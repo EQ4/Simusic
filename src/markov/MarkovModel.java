@@ -6,14 +6,13 @@ package markov;
 
 import elements.Playable;
 import elements.Sequence;
-import java.io.*;
 import java.util.*;
 
 /**
  *
  * @author Martin
  */
-public class MarkovChain {
+public class MarkovModel {
     
     public int markovSize;
     
@@ -28,7 +27,7 @@ public class MarkovChain {
     private int[][] secondMarkovTotals;
     private int[][][] thirdMarkovTotals;
 
-    public MarkovChain(ArrayList<Sequence> inputSequences, Playable.Type playableType) {
+    public MarkovModel(ArrayList<Sequence> inputSequences, Playable.Type playableType) {
         this.inputSequences = inputSequences;
         this.playableType = playableType;
         switch (playableType) {

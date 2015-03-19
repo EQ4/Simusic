@@ -4,8 +4,6 @@
  */
 package chordextract;
 
-import static chordextract.ChordScanner.NOTE_OFF;
-import static chordextract.ChordScanner.NOTE_ON;
 import static chordextract.ChordScanner.printRankings;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;

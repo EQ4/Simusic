@@ -1,21 +1,10 @@
 package main;
 
 import arpeggiator.Arpeggiator;
-import chordextract.ChordScanner;
 import elements.Chord;
-import jm.JMC;
-import jm.music.data.*;
-import jm.music.tools.*;
-import jm.util.*;
-import java.util.Vector;
-import java.awt.event.*;
-import java.awt.*;
-import java.io.*;
 import java.util.*;
 import org.jfugue.player.Player;
-import markov.MarkovChain;
-import services.Services;
-import elements.Note;
+import markov.MarkovModel;
 import chordextract.ChordExtractor;
 import elements.Playable;
 import elements.Sequence;
@@ -25,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         ArrayList<Sequence> chords = ChordExtractor.extractChordsFromMidiFiles("D:\\Desktop\\Dissertation\\MIDI-Live\\");
 
-        MarkovChain markovModel = new MarkovChain((ArrayList<Sequence>) chords, Playable.Type.CHORD);
+        MarkovModel markovModel = new MarkovModel((ArrayList<Sequence>) chords, Playable.Type.CHORD);
         Sequence markovOutput = markovModel.getTestSequence();
 
 
