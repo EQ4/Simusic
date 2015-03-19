@@ -9,5 +9,14 @@ package markov;
  * @author Martin
  */
 public class Instance {
-    
+
+    int instanceLevel;
+    boolean isLeafInstance;
+    int total;
+    int[] values;
+    Instance[] subInstances;
+
+    public Instance(boolean isLeafInstance) {
+        
+    }
 }

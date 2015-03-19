@@ -10,6 +10,7 @@ package elements;
  */
 public class Note extends Playable {
     
+    public static final int maxMarkovInteger = 12;
     public static final String letters[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",};
     
     public static String integerToNote(int integer, String key) {
@@ -34,7 +35,11 @@ public class Note extends Playable {
     }
     
     @Override
-    public int getNumericRepresentation() {
+    public int getMarkovInteger() {
+        return getIntegerRepresentation();
+    }
+    
+    public int getIntegerRepresentation() {
         int result = 0;
         for (int i = 0; i < 12; i++) {
             if (letter.equals(Note.letters[i])) {

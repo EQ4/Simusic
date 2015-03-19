@@ -55,7 +55,7 @@ public abstract class Playable implements Comparable {
         return probability;
     }
 
-    public abstract int getNumericRepresentation();
+    public abstract int getMarkovInteger();
 
     @Override
     public abstract String toString();

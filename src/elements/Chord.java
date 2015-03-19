@@ -12,6 +12,7 @@ import java.util.ArrayList;
  */
 public class Chord extends Playable {
 
+    public static final int maxMarkovInteger = 24;
     
     ArrayList<Integer> members;
     Note base;
@@ -36,12 +37,12 @@ public class Chord extends Playable {
     }
 
     @Override
-    public int getNumericRepresentation() {
-        return base.getNumericRepresentation() + (this.isMajor() ? 12 : 0);
+    public int getMarkovInteger() {
+        return base.getMarkovInteger() + (this.isMajor() ? 12 : 0);
     }
 
     public int getBaseNumeric() {
-        return base.getNumericRepresentation();
+        return base.getMarkovInteger();
     }
 
     public Chord getTransposedTwinChord(int transposeNumber) {

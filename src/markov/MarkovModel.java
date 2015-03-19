@@ -4,8 +4,7 @@
  */
 package markov;
 
-import elements.Playable;
-import elements.Sequence;
+import elements.*;
 import java.util.*;
 
 /**
@@ -32,10 +31,10 @@ public class MarkovModel {
         this.playableType = playableType;
         switch (playableType) {
             case CHORD:
-                markovSize = 24;
+                markovSize = Chord.maxMarkovInteger;
                 break;
             case NOTE:
-                markovSize = 12;
+                markovSize = Note.maxMarkovInteger;
                 break;
             default:
                 break;
@@ -83,21 +82,21 @@ public class MarkovModel {
             for (int j = 0; j < subList.size(); j++) {
                 Playable playable = subList.get(j);
                 if (j == 0) {
-                    zeroMarkov[playable.getNumericRepresentation()]++;
+                    zeroMarkov[playable.getMarkovInteger()]++;
                     zeroMarkovTotal++;
                 }
                 if (j > 0) {
                     Playable previousPlayable = subList.get(j - 1);
-                    firstMarkov[previousPlayable.getNumericRepresentation()][playable.getNumericRepresentation()]++;
-                    firstMarkovTotals[previousPlayable.getNumericRepresentation()]++;
+                    firstMarkov[previousPlayable.getMarkovInteger()][playable.getMarkovInteger()]++;
+                    firstMarkovTotals[previousPlayable.getMarkovInteger()]++;
                     if (j > 1) {
                         Playable prePreviousPlayable = subList.get(j - 2);
-                        secondMarkov[prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()][playable.getNumericRepresentation()]++;
-                        secondMarkovTotals[prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()]++;
+                        secondMarkov[prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()][playable.getMarkovInteger()]++;
+                        secondMarkovTotals[prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()]++;
                         if (j > 2) {
                             Playable prePrePreviousPlayable = subList.get(j - 3);
-                            thirdMarkov[prePrePreviousPlayable.getNumericRepresentation()][prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()][playable.getNumericRepresentation()]++;
-                            thirdMarkovTotals[prePrePreviousPlayable.getNumericRepresentation()][prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()]++;
+                            thirdMarkov[prePrePreviousPlayable.getMarkovInteger()][prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()][playable.getMarkovInteger()]++;
+                            thirdMarkovTotals[prePrePreviousPlayable.getMarkovInteger()][prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()]++;
                         }
                     }
                 }
@@ -110,13 +109,13 @@ public class MarkovModel {
     }
 
     public String getProbabilityTableAfterPlayable(Playable playable) {
-        int playableNum = playable.getNumericRepresentation();
+        int playableNum = playable.getMarkovInteger();
         return "Markov table after playable '" + playable.toString() + "':\n" + printMarkovTable(secondMarkov[playableNum], secondMarkovTotals[playableNum]);
     }
 
     public String getProbabilityTableAfterPlayables(Playable playable1, Playable playable2) {
-        int playable1Num = playable1.getNumericRepresentation();
-        int playable2Num = playable2.getNumericRepresentation();
+        int playable1Num = playable1.getMarkovInteger();
+        int playable2Num = playable2.getMarkovInteger();
         return "Markov table after sequence '" + playable1.toString() + ", " + playable2.toString() + "':\n" + printMarkovTable(thirdMarkov[playable1Num][playable2Num], thirdMarkovTotals[playable1Num][playable2Num]);
     }
 
@@ -139,7 +138,7 @@ public class MarkovModel {
     }
 
     public double getProbability(Playable playable) {
-        int playableNum = playable.getNumericRepresentation();
+        int playableNum = playable.getMarkovInteger();
         if (zeroMarkovTotal == 0) {
             return 0;
         }
@@ -147,8 +146,8 @@ public class MarkovModel {
     }
 
     public double getProbability(Playable playable1, Playable playable2) {
-        int playable1Num = playable1.getNumericRepresentation();
-        int playable2Num = playable2.getNumericRepresentation();
+        int playable1Num = playable1.getMarkovInteger();
+        int playable2Num = playable2.getMarkovInteger();
         if (firstMarkovTotals[playable1Num] == 0) {
             return 0;
         }
@@ -156,9 +155,9 @@ public class MarkovModel {
     }
 
     public double getProbability(Playable playable1, Playable playable2, Playable playable3) {
-        int playable1Num = playable1.getNumericRepresentation();
-        int playable2Num = playable2.getNumericRepresentation();
-        int playable3Num = playable3.getNumericRepresentation();
+        int playable1Num = playable1.getMarkovInteger();
+        int playable2Num = playable2.getMarkovInteger();
+        int playable3Num = playable3.getMarkovInteger();
         if (secondMarkovTotals[playable1Num][playable2Num] == 0) {
             return 0;
         }
@@ -166,10 +165,10 @@ public class MarkovModel {
     }
 
     public double getProbability(Playable playable1, Playable playable2, Playable playable3, Playable playable4) {
-        int playable1Num = playable1.getNumericRepresentation();
-        int playable2Num = playable2.getNumericRepresentation();
-        int playable3Num = playable3.getNumericRepresentation();
-        int playable4Num = playable4.getNumericRepresentation();
+        int playable1Num = playable1.getMarkovInteger();
+        int playable2Num = playable2.getMarkovInteger();
+        int playable3Num = playable3.getMarkovInteger();
+        int playable4Num = playable4.getMarkovInteger();
         if (thirdMarkovTotals[playable1Num][playable2Num][playable3Num] == 0) {
             return 0;
         }
@@ -181,15 +180,15 @@ public class MarkovModel {
     }
 
     public ArrayList<Playable> getSortedProbabilities(Playable playable) {
-        return getSortedProbabilities(firstMarkov[playable.getNumericRepresentation()], firstMarkovTotals[playable.getNumericRepresentation()]);
+        return getSortedProbabilities(firstMarkov[playable.getMarkovInteger()], firstMarkovTotals[playable.getMarkovInteger()]);
     }
 
     public ArrayList<Playable> getSortedProbabilities(Playable playable1, Playable playable2) {
-        return getSortedProbabilities(secondMarkov[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()], secondMarkovTotals[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()]);
+        return getSortedProbabilities(secondMarkov[playable1.getMarkovInteger()][playable2.getMarkovInteger()], secondMarkovTotals[playable1.getMarkovInteger()][playable2.getMarkovInteger()]);
     }
 
     public ArrayList<Playable> getSortedProbabilities(Playable playable1, Playable playable2, Playable playable3) {
-        return getSortedProbabilities(thirdMarkov[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()][playable3.getNumericRepresentation()], thirdMarkovTotals[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()][playable3.getNumericRepresentation()]);
+        return getSortedProbabilities(thirdMarkov[playable1.getMarkovInteger()][playable2.getMarkovInteger()][playable3.getMarkovInteger()], thirdMarkovTotals[playable1.getMarkovInteger()][playable2.getMarkovInteger()][playable3.getMarkovInteger()]);
     }
 
     public ArrayList<Playable> getSortedProbabilities(int[] array, int total) {
