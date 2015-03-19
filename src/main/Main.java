@@ -20,22 +20,33 @@ import chordextract.ChordExtractor;
 
 public class Main {
 
-    public static final String mainKey = "C";
-
     public static void main(String[] args) {
-        ChordExtractor extractor = new ChordExtractor();
-        ArrayList<ArrayList<Chord>> chords = extractor.extractChordsFromMidiFiles("D:\\Desktop\\Dissertation\\MIDI-Live\\");
-        
-        MarkovChain markovChain = new MarkovChain(chords);
-        ArrayList<Chord> markovChords = markovChain.getTestSequence();
-        
-        System.out.println(markovChain.printFirstMarkovTable());
-        System.out.println(markovChain.getProbability(new Chord("C", "maj"), new Chord("F", "maj")));
-        
-        // System.out.println(markovChain.printAllInputSequeces());
+        ArrayList<ArrayList<Chord>> chords = ChordExtractor.extractChordsFromMidiFiles("D:\\Desktop\\Dissertation\\MIDI-Live\\");
+
+        MarkovChain markovModel = new MarkovChain(chords);
+        ArrayList<Chord> markovChords = markovModel.getTestSequence();
+
+
+
+
+        //Get possibilities for a next chord after F major and C major
+        Chord chord1 = new Chord("F", "maj");
+        Chord chord2 = new Chord("C", "maj");
+        ArrayList<Chord> possibleChordChoices = markovModel.getSortedProbabilities(chord1, chord2);
+        for (int i = 0; i < possibleChordChoices.size(); i++) {
+            System.out.println(possibleChordChoices.get(i).getNameAndProbability());
+        }
+
+
+        //System.out.println(markovModel.printFirstMarkovTable());
+        //System.out.println(markovModel.getProbabilityTableAfterChords(chord1, chord2));
+        //System.out.println(markovModel.printAllInputSequeces());
         System.exit(1);
-        
-        
+
+
+
+
+
         Player player = new Player();
         Arpeggiator arp = new Arpeggiator(player);
         for (int i = 0; i < markovChords.size(); i++) {
@@ -46,5 +57,4 @@ public class Main {
 
     }
     //Sequence is naive.
-
 }

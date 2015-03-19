@@ -94,7 +94,22 @@ public class MarkovChain {
     }
 
     public String printFirstMarkovTable() {
-        String result = "First Markov table:\n***\tTotal\t";
+        return "First Markov table:\n" + printMarkovTable(firstMarkov, firstMarkovTotals);
+    }
+
+    public String getProbabilityTableAfterChord(Chord chord) {
+        int chordNum = chord.getMarkovNumeric();
+        return "Markov table after chord '" + chord.getFullName() + "':\n" + printMarkovTable(secondMarkov[chordNum], secondMarkovTotals[chordNum]);
+    }
+
+    public String getProbabilityTableAfterChords(Chord chord1, Chord chord2) {
+        int chord1Num = chord1.getMarkovNumeric();
+        int chord2Num = chord2.getMarkovNumeric();
+        return "Markov table after sequence '" + chord1.getFullName() + ", " + chord2.getFullName() + "':\n" + printMarkovTable(thirdMarkov[chord1Num][chord2Num], thirdMarkovTotals[chord1Num][chord2Num]);
+    }
+
+    public String printMarkovTable(int[][] table, int[] totals) {
+        String result = "Last chord goes on the X-axis.\n***\t<Total>\t";
 
         for (int i = 0; i < markovSize; i++) {
             result += Chord.getChordFromMarkovNumeric(i).getFullName() + "\t";
@@ -102,13 +117,21 @@ public class MarkovChain {
         result += "\n";
         for (int i = 0; i < markovSize; i++) {
             result += Chord.getChordFromMarkovNumeric(i).getFullName() + "\t";
-            result += firstMarkovTotals[i] + "\t";
+            result += totals[i] + "\t";
             for (int j = 0; j < markovSize; j++) {
-                result += firstMarkov[i][j] + "\t";
+                result += table[i][j] + "\t";
             }
             result += "\n";
         }
         return result;
+    }
+
+    public double getProbability(Chord chord) {
+        int chordNum = chord.getMarkovNumeric();
+        if (zeroMarkovTotal == 0) {
+            return 0;
+        }
+        return (double) zeroMarkov[chordNum] / (double) zeroMarkovTotal;
     }
 
     public double getProbability(Chord chord1, Chord chord2) {
@@ -120,10 +143,57 @@ public class MarkovChain {
         return (double) firstMarkov[chord1Num][chord2Num] / (double) firstMarkovTotals[chord1Num];
     }
 
-    public ArrayList<Chord> getTestSequence() {
-        // TODO!
+    public double getProbability(Chord chord1, Chord chord2, Chord chord3) {
+        int chord1Num = chord1.getMarkovNumeric();
+        int chord2Num = chord2.getMarkovNumeric();
+        int chord3Num = chord3.getMarkovNumeric();
+        if (secondMarkovTotals[chord1Num][chord2Num] == 0) {
+            return 0;
+        }
+        return (double) secondMarkov[chord1Num][chord2Num][chord3Num] / (double) secondMarkovTotals[chord1Num][chord2Num];
+    }
 
-        return getAllInputSequences();
+    public double getProbability(Chord chord1, Chord chord2, Chord chord3, Chord chord4) {
+        int chord1Num = chord1.getMarkovNumeric();
+        int chord2Num = chord2.getMarkovNumeric();
+        int chord3Num = chord3.getMarkovNumeric();
+        int chord4Num = chord4.getMarkovNumeric();
+        if (thirdMarkovTotals[chord1Num][chord2Num][chord3Num] == 0) {
+            return 0;
+        }
+        return (double) thirdMarkov[chord1Num][chord2Num][chord3Num][chord4Num] / (double) thirdMarkovTotals[chord1Num][chord2Num][chord3Num];
+    }
+
+    public ArrayList<Chord> getSortedProbabilities() {
+        return getSortedProbabilities(zeroMarkov, zeroMarkovTotal);
+    }
+
+    public ArrayList<Chord> getSortedProbabilities(Chord chord) {
+        return getSortedProbabilities(firstMarkov[chord.getMarkovNumeric()], firstMarkovTotals[chord.getMarkovNumeric()]);
+    }
+
+    public ArrayList<Chord> getSortedProbabilities(Chord chord1, Chord chord2) {
+        return getSortedProbabilities(secondMarkov[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()], secondMarkovTotals[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()]);
+    }
+
+    public ArrayList<Chord> getSortedProbabilities(Chord chord1, Chord chord2, Chord chord3) {
+        return getSortedProbabilities(thirdMarkov[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()][chord3.getMarkovNumeric()], thirdMarkovTotals[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()][chord3.getMarkovNumeric()]);
+    }
+
+    public ArrayList<Chord> getSortedProbabilities(int[] array, int total) {
+        ArrayList<Chord> result = new ArrayList<>();
+        for (int i = 0; i < markovSize; i++) {
+            Chord newChord = Chord.getChordFromMarkovNumeric(i);
+            //Initially set to 0 and check total to avoid divide by 0
+            double chordProbability = 0;
+            if (total > 0) {
+                chordProbability = (double) array[i] / (double) total;
+            }
+            newChord.setProbability(chordProbability);
+            result.add(newChord);
+        }
+        Collections.sort(result);
+        return result;
     }
 
     public ArrayList<Chord> getAllInputSequences() {
@@ -157,5 +227,11 @@ public class MarkovChain {
             result += "<End>\n";
         }
         return result;
+    }
+
+    public ArrayList<Chord> getTestSequence() {
+        // TODO!
+
+        return getAllInputSequences();
     }
 }
