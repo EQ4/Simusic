@@ -5,6 +5,8 @@
 package chordextract;
 
 import elements.Chord;
+import elements.Playable;
+import elements.Sequence;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,15 +18,15 @@ import java.util.Map;
  */
 public class ChordExtractor {
     
-    public static ArrayList<ArrayList<Chord>> extractChordsFromMidiFiles(String path) {
+    public static ArrayList<Sequence> extractChordsFromMidiFiles(String path) {
 
         File folder = new File(path);
         File[] files = folder.listFiles();
 
-        ArrayList<ArrayList<Chord>> fullSequence = new ArrayList<>();
+        ArrayList<Sequence> fullSequence = new ArrayList<>();
 
         for (int i = 0; i < files.length; i++) {
-            ArrayList<Chord> normalizedSequence = new ArrayList<>();
+            Sequence normalizedSequence = new Sequence(Playable.Type.CHORD);
             try {
                 if (files[i].isFile()) {
                     String file = files[i].getPath();
@@ -46,7 +48,7 @@ public class ChordExtractor {
 
                     for (int j = 0; j < sequence.size(); j++) {
                         Chord chord = sequence.get(j);
-                        normalizedSequence.add(chord.getTransposedTwinChord(songOffset));
+                        normalizedSequence.addPlayable(chord.getTransposedTwinChord(songOffset));
                     }
 
                 }
@@ -65,7 +67,7 @@ public class ChordExtractor {
     private static Chord getMainKey(ArrayList<Chord> sequence) {
         Map<String, Integer> chordHash = new HashMap<>();
         for (int j = 0; j < sequence.size(); j++) {
-            String chordName = sequence.get(j).getFullName();
+            String chordName = sequence.get(j).toString();
             if (chordHash.containsKey(chordName)) {
                 chordHash.put(chordName, (Integer) chordHash.get(chordName) + 1);
             } else {

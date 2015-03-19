@@ -4,7 +4,8 @@
  */
 package markov;
 
-import elements.Chord;
+import elements.Playable;
+import elements.Sequence;
 import java.io.*;
 import java.util.*;
 
@@ -13,10 +14,11 @@ import java.util.*;
  * @author Martin
  */
 public class MarkovChain {
-
-    public static final int markovSize = 24;
-    public static final int initialMarkovValue = 0;
-    private ArrayList<ArrayList<Chord>> inputChords;
+    
+    public int markovSize;
+    
+    private ArrayList<Sequence> inputSequences;
+    private Playable.Type playableType;
     private int[] zeroMarkov;
     private int[][] firstMarkov;
     private int[][][] secondMarkov;
@@ -26,8 +28,19 @@ public class MarkovChain {
     private int[][] secondMarkovTotals;
     private int[][][] thirdMarkovTotals;
 
-    public MarkovChain(ArrayList<ArrayList<Chord>> inputChords) {
-        this.inputChords = inputChords;
+    public MarkovChain(ArrayList<Sequence> inputSequences, Playable.Type playableType) {
+        this.inputSequences = inputSequences;
+        this.playableType = playableType;
+        switch (playableType) {
+            case CHORD:
+                markovSize = 24;
+                break;
+            case NOTE:
+                markovSize = 12;
+                break;
+            default:
+                break;
+        }
 
         initializeMarkovVars();
         generateMarkov();
@@ -50,15 +63,15 @@ public class MarkovChain {
             firstMarkov[i] = new int[markovSize];
             firstMarkovTotals[i] = 0;
             for (int j = 0; j < markovSize; j++) {
-                firstMarkov[i][j] = initialMarkovValue;
+                firstMarkov[i][j] = 0;
                 secondMarkov[i][j] = new int[markovSize];
                 secondMarkovTotals[i][j] = 0;
                 for (int k = 0; k < markovSize; k++) {
-                    secondMarkov[i][j][k] = initialMarkovValue;
+                    secondMarkov[i][j][k] = 0;
                     thirdMarkov[i][j][k] = new int[markovSize];
                     thirdMarkovTotals[i][j][k] = 0;
                     for (int l = 0; l < markovSize; l++) {
-                        thirdMarkov[i][j][k][l] = initialMarkovValue;
+                        thirdMarkov[i][j][k][l] = 0;
                     }
                 }
             }
@@ -66,26 +79,26 @@ public class MarkovChain {
     }
 
     private void generateMarkov() {
-        for (int i = 0; i < inputChords.size(); i++) {
-            ArrayList<Chord> subList = inputChords.get(i);
+        for (int i = 0; i < inputSequences.size(); i++) {
+            ArrayList<Playable> subList = inputSequences.get(i).getSequence();
             for (int j = 0; j < subList.size(); j++) {
-                Chord chord = subList.get(j);
+                Playable playable = subList.get(j);
                 if (j == 0) {
-                    zeroMarkov[chord.getMarkovNumeric()]++;
+                    zeroMarkov[playable.getNumericRepresentation()]++;
                     zeroMarkovTotal++;
                 }
                 if (j > 0) {
-                    Chord previousChord = subList.get(j - 1);
-                    firstMarkov[previousChord.getMarkovNumeric()][chord.getMarkovNumeric()]++;
-                    firstMarkovTotals[previousChord.getMarkovNumeric()]++;
+                    Playable previousPlayable = subList.get(j - 1);
+                    firstMarkov[previousPlayable.getNumericRepresentation()][playable.getNumericRepresentation()]++;
+                    firstMarkovTotals[previousPlayable.getNumericRepresentation()]++;
                     if (j > 1) {
-                        Chord prePreviousChord = subList.get(j - 2);
-                        secondMarkov[prePreviousChord.getMarkovNumeric()][previousChord.getMarkovNumeric()][chord.getMarkovNumeric()]++;
-                        secondMarkovTotals[prePreviousChord.getMarkovNumeric()][previousChord.getMarkovNumeric()]++;
+                        Playable prePreviousPlayable = subList.get(j - 2);
+                        secondMarkov[prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()][playable.getNumericRepresentation()]++;
+                        secondMarkovTotals[prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()]++;
                         if (j > 2) {
-                            Chord prePrePreviousChord = subList.get(j - 3);
-                            thirdMarkov[prePrePreviousChord.getMarkovNumeric()][prePreviousChord.getMarkovNumeric()][previousChord.getMarkovNumeric()][chord.getMarkovNumeric()]++;
-                            thirdMarkovTotals[prePrePreviousChord.getMarkovNumeric()][prePreviousChord.getMarkovNumeric()][previousChord.getMarkovNumeric()]++;
+                            Playable prePrePreviousPlayable = subList.get(j - 3);
+                            thirdMarkov[prePrePreviousPlayable.getNumericRepresentation()][prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()][playable.getNumericRepresentation()]++;
+                            thirdMarkovTotals[prePrePreviousPlayable.getNumericRepresentation()][prePreviousPlayable.getNumericRepresentation()][previousPlayable.getNumericRepresentation()]++;
                         }
                     }
                 }
@@ -97,26 +110,26 @@ public class MarkovChain {
         return "First Markov table:\n" + printMarkovTable(firstMarkov, firstMarkovTotals);
     }
 
-    public String getProbabilityTableAfterChord(Chord chord) {
-        int chordNum = chord.getMarkovNumeric();
-        return "Markov table after chord '" + chord.getFullName() + "':\n" + printMarkovTable(secondMarkov[chordNum], secondMarkovTotals[chordNum]);
+    public String getProbabilityTableAfterPlayable(Playable playable) {
+        int playableNum = playable.getNumericRepresentation();
+        return "Markov table after playable '" + playable.toString() + "':\n" + printMarkovTable(secondMarkov[playableNum], secondMarkovTotals[playableNum]);
     }
 
-    public String getProbabilityTableAfterChords(Chord chord1, Chord chord2) {
-        int chord1Num = chord1.getMarkovNumeric();
-        int chord2Num = chord2.getMarkovNumeric();
-        return "Markov table after sequence '" + chord1.getFullName() + ", " + chord2.getFullName() + "':\n" + printMarkovTable(thirdMarkov[chord1Num][chord2Num], thirdMarkovTotals[chord1Num][chord2Num]);
+    public String getProbabilityTableAfterPlayables(Playable playable1, Playable playable2) {
+        int playable1Num = playable1.getNumericRepresentation();
+        int playable2Num = playable2.getNumericRepresentation();
+        return "Markov table after sequence '" + playable1.toString() + ", " + playable2.toString() + "':\n" + printMarkovTable(thirdMarkov[playable1Num][playable2Num], thirdMarkovTotals[playable1Num][playable2Num]);
     }
 
     public String printMarkovTable(int[][] table, int[] totals) {
-        String result = "Last chord goes on the X-axis.\n***\t<Total>\t";
+        String result = "Last playable goes on the X-axis.\n***\t<Total>\t";
 
         for (int i = 0; i < markovSize; i++) {
-            result += Chord.getChordFromMarkovNumeric(i).getFullName() + "\t";
+            result += Playable.getPlayableFromMarkovNumeric(i, playableType).toString() + "\t";
         }
         result += "\n";
         for (int i = 0; i < markovSize; i++) {
-            result += Chord.getChordFromMarkovNumeric(i).getFullName() + "\t";
+            result += Playable.getPlayableFromMarkovNumeric(i, playableType).toString() + "\t";
             result += totals[i] + "\t";
             for (int j = 0; j < markovSize; j++) {
                 result += table[i][j] + "\t";
@@ -126,110 +139,105 @@ public class MarkovChain {
         return result;
     }
 
-    public double getProbability(Chord chord) {
-        int chordNum = chord.getMarkovNumeric();
+    public double getProbability(Playable playable) {
+        int playableNum = playable.getNumericRepresentation();
         if (zeroMarkovTotal == 0) {
             return 0;
         }
-        return (double) zeroMarkov[chordNum] / (double) zeroMarkovTotal;
+        return (double) zeroMarkov[playableNum] / (double) zeroMarkovTotal;
     }
 
-    public double getProbability(Chord chord1, Chord chord2) {
-        int chord1Num = chord1.getMarkovNumeric();
-        int chord2Num = chord2.getMarkovNumeric();
-        if (firstMarkovTotals[chord1Num] == 0) {
+    public double getProbability(Playable playable1, Playable playable2) {
+        int playable1Num = playable1.getNumericRepresentation();
+        int playable2Num = playable2.getNumericRepresentation();
+        if (firstMarkovTotals[playable1Num] == 0) {
             return 0;
         }
-        return (double) firstMarkov[chord1Num][chord2Num] / (double) firstMarkovTotals[chord1Num];
+        return (double) firstMarkov[playable1Num][playable2Num] / (double) firstMarkovTotals[playable1Num];
     }
 
-    public double getProbability(Chord chord1, Chord chord2, Chord chord3) {
-        int chord1Num = chord1.getMarkovNumeric();
-        int chord2Num = chord2.getMarkovNumeric();
-        int chord3Num = chord3.getMarkovNumeric();
-        if (secondMarkovTotals[chord1Num][chord2Num] == 0) {
+    public double getProbability(Playable playable1, Playable playable2, Playable playable3) {
+        int playable1Num = playable1.getNumericRepresentation();
+        int playable2Num = playable2.getNumericRepresentation();
+        int playable3Num = playable3.getNumericRepresentation();
+        if (secondMarkovTotals[playable1Num][playable2Num] == 0) {
             return 0;
         }
-        return (double) secondMarkov[chord1Num][chord2Num][chord3Num] / (double) secondMarkovTotals[chord1Num][chord2Num];
+        return (double) secondMarkov[playable1Num][playable2Num][playable3Num] / (double) secondMarkovTotals[playable1Num][playable2Num];
     }
 
-    public double getProbability(Chord chord1, Chord chord2, Chord chord3, Chord chord4) {
-        int chord1Num = chord1.getMarkovNumeric();
-        int chord2Num = chord2.getMarkovNumeric();
-        int chord3Num = chord3.getMarkovNumeric();
-        int chord4Num = chord4.getMarkovNumeric();
-        if (thirdMarkovTotals[chord1Num][chord2Num][chord3Num] == 0) {
+    public double getProbability(Playable playable1, Playable playable2, Playable playable3, Playable playable4) {
+        int playable1Num = playable1.getNumericRepresentation();
+        int playable2Num = playable2.getNumericRepresentation();
+        int playable3Num = playable3.getNumericRepresentation();
+        int playable4Num = playable4.getNumericRepresentation();
+        if (thirdMarkovTotals[playable1Num][playable2Num][playable3Num] == 0) {
             return 0;
         }
-        return (double) thirdMarkov[chord1Num][chord2Num][chord3Num][chord4Num] / (double) thirdMarkovTotals[chord1Num][chord2Num][chord3Num];
+        return (double) thirdMarkov[playable1Num][playable2Num][playable3Num][playable4Num] / (double) thirdMarkovTotals[playable1Num][playable2Num][playable3Num];
     }
 
-    public ArrayList<Chord> getSortedProbabilities() {
+    public ArrayList<Playable> getSortedProbabilities() {
         return getSortedProbabilities(zeroMarkov, zeroMarkovTotal);
     }
 
-    public ArrayList<Chord> getSortedProbabilities(Chord chord) {
-        return getSortedProbabilities(firstMarkov[chord.getMarkovNumeric()], firstMarkovTotals[chord.getMarkovNumeric()]);
+    public ArrayList<Playable> getSortedProbabilities(Playable playable) {
+        return getSortedProbabilities(firstMarkov[playable.getNumericRepresentation()], firstMarkovTotals[playable.getNumericRepresentation()]);
     }
 
-    public ArrayList<Chord> getSortedProbabilities(Chord chord1, Chord chord2) {
-        return getSortedProbabilities(secondMarkov[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()], secondMarkovTotals[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()]);
+    public ArrayList<Playable> getSortedProbabilities(Playable playable1, Playable playable2) {
+        return getSortedProbabilities(secondMarkov[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()], secondMarkovTotals[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()]);
     }
 
-    public ArrayList<Chord> getSortedProbabilities(Chord chord1, Chord chord2, Chord chord3) {
-        return getSortedProbabilities(thirdMarkov[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()][chord3.getMarkovNumeric()], thirdMarkovTotals[chord1.getMarkovNumeric()][chord2.getMarkovNumeric()][chord3.getMarkovNumeric()]);
+    public ArrayList<Playable> getSortedProbabilities(Playable playable1, Playable playable2, Playable playable3) {
+        return getSortedProbabilities(thirdMarkov[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()][playable3.getNumericRepresentation()], thirdMarkovTotals[playable1.getNumericRepresentation()][playable2.getNumericRepresentation()][playable3.getNumericRepresentation()]);
     }
 
-    public ArrayList<Chord> getSortedProbabilities(int[] array, int total) {
-        ArrayList<Chord> result = new ArrayList<>();
+    public ArrayList<Playable> getSortedProbabilities(int[] array, int total) {
+        ArrayList<Playable> result = new ArrayList<>();
         for (int i = 0; i < markovSize; i++) {
-            Chord newChord = Chord.getChordFromMarkovNumeric(i);
+            Playable newPlayable = Playable.getPlayableFromMarkovNumeric(i, playableType);
             //Initially set to 0 and check total to avoid divide by 0
-            double chordProbability = 0;
+            double playableProbability = 0;
             if (total > 0) {
-                chordProbability = (double) array[i] / (double) total;
+                playableProbability = (double) array[i] / (double) total;
             }
-            newChord.setProbability(chordProbability);
-            result.add(newChord);
+            newPlayable.setProbability(playableProbability);
+            result.add(newPlayable);
         }
         Collections.sort(result);
         return result;
     }
 
-    public ArrayList<Chord> getAllInputSequences() {
-        ArrayList<Chord> outputChords = new ArrayList<>();
-        for (int i = 0; i < inputChords.size(); i++) {
-            ArrayList<Chord> subList = inputChords.get(i);
-            for (int j = 0; j < subList.size(); j++) {
-                outputChords.add(subList.get(j));
+    public Sequence getAllInputSequences() {
+        Sequence outputPlayables = new Sequence(playableType);
+        for (Sequence sequence : inputSequences) {
+            ArrayList<Playable> subList = sequence.getSequence();
+            for (Playable playable : subList) {
+                outputPlayables.addPlayable(playable);
             }
         }
-        return outputChords;
+        return outputPlayables;
     }
 
-    public ArrayList<Chord> getInputSequence(int number) {
-        ArrayList<Chord> outputChords = new ArrayList<>();
-        ArrayList<Chord> subList = inputChords.get(number);
-        for (int i = 0; i < subList.size(); i++) {
-            outputChords.add(subList.get(i));
-        }
-        return outputChords;
+    public Sequence getInputSequence(int number) {
+        return inputSequences.get(number);
     }
 
     public String printAllInputSequeces() {
         String result = "Input sequences:\n";
-        for (int i = 0; i < inputChords.size(); i++) {
-            ArrayList<Chord> subList = inputChords.get(i);
+        for (int i = 0; i < inputSequences.size(); i++) {
+            ArrayList<Playable> subList = inputSequences.get(i).getSequence();
             result += i + ": ";
-            for (int j = 0; j < subList.size(); j++) {
-                result += subList.get(j).getFullName() + " ";
+            for (Playable playable : subList) {
+                result += playable.toString() + " ";
             }
             result += "<End>\n";
         }
         return result;
     }
 
-    public ArrayList<Chord> getTestSequence() {
+    public Sequence getTestSequence() {
         // TODO!
 
         return getAllInputSequences();

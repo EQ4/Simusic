@@ -10,45 +10,38 @@ import java.util.ArrayList;
  *
  * @author Martin
  */
-public class Chord implements Comparable {
+public class Chord extends Playable {
 
-    static final int probabilityCompareMultiplyFactor = 10000;
-    static final int probabilityRoundValue = 1000;
-
-    public static Chord getChordFromMarkovNumeric(int numeric) {
-        String letter = Note.integerToNote(numeric % 12);
-        String mode = (numeric >= 12) ? "maj" : "min";
-        return new Chord(letter, mode);
-    }
+    
     ArrayList<Integer> members;
     Note base;
     String mode;
-    double probability;
 
     public Chord(String letter, String mode) {
         members = new ArrayList<>();
         this.base = new Note(letter);
         this.mode = mode;
-        this.probability = -1;
     }
 
-    public String getFullName() {
+    @Override
+    public String toString() {
         return base.toString() + "-" + mode;
     }
 
     public String getNameAndProbability() {
         if (!hasProbability()) {
-            return getFullName();
+            return this.toString();
         }
-        return getRoundedProbability() + " - " + getFullName();
+        return getRoundedProbability() + " - " + this.toString();
     }
 
-    public int getMarkovNumeric() {
-        return base.getNumeric() + (this.isMajor() ? 12 : 0);
+    @Override
+    public int getNumericRepresentation() {
+        return base.getNumericRepresentation() + (this.isMajor() ? 12 : 0);
     }
 
     public int getBaseNumeric() {
-        return base.getNumeric();
+        return base.getNumericRepresentation();
     }
 
     public Chord getTransposedTwinChord(int transposeNumber) {
@@ -70,30 +63,4 @@ public class Chord implements Comparable {
         return base.toString();
     }
 
-    public void setProbability(double probability) {
-        this.probability = probability;
-    }
-
-    public boolean hasProbability() {
-        return (probability != -1);
-    }
-
-    public Double getProbability() {
-        if (!hasProbability()) {
-            // Prevents non-probability chords from returning a value
-            return null;
-        }
-        return probability;
-    }
-
-    public Double getRoundedProbability() {
-        return (double) Math.round(getProbability() * probabilityRoundValue) / probabilityRoundValue;
-    }
-
-    @Override
-    public int compareTo(Object compareChord) {
-        Chord compareChordCast = (Chord) compareChord;
-        double compareProbability = compareChordCast.getProbability();
-        return ((int) (compareProbability * probabilityCompareMultiplyFactor)) - ((int) (this.probability * probabilityCompareMultiplyFactor));
-    }
 }

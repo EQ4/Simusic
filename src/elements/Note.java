@@ -8,7 +8,7 @@ package elements;
  *
  * @author Martin
  */
-public class Note {
+public class Note extends Playable {
     
     public static final String letters[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",};
     
@@ -33,8 +33,8 @@ public class Note {
         this.letter = letter;
     }
     
-    
-    public int getNumeric() {
+    @Override
+    public int getNumericRepresentation() {
         int result = 0;
         for (int i = 0; i < 12; i++) {
             if (letter.equals(Note.letters[i])) {
