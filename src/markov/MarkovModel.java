@@ -12,22 +12,16 @@ import java.util.*;
  * @author Martin
  */
 public class MarkovModel {
-    
-    public int markovSize;
-    
+
+    private int markovSize;
+    private int depth;
     private ArrayList<Sequence> inputSequences;
     private Playable.Type playableType;
-    private int[] zeroMarkov;
-    private int[][] firstMarkov;
-    private int[][][] secondMarkov;
-    private int[][][][] thirdMarkov;
-    private int zeroMarkovTotal;
-    private int[] firstMarkovTotals;
-    private int[][] secondMarkovTotals;
-    private int[][][] thirdMarkovTotals;
+    Instance rootInstance;
+    Queue<Playable> liveStream;
 
-    public MarkovModel(ArrayList<Sequence> inputSequences, Playable.Type playableType) {
-        this.inputSequences = inputSequences;
+    public MarkovModel(int depth, Playable.Type playableType) {
+        this.depth = depth;
         this.playableType = playableType;
         switch (playableType) {
             case CHORD:
@@ -39,172 +33,44 @@ public class MarkovModel {
             default:
                 break;
         }
-
-        initializeMarkovVars();
-        generateMarkov();
-
+        this.rootInstance = new Instance(depth, markovSize);
+        this.liveStream = new LinkedList<>();
     }
 
-    private void initializeMarkovVars() {
-
-        zeroMarkov = new int[markovSize];
-        firstMarkov = new int[markovSize][markovSize];
-        secondMarkov = new int[markovSize][markovSize][markovSize];
-        thirdMarkov = new int[markovSize][markovSize][markovSize][markovSize];
-
-        zeroMarkovTotal = 0;
-        firstMarkovTotals = new int[markovSize];
-        secondMarkovTotals = new int[markovSize][markovSize];
-        thirdMarkovTotals = new int[markovSize][markovSize][markovSize];
-
-        for (int i = 0; i < markovSize; i++) {
-            firstMarkov[i] = new int[markovSize];
-            firstMarkovTotals[i] = 0;
-            for (int j = 0; j < markovSize; j++) {
-                firstMarkov[i][j] = 0;
-                secondMarkov[i][j] = new int[markovSize];
-                secondMarkovTotals[i][j] = 0;
-                for (int k = 0; k < markovSize; k++) {
-                    secondMarkov[i][j][k] = 0;
-                    thirdMarkov[i][j][k] = new int[markovSize];
-                    thirdMarkovTotals[i][j][k] = 0;
-                    for (int l = 0; l < markovSize; l++) {
-                        thirdMarkov[i][j][k][l] = 0;
-                    }
+    public void trainModel(ArrayList<Sequence> inputSequences) {
+        this.inputSequences = inputSequences;
+        for (Sequence sequence : inputSequences) {
+            if (!sequence.isEmpty()) {
+                int[] markovSequence = sequence.getMarkovIntegerArray();
+                //Update tree at each new playable
+                for (int i = 0; i < sequence.getSize() - depth; i++) {
+                    rootInstance.updateTree(markovSequence, i);
                 }
             }
         }
     }
-
-    private void generateMarkov() {
-        for (int i = 0; i < inputSequences.size(); i++) {
-            ArrayList<Playable> subList = inputSequences.get(i).getSequence();
-            for (int j = 0; j < subList.size(); j++) {
-                Playable playable = subList.get(j);
-                if (j == 0) {
-                    zeroMarkov[playable.getMarkovInteger()]++;
-                    zeroMarkovTotal++;
-                }
-                if (j > 0) {
-                    Playable previousPlayable = subList.get(j - 1);
-                    firstMarkov[previousPlayable.getMarkovInteger()][playable.getMarkovInteger()]++;
-                    firstMarkovTotals[previousPlayable.getMarkovInteger()]++;
-                    if (j > 1) {
-                        Playable prePreviousPlayable = subList.get(j - 2);
-                        secondMarkov[prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()][playable.getMarkovInteger()]++;
-                        secondMarkovTotals[prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()]++;
-                        if (j > 2) {
-                            Playable prePrePreviousPlayable = subList.get(j - 3);
-                            thirdMarkov[prePrePreviousPlayable.getMarkovInteger()][prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()][playable.getMarkovInteger()]++;
-                            thirdMarkovTotals[prePrePreviousPlayable.getMarkovInteger()][prePreviousPlayable.getMarkovInteger()][previousPlayable.getMarkovInteger()]++;
-                        }
-                    }
-                }
-            }
+    
+    public void liveRecord(Playable playable) {
+        if (liveStream.size() == depth-1) {
+            liveStream.remove();
         }
+        liveStream.add(playable);
     }
-
-    public String printFirstMarkovTable() {
-        return "First Markov table:\n" + printMarkovTable(firstMarkov, firstMarkovTotals);
-    }
-
-    public String getProbabilityTableAfterPlayable(Playable playable) {
-        int playableNum = playable.getMarkovInteger();
-        return "Markov table after playable '" + playable.toString() + "':\n" + printMarkovTable(secondMarkov[playableNum], secondMarkovTotals[playableNum]);
-    }
-
-    public String getProbabilityTableAfterPlayables(Playable playable1, Playable playable2) {
-        int playable1Num = playable1.getMarkovInteger();
-        int playable2Num = playable2.getMarkovInteger();
-        return "Markov table after sequence '" + playable1.toString() + ", " + playable2.toString() + "':\n" + printMarkovTable(thirdMarkov[playable1Num][playable2Num], thirdMarkovTotals[playable1Num][playable2Num]);
-    }
-
-    public String printMarkovTable(int[][] table, int[] totals) {
-        String result = "Last playable goes on the X-axis.\n***\t<Total>\t";
-
-        for (int i = 0; i < markovSize; i++) {
-            result += Playable.getPlayableFromMarkovNumeric(i, playableType).toString() + "\t";
+    
+    //TO FIX!!!
+    public Collection<Playable> getSortedProbabilitiesForLiveStream(int depth) {
+        if (depth > this.depth-1) {
+            //Error.
+            return null;
         }
-        result += "\n";
-        for (int i = 0; i < markovSize; i++) {
-            result += Playable.getPlayableFromMarkovNumeric(i, playableType).toString() + "\t";
-            result += totals[i] + "\t";
-            for (int j = 0; j < markovSize; j++) {
-                result += table[i][j] + "\t";
-            }
-            result += "\n";
+        Object[] streamArray = liveStream.toArray();
+        int[] streamIntArray = new int[streamArray.length];
+        for (int i = 0; i < streamArray.length; i++) {
+            streamIntArray[i] = ((Playable)streamArray[i]).getMarkovInteger();
         }
-        return result;
-    }
-
-    public double getProbability(Playable playable) {
-        int playableNum = playable.getMarkovInteger();
-        if (zeroMarkovTotal == 0) {
-            return 0;
-        }
-        return (double) zeroMarkov[playableNum] / (double) zeroMarkovTotal;
-    }
-
-    public double getProbability(Playable playable1, Playable playable2) {
-        int playable1Num = playable1.getMarkovInteger();
-        int playable2Num = playable2.getMarkovInteger();
-        if (firstMarkovTotals[playable1Num] == 0) {
-            return 0;
-        }
-        return (double) firstMarkov[playable1Num][playable2Num] / (double) firstMarkovTotals[playable1Num];
-    }
-
-    public double getProbability(Playable playable1, Playable playable2, Playable playable3) {
-        int playable1Num = playable1.getMarkovInteger();
-        int playable2Num = playable2.getMarkovInteger();
-        int playable3Num = playable3.getMarkovInteger();
-        if (secondMarkovTotals[playable1Num][playable2Num] == 0) {
-            return 0;
-        }
-        return (double) secondMarkov[playable1Num][playable2Num][playable3Num] / (double) secondMarkovTotals[playable1Num][playable2Num];
-    }
-
-    public double getProbability(Playable playable1, Playable playable2, Playable playable3, Playable playable4) {
-        int playable1Num = playable1.getMarkovInteger();
-        int playable2Num = playable2.getMarkovInteger();
-        int playable3Num = playable3.getMarkovInteger();
-        int playable4Num = playable4.getMarkovInteger();
-        if (thirdMarkovTotals[playable1Num][playable2Num][playable3Num] == 0) {
-            return 0;
-        }
-        return (double) thirdMarkov[playable1Num][playable2Num][playable3Num][playable4Num] / (double) thirdMarkovTotals[playable1Num][playable2Num][playable3Num];
-    }
-
-    public ArrayList<Playable> getSortedProbabilities() {
-        return getSortedProbabilities(zeroMarkov, zeroMarkovTotal);
-    }
-
-    public ArrayList<Playable> getSortedProbabilities(Playable playable) {
-        return getSortedProbabilities(firstMarkov[playable.getMarkovInteger()], firstMarkovTotals[playable.getMarkovInteger()]);
-    }
-
-    public ArrayList<Playable> getSortedProbabilities(Playable playable1, Playable playable2) {
-        return getSortedProbabilities(secondMarkov[playable1.getMarkovInteger()][playable2.getMarkovInteger()], secondMarkovTotals[playable1.getMarkovInteger()][playable2.getMarkovInteger()]);
-    }
-
-    public ArrayList<Playable> getSortedProbabilities(Playable playable1, Playable playable2, Playable playable3) {
-        return getSortedProbabilities(thirdMarkov[playable1.getMarkovInteger()][playable2.getMarkovInteger()][playable3.getMarkovInteger()], thirdMarkovTotals[playable1.getMarkovInteger()][playable2.getMarkovInteger()][playable3.getMarkovInteger()]);
-    }
-
-    public ArrayList<Playable> getSortedProbabilities(int[] array, int total) {
-        ArrayList<Playable> result = new ArrayList<>();
-        for (int i = 0; i < markovSize; i++) {
-            Playable newPlayable = Playable.getPlayableFromMarkovNumeric(i, playableType);
-            //Initially set to 0 and check total to avoid divide by 0
-            double playableProbability = 0;
-            if (total > 0) {
-                playableProbability = (double) array[i] / (double) total;
-            }
-            newPlayable.setProbability(playableProbability);
-            result.add(newPlayable);
-        }
-        Collections.sort(result);
-        return result;
+        double[] probabilities = rootInstance.getProbabilities(streamIntArray, depth);
+        Collection<Playable> = new Collection<>();
+        
     }
 
     public Sequence getAllInputSequences() {

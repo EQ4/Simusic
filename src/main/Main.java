@@ -11,27 +11,23 @@ import elements.Sequence;
 
 public class Main {
 
+    public static final int markovDepth = 3;
+
     public static void main(String[] args) {
         ArrayList<Sequence> chords = ChordExtractor.extractChordsFromMidiFiles("D:\\Desktop\\Dissertation\\MIDI-Live\\");
 
-        MarkovModel markovModel = new MarkovModel((ArrayList<Sequence>) chords, Playable.Type.CHORD);
+        MarkovModel markovModel = new MarkovModel(markovDepth, Playable.Type.CHORD);
+        markovModel.trainModel(chords);
         Sequence markovOutput = markovModel.getTestSequence();
 
 
 
-
-        //Get possibilities for a next chord after F major and C major
-        Playable chord1 = new Chord("F", "maj");
-        Playable chord2 = new Chord("C", "maj");
-        ArrayList<Playable> possibleChordChoices = markovModel.getSortedProbabilities(chord1, chord2);
-        for (int i = 0; i < possibleChordChoices.size(); i++) {
-            System.out.println(((Chord) possibleChordChoices.get(i)).getNameAndProbability());
+        for (Playable playable : markovOutput.getSequence()) {
+            //System.out.println(((Chord) playable).getNameAndProbability());
         }
 
-
-        System.out.println(markovModel.printFirstMarkovTable());
-        System.out.println(markovModel.getProbabilityTableAfterPlayables(chord1, chord2));
         System.out.println(markovModel.printAllInputSequeces());
+        
         System.exit(1);
 
 

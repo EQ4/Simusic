@@ -9,7 +9,7 @@ package elements;
  * @author Martin
  */
 public abstract class Playable implements Comparable {
-
+    
     public static enum Type {
 
         CHORD, NOTE
@@ -30,13 +30,9 @@ public abstract class Playable implements Comparable {
     }
     static final int probabilityCompareMultiplyFactor = 10000;
     static final int probabilityRoundValue = 1000;
-    double probability;
-    boolean hasProbability;
-
-    public Playable() {
-        this.probability = -1;
-        this.hasProbability = false;
-    }
+    
+    private double probability = -1;
+    private boolean hasProbability = false;
 
     public void setProbability(double probability) {
         this.probability = probability;
