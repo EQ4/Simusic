@@ -13,10 +13,13 @@ import java.util.ArrayList;
 public class Chord extends Playable {
 
     public static final int maxMarkovInteger = 24;
-    
     ArrayList<Integer> members;
     Note base;
     String mode;
+    
+    public Chord(){
+        //Empty constructor
+    };
 
     public Chord(String letter, String mode) {
         members = new ArrayList<>();
@@ -39,6 +42,23 @@ public class Chord extends Playable {
     @Override
     public int getMarkovInteger() {
         return base.getMarkovInteger() + (this.isMajor() ? 12 : 0);
+    }
+    
+    @Override
+    public int getMaximumMarkovInteger() {
+        return maxMarkovInteger;
+    }
+
+    @Override
+    public Playable getNewPlayableFromMarkovNumeric(int numeric) {
+        String newLetter = Note.integerToNote(numeric % 12);
+        String newMode = (numeric >= 12) ? "maj" : "min";
+        return new Chord(newLetter, newMode);
+    }
+    
+    @Override
+    public String getType() {
+        return "Chord";
     }
 
     public int getBaseNumeric() {
@@ -63,5 +83,4 @@ public class Chord extends Playable {
     public String getBaseLetter() {
         return base.toString();
     }
-
 }

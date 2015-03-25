@@ -11,35 +11,42 @@ import elements.Sequence;
 
 public class Main {
 
-    public static final int markovDepth = 3;
-
     public static void main(String[] args) {
+
+        //Extract chords
         ArrayList<Sequence> chords = ChordExtractor.extractChordsFromMidiFiles("D:\\Desktop\\Dissertation\\MIDI-Live\\");
 
-        MarkovModel markovModel = new MarkovModel(markovDepth, Playable.Type.CHORD);
+        //Generate markov model
+        MarkovModel markovModel = new MarkovModel(3, new Chord());
         markovModel.trainModel(chords);
-        Sequence markovOutput = markovModel.getTestSequence();
 
+        //Add chords to live sequence
+        markovModel.livePush(new Chord("G", "maj"));
+        markovModel.livePush(new Chord("F", "maj"));
+        markovModel.livePush(new Chord("C", "maj"));
+        markovModel.livePush(new Chord("A", "min"));
 
+        //Print probabilities
+        markovModel.printSortedPlayables(3);
 
-        for (Playable playable : markovOutput.getSequence()) {
-            //System.out.println(((Chord) playable).getNameAndProbability());
-        }
-
-        System.out.println(markovModel.printAllInputSequeces());
+        //Print table
+        //System.out.println(markovModel.toString());
         
-        System.exit(1);
-
-
-
+        //Print table size
+        System.out.println("Model length: " + markovModel.getTableSize());
+        
+        // Test Markov
+        markovModel.testMethod();
 
         //Todo: Make player accept sequence objects.
-        Player player = new Player();
-        Arpeggiator arp = new Arpeggiator(player);
-        for (Playable playable : markovOutput.getSequence()) {
-            arp.addArpeggio((Chord) playable);
-        }
-        arp.play();
+        /*
+         Player player = new Player();
+         Arpeggiator arp = new Arpeggiator(player);
+         for (Playable playable : markovOutput) {
+         arp.addArpeggio((Chord) playable);
+         }
+         arp.play();
+         */
 
     }
 }
