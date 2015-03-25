@@ -14,13 +14,16 @@ import java.util.List;
 public class Sequence {
 
     private ArrayList<Playable> sequence;
+    private Playable.Type type;
 
-    public Sequence() {
+    public Sequence(Playable.Type type) {
         this.sequence = new ArrayList<>();
+        this.type = type;
     }
 
-    public Sequence(ArrayList<Object> sequence) {
+    public Sequence(ArrayList<Object> sequence, Playable.Type type) {
         this.sequence = new ArrayList<>();
+        this.type = type;
         for (Object playable : sequence) {
             try {
                 this.sequence.add((Playable) playable);
@@ -30,6 +33,9 @@ public class Sequence {
         }
     }
 
+    public Playable.Type getType() {
+        return type;
+    }
 
     public ArrayList<Playable> getSequence() {
         return sequence;

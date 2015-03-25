@@ -13,198 +13,82 @@ import java.util.*;
  */
 public class MarkovModel {
 
-    private Playable modelType;
+    private int markovSize;
     private int depth;
-    private int length;
-    private int tableHeight;
-    private ArrayList<Sequence> inputSequences; // Dispose???
-    int[][] markovTable; // oh well
-    Queue<Playable> trainStream;
+    private ArrayList<Sequence> inputSequences;
+    private Playable.Type playableType;
+    Instance rootInstance;
     Queue<Playable> liveStream;
-    
-    private int emptyInputSequences;
-    private int allPlayablesRecorded;
 
-    public MarkovModel(int depth, Playable modelType) {
-        this.modelType = modelType;
+    public MarkovModel(int depth, Playable.Type playableType) {
         this.depth = depth;
-        this.length = modelType.getMaximumMarkovInteger();
-
-        this.trainStream = new LinkedList<>();
+        this.playableType = playableType;
+        switch (playableType) {
+            case CHORD:
+                markovSize = Chord.maxMarkovInteger;
+                break;
+            case NOTE:
+                markovSize = Note.maxMarkovInteger;
+                break;
+            default:
+                break;
+        }
+        this.rootInstance = new Instance(depth, markovSize);
         this.liveStream = new LinkedList<>();
-
-        this.tableHeight = calculateTableHeight(length, depth);
-        initializeTable();
-
-        emptyInputSequences = 0;
-        allPlayablesRecorded = 0;
-    }
-
-    private void initializeTable() {
-        markovTable = new int[tableHeight + 1][length + 1];
-
-        for (int i = 0; i <= tableHeight; i++) {
-            for (int j = 0; j <= length; j++) {
-                markovTable[i][j] = 0;
-            }
-        }
-    }
-
-    private int calculateTableHeight(int length, int depth) {
-        if (depth == 1) {
-            return length;
-        }
-        return calculateTableHeight(length, depth - 1) + getPower(length, depth);
-    }
-
-    private int getPower(int base, int exponent) {
-        if (exponent > 0) {
-            return getPower(base, exponent - 1) * base;
-        }
-        return 1;
     }
 
     public void trainModel(ArrayList<Sequence> inputSequences) {
         this.inputSequences = inputSequences;
         for (Sequence sequence : inputSequences) {
             if (!sequence.isEmpty()) {
-                for (Playable playable : sequence.getSequence()) {
-                    // Update table:
-                    if (trainStream.isEmpty()) {
-                        // Update initial chord
-                        markovTable[0][playable.getMarkovInteger()]++;   //Updates count
-                        markovTable[0][length]++;   // Updates total
-                    } else {
-                        // Normal table update
-                        for (int i = 1; i <= trainStream.size(); i++) {
-                            updateTable(i, playable);
-                        }
-                    }
-
-                    //Record chord onto stream
-                    recordPlayable(trainStream, playable);
-                    
-                    //Just for the record
-                    allPlayablesRecorded++;
+                int[] markovSequence = sequence.getMarkovIntegerArray();
+                //Update tree at each new playable
+                for (int i = 0; i < sequence.getSize() - depth; i++) {
+                    rootInstance.updateTree(markovSequence, i);
                 }
-                trainStream.clear();
-            } else {
-                emptyInputSequences++;
             }
         }
     }
-
-    private void recordPlayable(Queue<Playable> stream, Playable playable) {
-        if (stream.size() >= depth) {
-            stream.remove();
+    
+    public void liveRecord(Playable playable) {
+        if (liveStream.size() == depth-1) {
+            liveStream.remove();
         }
-        stream.add(playable);
+        liveStream.add(playable);
     }
-
-    public void livePush(Playable playable) {
-        recordPlayable(liveStream, playable);
-    }
-
-    public void liveFlush() {
-        liveStream.clear();
-    }
-
-    private void updateTable(int updateDepth, Playable newPlayable) {
-        int[] streamIntArray = getPartialStreamIntArray(updateDepth, trainStream);
-        int row = getMarkovRowUsingDaFormula(streamIntArray);
-        markovTable[row][newPlayable.getMarkovInteger()]++;
-        markovTable[row][length]++;
-    }
-
-    private int[] getPartialStreamIntArray(int windowSize, Queue<Playable> stream) {
-        Object[] streamArray = stream.toArray();
-        int[] streamIntArray = new int[windowSize];
-        for (int i = 0; i < windowSize; i++) {
-            streamIntArray[i] = ((Playable) streamArray[i + (streamArray.length - windowSize)]).getMarkovInteger();
-        }
-        return streamIntArray;
-    }
-
-    private int getMarkovRowUsingDaFormula(int[] inputArray) {
-        int row = 0;
-        for (int i = 0; i < inputArray.length; i++) {
-            // Da Markov formula
-            row += (1 + inputArray[i]) * getPower(length, inputArray.length - i - 1);
-        }
-        return row;
-    }
-
-    public ArrayList<Playable> getSortedPlayables(int queryDepth) {
-        if (queryDepth > depth) { // -1 ?
-            //Error. Query depth cannot be larger than model depth
+    
+    //TO FIX!!!
+    public Collection<Playable> getSortedProbabilitiesForLiveStream(int depth) {
+        if (depth > this.depth-1) {
+            //Error.
             return null;
         }
-
-        ArrayList<Playable> result = new ArrayList<>();
-        int[] streamIntArray = getPartialStreamIntArray(queryDepth, liveStream);
-        int row = getMarkovRowUsingDaFormula(streamIntArray);
-        for (int i = 0; i < length; i++) {
-            Playable newElement = modelType.getNewPlayableFromMarkovNumeric(i);
-            newElement.setProbability((double) markovTable[row][i] / (double) markovTable[row][length]);
-            newElement.setCount(markovTable[row][i]);
-            newElement.setTotal(markovTable[row][length]);
-            result.add(newElement);
+        Object[] streamArray = liveStream.toArray();
+        int[] streamIntArray = new int[streamArray.length];
+        for (int i = 0; i < streamArray.length; i++) {
+            streamIntArray[i] = ((Playable)streamArray[i]).getMarkovInteger();
         }
-        Collections.sort(result);
-        return result;
-
+        double[] probabilities = rootInstance.getProbabilities(streamIntArray, depth);
+        Collection<Playable> = new Collection<>();
+        
     }
 
-    public void printSortedPlayables(int queryDepth) {
-        System.out.println("Sorted probabilities for live sequence with depth " + queryDepth);
-        Collection<Playable> markovOutput = getSortedPlayables(queryDepth);
-        for (Playable playable : markovOutput) {
-            System.out.println(((Chord) playable).getNameAndProbability() + " (" + playable.getCount() + " out of " + playable.getTotal() + ")");
+    public Sequence getAllInputSequences() {
+        Sequence outputPlayables = new Sequence(playableType);
+        for (Sequence sequence : inputSequences) {
+            ArrayList<Playable> subList = sequence.getSequence();
+            for (Playable playable : subList) {
+                outputPlayables.addPlayable(playable);
+            }
         }
+        return outputPlayables;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append("Markov Model Table:\n\t\t");
-        //Headings
-        for (int i = 0; i < length; i++) {
-            result.append(modelType.getNewPlayableFromMarkovNumeric(i).toString());
-            result.append("\t");
-        }
-        result.append("Total \nInitial\t\t");
-
-        //Table
-        for (int i = 0; i < markovTable.length; i++) {
-            if (i == 0) {
-                for (int j = 0; j <= length; j++) {
-                    result.append(markovTable[0][j]);
-                    result.append("\t");
-                }
-                result.append("\n");
-                continue;
-            }
-
-
-            int row = i - 1;
-            if (row < length) {
-                result.append(modelType.getNewPlayableFromMarkovNumeric(row));
-            } else {
-                result.append(row);
-            }
-
-
-            result.append("\t\t");
-            for (int j = 0; j <= length; j++) {
-                result.append(markovTable[i][j]);
-                result.append("\t");
-            }
-            result.append("\n");
-        }
-        return result.toString();
+    public Sequence getInputSequence(int number) {
+        return inputSequences.get(number);
     }
 
-    public void printAllInputSequeces() {
+    public String printAllInputSequeces() {
         String result = "Input sequences:\n";
         for (int i = 0; i < inputSequences.size(); i++) {
             ArrayList<Playable> subList = inputSequences.get(i).getSequence();
@@ -214,26 +98,12 @@ public class MarkovModel {
             }
             result += "<End>\n";
         }
-        System.out.println(result);
+        return result;
     }
 
-    public int getEmptyInputSequenceCount() {
-        return emptyInputSequences;
-    }
+    public Sequence getTestSequence() {
+        // TODO!
 
-    public int getTableSize() {
-        return markovTable.length;
-    }
-    
-    public int getAllPlayablesRecorded() {
-        return allPlayablesRecorded;
-    }
-
-    public void testMethod() {
-        int testSum = 0;
-        for (int i = 1; i <= 5000; i++) {
-            testSum += markovTable[markovTable.length - i][length];
-        }
-        //System.out.println("Last 5000 elements total:" + testSum);
+        return getAllInputSequences();
     }
 }

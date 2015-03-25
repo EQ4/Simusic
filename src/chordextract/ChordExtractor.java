@@ -26,7 +26,7 @@ public class ChordExtractor {
         ArrayList<Sequence> fullSequence = new ArrayList<>();
 
         for (int i = 0; i < files.length; i++) {
-            Sequence normalizedSequence = new Sequence();
+            Sequence normalizedSequence = new Sequence(Playable.Type.CHORD);
             try {
                 if (files[i].isFile()) {
                     String file = files[i].getPath();
@@ -35,8 +35,7 @@ public class ChordExtractor {
 
                     ArrayList<Chord> sequence = ce.getSequence();
                     if (sequence.isEmpty()) {
-                        //Commented out - the Markov model handles and records empty sequences
-                        //continue;
+                        continue;
                     }
                     Chord songKey = getMainKey(sequence);
 

@@ -11,42 +11,35 @@ import elements.Sequence;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static final int markovDepth = 3;
 
-        //Extract chords
+    public static void main(String[] args) {
         ArrayList<Sequence> chords = ChordExtractor.extractChordsFromMidiFiles("D:\\Desktop\\Dissertation\\MIDI-Live\\");
 
-        //Generate markov model
-        MarkovModel markovModel = new MarkovModel(3, new Chord());
+        MarkovModel markovModel = new MarkovModel(markovDepth, Playable.Type.CHORD);
         markovModel.trainModel(chords);
+        Sequence markovOutput = markovModel.getTestSequence();
 
-        //Add chords to live sequence
-        markovModel.livePush(new Chord("G", "maj"));
-        markovModel.livePush(new Chord("F", "maj"));
-        markovModel.livePush(new Chord("C", "maj"));
-        markovModel.livePush(new Chord("A", "min"));
 
-        //Print probabilities
-        markovModel.printSortedPlayables(3);
 
-        //Print table
-        //System.out.println(markovModel.toString());
+        for (Playable playable : markovOutput.getSequence()) {
+            //System.out.println(((Chord) playable).getNameAndProbability());
+        }
+
+        System.out.println(markovModel.printAllInputSequeces());
         
-        //Print table size
-        System.out.println("Model length: " + markovModel.getTableSize());
-        
-        // Test Markov
-        markovModel.testMethod();
+        System.exit(1);
+
+
+
 
         //Todo: Make player accept sequence objects.
-        /*
-         Player player = new Player();
-         Arpeggiator arp = new Arpeggiator(player);
-         for (Playable playable : markovOutput) {
-         arp.addArpeggio((Chord) playable);
-         }
-         arp.play();
-         */
+        Player player = new Player();
+        Arpeggiator arp = new Arpeggiator(player);
+        for (Playable playable : markovOutput.getSequence()) {
+            arp.addArpeggio((Chord) playable);
+        }
+        arp.play();
 
     }
 }

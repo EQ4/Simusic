@@ -15,15 +15,24 @@ public abstract class Playable implements Comparable {
         CHORD, NOTE
     }
 
-    
+    public static Playable getPlayableFromMarkovNumeric(int numeric, Type type) {
+        switch (type) {
+            case CHORD:
+                String letter = Note.integerToNote(numeric % 12);
+                String mode = (numeric >= 12) ? "maj" : "min";
+                return new Chord(letter, mode);
+            case NOTE:
+                return new Note(Note.integerToNote(numeric));
+            default:
+                break;
+        }
+        return null;
+    }
     static final int probabilityCompareMultiplyFactor = 10000;
     static final int probabilityRoundValue = 1000;
     
     private double probability = -1;
     private boolean hasProbability = false;
-    
-    private int count = 0;
-    private int total = 0;
 
     public void setProbability(double probability) {
         this.probability = probability;
@@ -41,27 +50,9 @@ public abstract class Playable implements Comparable {
         }
         return probability;
     }
-    
-    public void setCount(int count) {
-        this.count = count;
-    }
-    
-    public int getCount() {
-        return count;
-    }
-    
-    public void setTotal(int total) {
-        this.total = total;
-    }
-    
-    public int getTotal() {
-        return total;
-    }
 
     public abstract int getMarkovInteger();
-    public abstract int getMaximumMarkovInteger();
-    public abstract Playable getNewPlayableFromMarkovNumeric(int numeric);
-    public abstract String getType();
+
     @Override
     public abstract String toString();
 
@@ -71,7 +62,6 @@ public abstract class Playable implements Comparable {
         double compareProbability = compareCast.getProbability();
         return ((int) (compareProbability * probabilityCompareMultiplyFactor)) - ((int) (this.probability * probabilityCompareMultiplyFactor));
     }
-    
 
     public Double getRoundedProbability() {
         return (double) Math.round(getProbability() * probabilityRoundValue) / probabilityRoundValue;
