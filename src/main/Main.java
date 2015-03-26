@@ -5,16 +5,27 @@ import elements.Chord;
 import java.util.*;
 import org.jfugue.player.Player;
 import markov.MarkovModel;
-import chordextract.ChordExtractor;
+import extractors.chord.ChordExtractor;
 import elements.Playable;
 import elements.Sequence;
+import extractors.feature.FeatureExtractor;
 
 public class Main {
 
     public static void main(String[] args) {
-
+        
+        //Get paths from args? (todo)
+        //String midiPath = args[0];
+        //String featurePath = args[1];
+        
+        String midiPath = "D:\\Desktop\\Dissertation\\_runtime\\midi_less\\";
+        String featurePath = "D:\\Desktop\\Dissertation\\_runtime\\features\\";
+        
         //Extract chords
-        ArrayList<Sequence> chords = ChordExtractor.extractChordsFromMidiFiles("D:\\Desktop\\Dissertation\\MIDI-Live\\");
+        ArrayList<Sequence> chords = ChordExtractor.extractChordsFromMidiFiles(midiPath);
+        
+        //Extract features
+        FeatureExtractor fextract = new FeatureExtractor(midiPath, featurePath);
 
         //Generate markov model
         MarkovModel markovModel = new MarkovModel(3, new Chord());
