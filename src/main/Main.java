@@ -26,7 +26,10 @@ public class Main {
         
         //Extract features
         FeatureExtractor fextract = new FeatureExtractor(midiPath, featurePath);
-
+        
+        //Print Amount of Arpeggiation feature of second song
+        fextract.printFeature(0, "Amount of Arpeggiation");
+        
         //Generate markov model
         MarkovModel markovModel = new MarkovModel(3, new Chord());
         markovModel.trainModel(chords);
@@ -38,13 +41,13 @@ public class Main {
         markovModel.livePush(new Chord("A", "min"));
 
         //Print probabilities
-        markovModel.printSortedPlayables(3);
+        //markovModel.printSortedPlayables(3);
 
         //Print table
         //System.out.println(markovModel.toString());
         
         //Print table size
-        System.out.println("Model length: " + markovModel.getTableSize());
+        //System.out.println("Model length: " + markovModel.getTableSize());
         
         // Test Markov
         markovModel.testMethod();
