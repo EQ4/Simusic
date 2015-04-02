@@ -11,8 +11,7 @@ import jade.lang.acl.*;
 import jade.wrapper.*;
 import java.io.File;
 import java.io.FileFilter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import test.RunTests;
 
 /**
  *
@@ -38,7 +37,8 @@ public class Studio extends Agent {
         AgentContainer c = getContainerController();
         for (int i = 0; i < folders.length; i++) {
             try {
-                Object[] agentArgs = new Object[]{folders[i].getPath()};
+                String maxMarkovLevel = RunTests.maxMarkovHarmonyLevel + "";
+                Object[] agentArgs = new Object[]{folders[i].getPath(), (String)getName(), (String)maxMarkovLevel};
                 AgentController a = c.createNewAgent(folders[i].getName(), "agents.Performer", agentArgs);
                 a.start();
                 performerGUIDs[i] = a.getName();
@@ -47,21 +47,25 @@ public class Studio extends Agent {
             }
         }
 
-        //Add behaviour
+        //Add message behaviour
         addBehaviour(new CyclicBehaviour(this) {
             @Override
             public void action() {
-                try {
-                    System.out.println("Studio: Sending messages to performers...");
-                    for (String performerGUID : performerGUIDs) {
-                        //Send a test message to the performer
-                        send(agents.Services.SendMessage(performerGUID, "Hi from the studio!"));
-                    }
-                    Thread.sleep(2000);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Studio.class.getName()).log(Level.SEVERE, null, ex);
+                ACLMessage incomingMessage = blockingReceive();
+                if (incomingMessage != null) {
+                    System.out.println(getLocalName() + ": I received '" + incomingMessage.getContent() + "' from " + incomingMessage.getSender().getLocalName());
                 }
             }
         });
+        
+        //sendTestMessageToPerformers();
+    }
+
+    void sendTestMessageToPerformers() {
+        System.out.println("Studio: Sending test messages to performers...");
+        for (String performerGUID : performerGUIDs) {
+            //Send a test message to the performer
+            send(agents.Services.SendMessage(performerGUID, "Hi from the studio!"));
+        }
     }
 }

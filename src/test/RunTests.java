@@ -12,6 +12,9 @@ import elements.Sequence;
 import extractors.feature.FeatureExtractor;
 
 public class RunTests {
+    
+    //Config vars - TO BE CUSTOMIZED BY USER IN GUI!
+    public static final int maxMarkovHarmonyLevel = 4;
 
     //Main agent directory
     static String agentsPath = "D:\\Desktop\\Dissertation\\_agents\\";
