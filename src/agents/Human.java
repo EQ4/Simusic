@@ -2,11 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package services;
+package agents;
 
 /**
  *
  * @author Martin
  */
-public class Services {
+public class Human {
+    
 }

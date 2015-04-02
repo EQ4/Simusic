@@ -216,6 +216,14 @@ public class MarkovModel {
         }
         System.out.println(result);
     }
+    
+    public ArrayList<Playable> getAllInputSequences() {
+        ArrayList<Playable> result = new ArrayList<>();
+        for (Sequence sequence: inputSequences) {
+            result.addAll(sequence.getSequence());
+        }
+        return result;
+    }
 
     public int getEmptyInputSequenceCount() {
         return emptyInputSequences;

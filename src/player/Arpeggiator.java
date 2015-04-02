@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package arpeggiator;
+package player;
 
 import elements.Chord;
 import java.util.Random;

@@ -25,7 +25,11 @@ public class ChordExtractor {
 
         ArrayList<Sequence> fullSequence = new ArrayList<>();
 
+        System.out.println("Extracting chords from " + files.length + " files...");
         for (int i = 0; i < files.length; i++) {
+            
+            System.out.println("\t" + (i + 1) + "/" + files.length);
+            
             Sequence normalizedSequence = new Sequence();
             try {
                 if (files[i].isFile()) {
@@ -36,7 +40,8 @@ public class ChordExtractor {
                     ArrayList<Chord> sequence = ce.getSequence();
                     if (sequence.isEmpty()) {
                         //Commented out - the Markov model handles and records empty sequences
-                        //continue;
+                        //Commented in  - exception occurs
+                        continue;
                     }
                     Chord songKey = getMainKey(sequence);
 
@@ -54,12 +59,14 @@ public class ChordExtractor {
 
                 }
             } catch (Exception e) {
-                System.out.println("Chord Extractor: " + e.getMessage());
+                System.out.println("Chord Extractor exception.");
+                e.printStackTrace();
             }
             fullSequence.add(normalizedSequence);
         }
 
 
+        System.out.println("Done!");
 
         return fullSequence;
 
