@@ -20,6 +20,7 @@ import test.RunTests;
 public class Studio extends Agent {
 
     String[] performerGUIDs;
+    int performerCounter = 0;
 
     @Override
     protected void setup() {
@@ -38,7 +39,7 @@ public class Studio extends Agent {
         for (int i = 0; i < folders.length; i++) {
             try {
                 String maxMarkovLevel = RunTests.maxMarkovHarmonyLevel + "";
-                Object[] agentArgs = new Object[]{folders[i].getPath(), (String)getName(), (String)maxMarkovLevel};
+                Object[] agentArgs = new Object[]{folders[i].getPath(), (String) getName(), (String) maxMarkovLevel};
                 AgentController a = c.createNewAgent(folders[i].getName(), "agents.Performer", agentArgs);
                 a.start();
                 performerGUIDs[i] = a.getName();
@@ -53,19 +54,56 @@ public class Studio extends Agent {
             public void action() {
                 ACLMessage incomingMessage = blockingReceive();
                 if (incomingMessage != null) {
-                    System.out.println(getLocalName() + ": I received '" + incomingMessage.getContent() + "' from " + incomingMessage.getSender().getLocalName());
+                    String msg = incomingMessage.getContent();
+                    if (msg.contains("load_finished")) {
+                        loadPerformer(performerCounter++);
+                    }
                 }
             }
         });
-        
-        //sendTestMessageToPerformers();
+
+        loadPerformer(performerCounter++);
+
     }
 
-    void sendTestMessageToPerformers() {
-        System.out.println("Studio: Sending test messages to performers...");
-        for (String performerGUID : performerGUIDs) {
-            //Send a test message to the performer
-            send(agents.Services.SendMessage(performerGUID, "Hi from the studio!"));
+    void loadPerformer(int performer) {
+        if (performer < performerGUIDs.length) {
+            System.out.println("Studio: Starting " + performerGUIDs[performer] + "...");
+            send(agents.Services.SendMessage(performerGUIDs[performer], "load_yourself"));
+        } else {
+            System.out.println("Studio: All performers have finished loading.");
+            
+            //Once all performers have loaded, call:
+            startSession();
+        }
+    }
+
+    void startSession() {
+        //Play simultaneous clicks
+        for (int i = 0; i < 12; i++) {
+            clickTest();
+            wait(1000);
+        }
+    }
+
+    void clickTest() {
+        for (String performer : performerGUIDs) {
+            send(agents.Services.SendMessage(performer, "play_test_click"));
+        }
+    }
+
+    void countTest() {
+        for (String performer : performerGUIDs) {
+            send(agents.Services.SendMessage(performer, "play_test_count"));
+            wait(1000);
+        }
+    }
+
+    void wait(int milliSeconds) {
+        try {
+            Thread.sleep(milliSeconds);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

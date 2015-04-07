@@ -10,12 +10,15 @@ import extractors.chord.ChordExtractor;
 import elements.Playable;
 import elements.Sequence;
 import extractors.feature.FeatureExtractor;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
 
 public class RunTests {
-    
+
     //Config vars - TO BE CUSTOMIZED BY USER IN GUI!
     public static final int maxMarkovHarmonyLevel = 4;
-
     //Main agent directory
     static String agentsPath = "D:\\Desktop\\Dissertation\\_agents\\";
     //Obsolete
@@ -27,6 +30,8 @@ public class RunTests {
 
     public static void main(String[] args) {
         testAgents();
+
+        //Deprecated:
         //testMarkov();
         //testFeatures();
         //testPlayer();

@@ -99,6 +99,9 @@ public class FeatureExtractor {
             }
 
         }
+        
+        
+        System.out.println("Done!");
     }
 
     public double getFeatureValue(int songNumber, String featureName) {
