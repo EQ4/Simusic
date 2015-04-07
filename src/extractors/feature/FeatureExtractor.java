@@ -20,6 +20,7 @@ public class FeatureExtractor {
     String midiPath;
     String featurePath;
     HashMap<String, ArrayList<Double>> mapOfSongListsOfFeatures;
+    HashMap<String, Double> mapOfAverageFeatures;
     ArrayList<String> listOfSongNames;
     int numberOfSongs;
 
@@ -27,6 +28,7 @@ public class FeatureExtractor {
         this.midiPath = midiPath;
         this.featurePath = featurePath;
         this.mapOfSongListsOfFeatures = new HashMap<>();
+        mapOfAverageFeatures = new HashMap<>();
         this.listOfSongNames = new ArrayList<>();
         this.numberOfSongs = 0;
 
@@ -36,14 +38,14 @@ public class FeatureExtractor {
 
         System.out.println("Extracting features from " + files.length + " files...");
         int counter = 0;
-        
-        
+
+
         for (File file : files) {
 
             if (!file.isFile()) {
                 continue;
             }
-            
+
             System.out.println("\t" + ++counter + "/" + files.length);
 
             try {
@@ -94,19 +96,29 @@ public class FeatureExtractor {
                 //Increment song number
                 numberOfSongs++;
 
+                //Populate average feature hashmap
+                for (Map.Entry<String, ArrayList<Double>> entry : mapOfSongListsOfFeatures.entrySet()) {
+                    mapOfAverageFeatures.put(entry.getKey(), calculateAverage(entry.getValue()));
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
         }
-        
-        
+
+
         System.out.println("Done!");
     }
 
     public double getFeatureValue(int songNumber, String featureName) {
         //return listOfSongMapsOfFeatures.get(songNumber).get(featureName);
         return mapOfSongListsOfFeatures.get(featureName).get(songNumber);
+    }
+
+    public double getAverageFeatureValue(String featureName) {
+        //return listOfSongMapsOfFeatures.get(songNumber).get(featureName);
+        return mapOfAverageFeatures.get(featureName);
     }
 
     public String getSongName(int songNumber) {
@@ -119,14 +131,6 @@ public class FeatureExtractor {
 
     public int getNumberOfSongs() {
         return numberOfSongs;
-    }
-
-    public HashMap<String, Double> computeAverageFeatures() {
-        HashMap<String, Double> result = new HashMap<>();
-        for (Map.Entry<String, ArrayList<Double>> entry : mapOfSongListsOfFeatures.entrySet()) {
-            result.put(entry.getKey(), calculateAverage(entry.getValue()));
-        }
-        return result;
     }
 
     private Double calculateAverage(ArrayList<Double> list) {
@@ -142,8 +146,7 @@ public class FeatureExtractor {
 
     public void printAverageFeatures() {
         System.out.println("Printing average features:");
-        HashMap<String, Double> averageMap = computeAverageFeatures();
-        for (Map.Entry<String, Double> entry : averageMap.entrySet()) {
+        for (Map.Entry<String, Double> entry : mapOfAverageFeatures.entrySet()) {
             System.out.println("\t" + entry.getKey() + " - " + entry.getValue());
         }
     }

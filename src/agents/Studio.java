@@ -11,6 +11,9 @@ import jade.lang.acl.*;
 import jade.wrapper.*;
 import java.io.File;
 import java.io.FileFilter;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 import test.RunTests;
 
 /**
@@ -20,10 +23,12 @@ import test.RunTests;
 public class Studio extends Agent {
 
     String[] performerGUIDs;
-    int performerCounter = 0;
+    List<Double> averageInitialTempos;
+    int performerCounter;
 
     @Override
     protected void setup() {
+        //Create agents from agent directory
         Object[] args = getArguments();
         FileFilter directoryFilter = new FileFilter() {
             @Override
@@ -34,7 +39,10 @@ public class Studio extends Agent {
         File mainFolder = new File((String) args[0]);
         File[] folders = mainFolder.listFiles(directoryFilter);
 
+        //Initialize vars
         performerGUIDs = new String[folders.length];
+        averageInitialTempos = new LinkedList<>();
+
         AgentContainer c = getContainerController();
         for (int i = 0; i < folders.length; i++) {
             try {
@@ -58,10 +66,19 @@ public class Studio extends Agent {
                     if (msg.contains("load_finished")) {
                         loadPerformer(performerCounter++);
                     }
+                    if (msg.contains("initial_tempo=")) {
+                        averageInitialTempos.add(Double.parseDouble(msg.split("=")[1]));
+                        //Check if last agent's tempo
+                        if (averageInitialTempos.size() == performerGUIDs.length) {
+                            initialTempoReady();
+                        }
+                    }
                 }
             }
         });
 
+        //Start performer load chain
+        performerCounter = 0;
         loadPerformer(performerCounter++);
 
     }
@@ -72,20 +89,52 @@ public class Studio extends Agent {
             send(agents.Services.SendMessage(performerGUIDs[performer], "load_yourself"));
         } else {
             System.out.println("Studio: All performers have finished loading.");
-            
+
             //Once all performers have loaded, call:
-            startSession();
+            getInitialTempo();
         }
     }
 
-    void startSession() {
-        //Play simultaneous clicks
-        for (int i = 0; i < 12; i++) {
-            clickTest();
-            wait(1000);
+    void getInitialTempo() {
+        performerCounter = 0;
+        while (performerCounter < performerGUIDs.length) {
+            send(agents.Services.SendMessage(performerGUIDs[performerCounter++], "get_initial_tempo"));
         }
     }
 
+    void initialTempoReady() {
+        printAverageInitialTempo();
+    }
+
+    //Tool methods:
+    double getAverageInitialTempo() {
+        double sum = 0;
+        ListIterator<Double> listIterator = averageInitialTempos.listIterator();
+        while (listIterator.hasNext()) {
+            sum += listIterator.next();
+        }
+        return (sum / (double) averageInitialTempos.size());
+    }
+
+    void wait(int milliSeconds) {
+        try {
+            Thread.sleep(milliSeconds);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //Print methods
+    void printAverageInitialTempo() {
+        System.out.print("Studio: Initial tempo is " + getAverageInitialTempo() + "(");
+        ListIterator<Double> listIterator = averageInitialTempos.listIterator();
+        while (listIterator.hasNext()) {
+            System.out.print(listIterator.next() + ", ");
+        }
+        System.out.println(")");
+    }
+
+    //Test methods
     void clickTest() {
         for (String performer : performerGUIDs) {
             send(agents.Services.SendMessage(performer, "play_test_click"));
@@ -96,14 +145,6 @@ public class Studio extends Agent {
         for (String performer : performerGUIDs) {
             send(agents.Services.SendMessage(performer, "play_test_count"));
             wait(1000);
-        }
-    }
-
-    void wait(int milliSeconds) {
-        try {
-            Thread.sleep(milliSeconds);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

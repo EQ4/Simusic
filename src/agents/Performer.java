@@ -63,6 +63,9 @@ public class Performer extends Agent {
                     if (msg.equals("play_test_click")) {
                         playTestClick();
                     }
+                    if (msg.equals("get_initial_tempo")) {
+                        send(agents.Services.SendMessage(studioAddress, "initial_tempo=" + fextract.getAverageFeatureValue("Initial Tempo")));
+                    }
                 }
             }
         });
@@ -80,7 +83,7 @@ public class Performer extends Agent {
         markovHarmonyModel.trainModel(chords);
 
         //Extract features
-        //fextract = new FeatureExtractor(midiPath, featurePath);
+        fextract = new FeatureExtractor(midiPath, featurePath);
     }
 
     private void playTestCount() {
