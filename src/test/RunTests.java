@@ -66,7 +66,7 @@ public class RunTests {
 
     static void testFeatures() {
         //Extract features
-        FeatureExtractor fextract = new FeatureExtractor(midiPath, featurePath);
+        FeatureExtractor fextract = new FeatureExtractor(midiPath, featurePath, true);
 
         //Print all average features
         fextract.printAverageFeatures();

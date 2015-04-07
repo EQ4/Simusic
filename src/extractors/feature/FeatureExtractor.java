@@ -24,7 +24,7 @@ public class FeatureExtractor {
     ArrayList<String> listOfSongNames;
     int numberOfSongs;
 
-    public FeatureExtractor(String midiPath, String featurePath) {
+    public FeatureExtractor(String midiPath, String featurePath, boolean overwrite) {
         this.midiPath = midiPath;
         this.featurePath = featurePath;
         this.mapOfSongListsOfFeatures = new HashMap<>();
@@ -39,22 +39,43 @@ public class FeatureExtractor {
         System.out.println("Extracting features from " + files.length + " files...");
         int counter = 0;
 
-
+        //Write loop
         for (File file : files) {
 
             if (!file.isFile()) {
                 continue;
             }
 
-            System.out.println("\t" + ++counter + "/" + files.length);
 
             try {
+
+                //If not (overwrite), check if xml already exists
+                if (!overwrite) {
+                    File f = new File(featurePath + file.getName() + ".xml");
+                    if (f.exists() && !f.isDirectory()) {
+                        System.out.println("\t" + ++counter + "/" + files.length + " - XML already exsists");
+                        continue;
+                    }
+                }
+                
+                System.out.println("\t" + ++counter + "/" + files.length);
 
                 //Extract features to XML
                 CommandLine.extractFeatures(
                         file.getCanonicalPath(),
                         featurePath + file.getName() + ".xml",
                         featurePath + file.getName() + "_def.xml", false);
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        //Read loop
+        for (File file : files) {
+            try {
 
                 //Store features from XML to hashmap
                 File xmlFile = new File(featurePath + file.getName() + ".xml");
@@ -100,15 +121,12 @@ public class FeatureExtractor {
                 for (Map.Entry<String, ArrayList<Double>> entry : mapOfSongListsOfFeatures.entrySet()) {
                     mapOfAverageFeatures.put(entry.getKey(), calculateAverage(entry.getValue()));
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
 
-
-        System.out.println("Done!");
+        System.out.println("Features extracted!");
     }
 
     public double getFeatureValue(int songNumber, String featureName) {

@@ -83,7 +83,7 @@ public class Performer extends Agent {
         markovHarmonyModel.trainModel(chords);
 
         //Extract features
-        fextract = new FeatureExtractor(midiPath, featurePath);
+        fextract = new FeatureExtractor(midiPath, featurePath, false);
     }
 
     private void playTestCount() {
