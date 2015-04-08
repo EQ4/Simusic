@@ -21,13 +21,13 @@ import test.RunTests;
  * @author Martin
  */
 public class Studio extends Agent {
-    
+
     String[] performerGUIDs;
     List<Double> averageInitialTempos;
     int performerCounter;
     int initialTempo;
     int beatDelay;
-    
+
     @Override
     protected void setup() {
         //Create agents from agent directory
@@ -44,7 +44,7 @@ public class Studio extends Agent {
         //Initialize vars
         performerGUIDs = new String[folders.length];
         averageInitialTempos = new LinkedList<>();
-        
+
         AgentContainer c = getContainerController();
         for (int i = 0; i < folders.length; i++) {
             try {
@@ -82,9 +82,9 @@ public class Studio extends Agent {
         //Start performer load chain
         performerCounter = 0;
         loadPerformer(performerCounter++);
-        
+
     }
-    
+
     void loadPerformer(int performer) {
         if (performer < performerGUIDs.length) {
             System.out.println("Studio: Starting " + performerGUIDs[performer] + "...");
@@ -96,18 +96,18 @@ public class Studio extends Agent {
             getInitialTempo();
         }
     }
-    
+
     void getInitialTempo() {
         performerCounter = 0;
         while (performerCounter < performerGUIDs.length) {
             send(agents.Services.SendMessage(performerGUIDs[performerCounter++], "get_initial_tempo"));
         }
     }
-    
+
     void initialTempoReady() {
-        initialTempo = (int)getAverageInitialTempo();
+        initialTempo = (int) getAverageInitialTempo();
         beatDelay = 60000 / initialTempo;
-        
+
         runInfiniteTest();
     }
 
@@ -120,13 +120,22 @@ public class Studio extends Agent {
         }
         return (sum / (double) averageInitialTempos.size());
     }
-    
+
     void wait(int milliSeconds) {
+
         try {
             Thread.sleep(milliSeconds);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        /*
+         long now = System.currentTimeMillis();
+         long end = now + milliSeconds;
+         while (now < end) {
+         now = System.currentTimeMillis();
+         }
+         */
     }
 
     //Print methods
@@ -145,18 +154,18 @@ public class Studio extends Agent {
             send(agents.Services.SendMessage(performer, "play_test_click"));
         }
     }
-    
+
     void countTest() {
         for (String performer : performerGUIDs) {
             send(agents.Services.SendMessage(performer, "play_test_count"));
             wait(1000);
         }
     }
-    
+
     void runInfiniteTest() {
         while (true) {
             clickTest();
-            wait(beatDelay/4);
+            wait(beatDelay / 4);
         }
     }
 }

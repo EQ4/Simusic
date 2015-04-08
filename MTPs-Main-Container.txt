@@ -1,1 +1,1 @@
-http://Dellissimo:7778/acc
+http://Delissimo:7778/acc

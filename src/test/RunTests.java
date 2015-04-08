@@ -20,10 +20,12 @@ public class RunTests {
     //Config vars - TO BE CUSTOMIZED BY USER IN GUI!
     public static final int maxMarkovHarmonyLevel = 4;
     //Main agent directory
-    static String agentsPath = "D:\\Desktop\\Dissertation\\_agents\\";
+    static String agentsPath = "E:\\Desktop\\Dissertation\\_agents\\";
+    public static String clickPath = "E:\\Desktop\\Dissertation\\_runtime\\click_sounds\\";
+    
     //Obsolete
-    static String midiPath = "D:\\Desktop\\Dissertation\\_runtime\\midi_mid\\";
-    static String featurePath = "D:\\Desktop\\Dissertation\\_runtime\\features\\";
+    static String midiPath = "E:\\Desktop\\Dissertation\\_runtime\\midi_mid\\";
+    static String featurePath = "E:\\Desktop\\Dissertation\\_runtime\\features\\";
     //Used for test class
     static ArrayList<Sequence> chords;
     static MarkovModel markovModel;

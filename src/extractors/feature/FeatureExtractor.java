@@ -42,13 +42,12 @@ public class FeatureExtractor {
         //Write loop
         for (File file : files) {
 
+            //Ignore folders
             if (!file.isFile()) {
                 continue;
             }
 
-
             try {
-
                 //If not (overwrite), check if xml already exists
                 if (!overwrite) {
                     File f = new File(featurePath + file.getName() + ".xml");
