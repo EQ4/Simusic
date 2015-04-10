@@ -14,7 +14,13 @@ import java.io.FileFilter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import test.RunTests;
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  *
@@ -22,9 +28,14 @@ import test.RunTests;
  */
 public class Studio extends Agent {
 
+    public final int NUMBER_OF_PING_MESSAGES = 10;
+
     String[] performerGUIDs;
     List<Double> averageInitialTempos;
     int performerCounter;
+    int pingMessageCounter;
+    long pingSendTimeFlag;
+    String pongLog = "Performer pong log:\n";
     int initialTempo;
     int beatDelay;
 
@@ -66,7 +77,12 @@ public class Studio extends Agent {
                 if (incomingMessage != null) {
                     String msg = incomingMessage.getContent();
                     if (msg.contains("load_finished")) {
-                        loadPerformer(performerCounter++);
+                        //Once all agents have loaded, the loadPerformer calls next method in loading chain
+                        loadPerformer();
+                    }
+                    if (msg.contains("pong")) {
+                        pongLog += incomingMessage.getSender().getLocalName() + " pongs after " + (System.currentTimeMillis() - pingSendTimeFlag) + "\n";
+                        pingPerformer();
                     }
                     if (msg.contains("initial_tempo=")) {
                         averageInitialTempos.add(Double.parseDouble(msg.split("=")[1]));
@@ -81,19 +97,41 @@ public class Studio extends Agent {
 
         //Start performer load chain
         performerCounter = 0;
-        loadPerformer(performerCounter++);
+        loadPerformer();
 
     }
 
-    void loadPerformer(int performer) {
-        if (performer < performerGUIDs.length) {
-            System.out.println("Studio: Starting " + performerGUIDs[performer] + "...");
-            send(agents.Services.SendMessage(performerGUIDs[performer], "load_yourself"));
+    void loadPerformer() {
+        if (performerCounter < performerGUIDs.length) {
+            System.out.println("Studio: Starting " + performerGUIDs[performerCounter] + "...");
+            send(agents.Services.SendMessage(performerGUIDs[performerCounter], "load_yourself"));
+            performerCounter++;
         } else {
             System.out.println("Studio: All performers have finished loading.");
 
-            //Once all performers have loaded, call:
-            getInitialTempo();
+            //Once all performers have loaded, call next method in chain:
+            performerCounter = 0;
+            pingMessageCounter = 0;
+            pingPerformer();
+        }
+    }
+
+    void pingPerformer() {
+        if (pingMessageCounter < NUMBER_OF_PING_MESSAGES) {
+            wait(100);
+            pingSendTimeFlag = System.currentTimeMillis();
+            send(agents.Services.SendMessage(performerGUIDs[performerCounter], "ping"));
+            pingMessageCounter++;
+        } else {
+             if (performerCounter < performerGUIDs.length - 1) {
+                 pingMessageCounter = 0;
+                 performerCounter++;
+                 pingPerformer();
+             }
+             else {
+                 //Once done, continue chain:
+                 getInitialTempo();
+             }
         }
     }
 
@@ -108,7 +146,24 @@ public class Studio extends Agent {
         initialTempo = (int) getAverageInitialTempo();
         beatDelay = 60000 / initialTempo;
 
-        runInfiniteTest();
+        //DONE FLAG!
+        System.out.println(pongLog);
+    }
+
+    public void schedleTicker(long delay) {
+        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(124);
+
+        ScheduledFuture scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        clickTest();
+                    }
+                },
+                delay,
+                delay,
+                TimeUnit.MILLISECONDS
+        );
     }
 
     //Tool methods:
@@ -122,20 +177,11 @@ public class Studio extends Agent {
     }
 
     void wait(int milliSeconds) {
-
         try {
             Thread.sleep(milliSeconds);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        /*
-         long now = System.currentTimeMillis();
-         long end = now + milliSeconds;
-         while (now < end) {
-         now = System.currentTimeMillis();
-         }
-         */
     }
 
     //Print methods
@@ -159,13 +205,6 @@ public class Studio extends Agent {
         for (String performer : performerGUIDs) {
             send(agents.Services.SendMessage(performer, "play_test_count"));
             wait(1000);
-        }
-    }
-
-    void runInfiniteTest() {
-        while (true) {
-            clickTest();
-            wait(beatDelay / 4);
         }
     }
 }

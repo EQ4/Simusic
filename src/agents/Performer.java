@@ -67,6 +67,9 @@ public class Performer extends Agent {
                     if (msg.equals("get_initial_tempo")) {
                         send(agents.Services.SendMessage(studioAddress, "initial_tempo=" + fextract.getAverageFeatureValue("Initial Tempo")));
                     }
+                    if (msg.equals("ping")) {
+                        send(agents.Services.SendMessage(studioAddress, "pong"));
+                    }
                 }
             }
         });
