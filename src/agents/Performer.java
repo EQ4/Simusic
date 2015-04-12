@@ -19,7 +19,7 @@ import markov.MarkovModel;
 import sun.applet.Main;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
-import test.RunTests;
+import runners.TestRunner;
 
 /**
  *
@@ -28,13 +28,17 @@ import test.RunTests;
 public class Performer extends Agent {
 
     String agentFolder;
-    String studioAddress;
+    String studioGUID;
     String midiPath;
     String featurePath;
     Integer maxMarkovHarmonyDepth;
     ArrayList<Sequence> chords;
     MarkovModel markovHarmonyModel;
     FeatureExtractor fextract;
+
+    boolean isConnectedToStudio;
+    
+    String managerGUID;
 
     @Override
     protected void setup() {
@@ -43,9 +47,11 @@ public class Performer extends Agent {
         agentFolder = (String) agentArgs[0];
         midiPath = agentFolder + "//midi//";
         featurePath = agentFolder + "//features//";
-        studioAddress = (String) agentArgs[1];
-        maxMarkovHarmonyDepth = Integer.parseInt((String) agentArgs[2]);
-
+        studioGUID = (String) agentArgs[1];
+        managerGUID = (String) agentArgs[2];
+        maxMarkovHarmonyDepth = Integer.parseInt((String) agentArgs[3]);
+        isConnectedToStudio = false;
+        //Save manager GUID
 
         //Add message behaviour
         addBehaviour(new CyclicBehaviour(this) {
@@ -54,31 +60,42 @@ public class Performer extends Agent {
                 ACLMessage incomingMessage = blockingReceive();
                 if (incomingMessage != null) {
                     String msg = incomingMessage.getContent();
-                    if (msg.contains("load_yourself")) {
-                        load();
-                        send(agents.Services.SendMessage(studioAddress, "load_finished"));
-                    }
-                    if (msg.equals("play_test_count")) {
-                        playTestCount();
-                    }
-                    if (msg.equals("play_test_click")) {
-                        playTestClick();
-                    }
-                    if (msg.equals("get_initial_tempo")) {
-                        send(agents.Services.SendMessage(studioAddress, "initial_tempo=" + fextract.getAverageFeatureValue("Initial Tempo")));
-                    }
-                    if (msg.equals("ping")) {
-                        send(agents.Services.SendMessage(studioAddress, "pong"));
+                    if (!isConnectedToStudio) {
+                        if (msg.contains("join_request_ack")) {
+                            System.out.println("<" + getName() + "> I connected to " + studioGUID);
+                            isConnectedToStudio = true;
+                        }
+                    } else {
+                        if (msg.contains("load_yourself")) {
+                            load();
+                            send(agents.Services.SendMessage(studioGUID, "load_finished"));
+                        }
+                        if (msg.equals("play_test_count")) {
+                            playTestCount();
+                        }
+                        if (msg.equals("play_test_click")) {
+                            playTestClick();
+                        }
+                        if (msg.equals("get_initial_tempo")) {
+                            send(agents.Services.SendMessage(studioGUID, "initial_tempo=" + fextract.getAverageFeatureValue("Initial Tempo")));
+                        }
+                        if (msg.equals("ping")) {
+                            send(agents.Services.SendMessage(studioGUID, "pong"));
+                        }
                     }
                 }
             }
         });
 
-        //Send idle message
-        send(agents.Services.SendMessage(studioAddress, "I am initialized!"));
+        //Send connect request to studio
+        send(agents.Services.SendMessage(studioGUID, "join_request"));
+        
+        System.out.println("<" + getName() + "> Hello World! My manager is " + managerGUID);
     }
 
     private void load() {
+        System.out.println("<" + getName() + "> Extracting chords and generating Markov model...");
+        
         //Extract chords
         chords = ChordExtractor.extractChordsFromMidiFiles(midiPath);
 
@@ -86,16 +103,18 @@ public class Performer extends Agent {
         markovHarmonyModel = new MarkovModel(maxMarkovHarmonyDepth, new Chord());
         markovHarmonyModel.trainModel(chords);
 
+        System.out.println("<" + getName() + "> Extracting MIDI features...");
+        
         //Extract features
         fextract = new FeatureExtractor(midiPath, featurePath, false);
     }
 
     private void playTestCount() {
-        playSound(RunTests.clickPath + getLocalName() + ".wav");
+        playSound(TestRunner.clickPath + getLocalName() + ".wav");
     }
-    
+
     private void playTestClick() {
-        playSound(RunTests.clickPath + "hihat.wav");
+        playSound(TestRunner.clickPath + "hihat.wav");
     }
 
     private void playSound(final String path) {

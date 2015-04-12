@@ -17,7 +17,9 @@ import java.util.Map;
  * @author Martin
  */
 public class ChordExtractor {
-    
+
+    static boolean log = false;
+
     public static ArrayList<Sequence> extractChordsFromMidiFiles(String path) {
 
         File folder = new File(path);
@@ -25,16 +27,18 @@ public class ChordExtractor {
 
         ArrayList<Sequence> fullSequence = new ArrayList<>();
 
-        System.out.println("Extracting chords from " + files.length + " files...");
+        if (log) {
+            System.out.println("Extracting chords from " + files.length + " files...");
+        }
         for (int i = 0; i < files.length; i++) {
-            
+
             System.out.println("\t" + (i + 1) + "/" + files.length);
-            
+
             Sequence normalizedSequence = new Sequence();
             try {
                 if (files[i].isFile()) {
                     String file = files[i].getPath();
-                    
+
                     ChordScanner ce = new ChordScanner(file);
 
                     ArrayList<Chord> sequence = ce.getSequence();
@@ -65,8 +69,9 @@ public class ChordExtractor {
             fullSequence.add(normalizedSequence);
         }
 
-
-        System.out.println("Done!");
+        if (log) {
+            System.out.println("Done!");
+        }
 
         return fullSequence;
 

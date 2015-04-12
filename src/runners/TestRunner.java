@@ -1,4 +1,4 @@
-package test;
+package runners;
 
 import agents.AgentManager;
 import player.Arpeggiator;
@@ -15,12 +15,8 @@ import java.io.InputStream;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 
-public class RunTests {
+public class TestRunner {
 
-    //Config vars - TO BE CUSTOMIZED BY USER IN GUI!
-    public static final int maxMarkovHarmonyLevel = 4;
-    //Main agent directory
-    static String agentsPath = "E:\\Desktop\\Dissertation\\_agents\\";
     public static String clickPath = "E:\\Desktop\\Dissertation\\_runtime\\click_sounds\\";
     
     //Obsolete
@@ -31,16 +27,10 @@ public class RunTests {
     static MarkovModel markovModel;
 
     public static void main(String[] args) {
-        testAgents();
-
         //Deprecated:
         //testMarkov();
         //testFeatures();
         //testPlayer();
-    }
-
-    static void testAgents() {
-        AgentManager agentManager = new AgentManager(agentsPath);
     }
 
     static void testMarkov() {

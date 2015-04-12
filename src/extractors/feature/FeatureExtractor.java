@@ -24,6 +24,8 @@ public class FeatureExtractor {
     ArrayList<String> listOfSongNames;
     int numberOfSongs;
 
+    boolean log = false;
+
     public FeatureExtractor(String midiPath, String featurePath, boolean overwrite) {
         this.midiPath = midiPath;
         this.featurePath = featurePath;
@@ -35,8 +37,9 @@ public class FeatureExtractor {
         File folder = new File(midiPath);
         File[] files = folder.listFiles();
 
-
-        System.out.println("Extracting features from " + files.length + " files...");
+        if (log) {
+            System.out.println("Extracting features from " + files.length + " files...");
+        }
         int counter = 0;
 
         //Write loop
@@ -56,7 +59,7 @@ public class FeatureExtractor {
                         continue;
                     }
                 }
-                
+
                 System.out.println("\t" + ++counter + "/" + files.length);
 
                 //Extract features to XML
@@ -64,7 +67,6 @@ public class FeatureExtractor {
                         file.getCanonicalPath(),
                         featurePath + file.getName() + ".xml",
                         featurePath + file.getName() + "_def.xml", false);
-
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -82,11 +84,9 @@ public class FeatureExtractor {
                 DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
                 Document doc = dBuilder.parse(xmlFile);
 
-
                 //Extract features for single song:
                 doc.getDocumentElement().normalize();
                 NodeList nodeList = doc.getElementsByTagName("feature");
-
 
                 for (int i = 0; i < nodeList.getLength(); i++) {
                     NodeList childList = nodeList.item(i).getChildNodes();
@@ -125,7 +125,9 @@ public class FeatureExtractor {
             }
         }
 
-        System.out.println("Features extracted!");
+        if (log) {
+            System.out.println("Features extracted!");
+        }
     }
 
     public double getFeatureValue(int songNumber, String featureName) {

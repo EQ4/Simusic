@@ -25,4 +25,12 @@ public class Services {
         response.addReceiver(new AID(recipient, AID.ISGUID));
         return response;
     }
+    
+    public static void wait(int milliSeconds) {
+        try {
+            Thread.sleep(milliSeconds);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
