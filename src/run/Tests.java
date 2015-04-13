@@ -1,4 +1,4 @@
-package runners;
+package run;
 
 import agents.AgentManager;
 import player.Arpeggiator;
@@ -15,7 +15,7 @@ import java.io.InputStream;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 
-public class TestRunner {
+public class Tests {
 
     public static String clickPath = "E:\\Desktop\\Dissertation\\_runtime\\click_sounds\\";
     

@@ -14,8 +14,9 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import runners.EnvironmentRunner;
-import runners.TestRunner;
+import javax.swing.JFrame;
+import run.Main;
+import run.Tests;
 
 /**
  *
@@ -23,24 +24,35 @@ import runners.TestRunner;
  */
 public class AgentManager extends Agent {
 
-    //Constants (should be customizable?
-    private static final int maxMarkovHarmonyLevel = 4;
-    
-    private static final String performersFolder = "E:\\Desktop\\Dissertation\\_agents\\";
-    private static final String remoteStudio = "";
-
     String studioGUID;
+    String performersFolder;
+    int maxMarkovHarmonyLevel;
+    Main mainFrame;
 
-    void executeUsingNewStudio() {
-        //Command line: ------------------------------^
-        studioGUID = createStudio();
+    private void executeUsingNewStudio() {
+        //Create new studio
+
+        try {
+            System.out.println("<AgentManager> Creating the Studio agent in the main container...");
+            AgentController studioAgent = getContainerController().createNewAgent("Studio",
+                    "agents.Studio", new Object[]{getName()});
+            System.out.println("<AgentManager> Launching the Studio...");
+            studioAgent.start();
+            System.out.println("<AgentManager> Studio agent launched. Studio GUID: " + studioAgent.getName());
+            studioGUID = studioAgent.getName();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //Create local performers and wait for remote ones to join
         createPerformers(performersFolder, studioGUID);
 
-        System.out.println("<AgentManager> Waiting for remote performers to join...");
-        Services.wait(5000);
-        
+        mainFrame.haltSimulation("Waiting for remote performers to join...");
+
+        //Once ready, send load (and lock session) command to Studio
         send(agents.Services.SendMessage(studioGUID, "do_load_performers"));
 
+        //TODO: Runtime GUI
         addBehaviour(new CyclicBehaviour(this) {
             @Override
             public void action() {
@@ -56,41 +68,29 @@ public class AgentManager extends Agent {
         });
     }
 
-    void executeUsingExistingStudio(String studioGUID) {
+    void executeUsingRemoteStudio() {
         createPerformers(performersFolder, studioGUID);
     }
 
     @Override
     protected void setup() {
-        addBehaviour(new OneShotBehaviour(this) {
-            @Override
-            public void action() {
-                if (remoteStudio.isEmpty()) {
-                    executeUsingNewStudio();
-                }
-                else {
-                    executeUsingExistingStudio(remoteStudio);
-                }
-            }
-        });
+        
+        //Get studio address from args (empty if creating new)
+        Object[] agentArgs = getArguments();
+        studioGUID = (String) agentArgs[0];
+        mainFrame = (Main)agentArgs[1];
+
+        //TODO: Configure GUI
+        maxMarkovHarmonyLevel = 4;
+        performersFolder = "E:\\Desktop\\Dissertation\\_agents\\";
+        
+        if (studioGUID.isEmpty()) {
+            executeUsingNewStudio();
+        } else {
+            executeUsingRemoteStudio();
+        }
 
         System.out.println("<AgentManager> Hello World!");
-    }
-
-    public String createStudio() {
-        String studioGUID = null;
-        try {
-            System.out.println("<AgentManager> Creating the Studio agent in the main container...");
-            AgentController studioAgent = getContainerController().createNewAgent("Studio",
-                    "agents.Studio", new Object[]{getName()});
-            System.out.println("<AgentManager> Launching the Studio...");
-            studioAgent.start();
-            System.out.println("<AgentManager> Studio agent launched. Studio GUID: " + studioAgent.getName());
-            studioGUID = studioAgent.getName();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return studioGUID;
     }
 
     public void createPerformers(String path, String studioAgent) {

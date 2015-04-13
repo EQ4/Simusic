@@ -19,7 +19,7 @@ import markov.MarkovModel;
 import sun.applet.Main;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
-import runners.TestRunner;
+import run.Tests;
 
 /**
  *
@@ -110,11 +110,11 @@ public class Performer extends Agent {
     }
 
     private void playTestCount() {
-        playSound(TestRunner.clickPath + getLocalName() + ".wav");
+        playSound(Tests.clickPath + getLocalName() + ".wav");
     }
 
     private void playTestClick() {
-        playSound(TestRunner.clickPath + "hihat.wav");
+        playSound(Tests.clickPath + "hihat.wav");
     }
 
     private void playSound(final String path) {
