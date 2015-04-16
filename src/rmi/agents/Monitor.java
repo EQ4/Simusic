@@ -5,6 +5,7 @@
  */
 package rmi.agents;
 
+import com.sun.corba.se.spi.ior.iiop.IIOPAddress;
 import rmi.dummies.MonitorDummy;
 import rmi.dummies.AgentDummy;
 import java.awt.BorderLayout;
@@ -36,6 +37,7 @@ import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
 import rmi.registry.Registry;
 import rmi.interfaces.MonitorInterface;
+import rmi.misc.NewRegistryDialog;
 import run.Main;
 
 /**
@@ -44,9 +46,10 @@ import run.Main;
  */
 public class Monitor extends javax.swing.JFrame {
 
-    Integer id;
     MonitorInterface registryConnection;
-    static Random rand = new Random();
+
+    Integer id;
+    int updateDelay;
 
     public Monitor() {
         initComponents();
@@ -58,6 +61,9 @@ public class Monitor extends javax.swing.JFrame {
     }
 
     public boolean pingRegistry() throws RemoteException {
+        if (registryConnection == null) {
+            return false;
+        }
         return registryConnection.ping(id);
     }
 
@@ -66,38 +72,38 @@ public class Monitor extends javax.swing.JFrame {
     }
 
     public boolean checkConnection() throws RemoteException {
-        boolean truthValue = pingRegistry() && isAssignedID();
+        boolean truthValue = (pingRegistry() && isAssignedID());
         if (truthValue) {
             agentsMenu.setEnabled(true);
+            disconnectBtn.setEnabled(true);
+            startLocalRegistryMenuItem.setEnabled(false);
+            connectToRemoteRegistryMenuItem.setEnabled(false);
         } else {
             agentsMenu.setEnabled(false);
             statusTextField.setText("Disconnected");
             monitorIdTextField.setText("");
+            disconnectBtn.setEnabled(false);
+            startLocalRegistryMenuItem.setEnabled(true);
+            connectToRemoteRegistryMenuItem.setEnabled(true);
         }
         return truthValue;
     }
 
     private void startNewRegistry() throws RemoteException {
-        String randomName = "SimusicRegistry" + rand.nextInt(Registry.MAX_REGISTRY_ID);
-        String registryName = (String) JOptionPane.showInputDialog(
-                this,
-                "Enter registry name:\n"
-                + "If name is \n    " + randomName + "\n then the RMI service URL will be\n    "
-                + "//localhost/" + randomName + "\n \n",
-                "Start new registry",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                randomName);
-        if ((registryName == null) || registryName.isEmpty()) {
+        NewRegistryDialog d = new NewRegistryDialog(this, true, getAllIPs());
+        if (!d.getResult()) {
             return;
         }
-        Main.startLocalRegistryDaemon(registryName);
-        log("Local registry created: " + registryName);
+        Main.startLocalRegistryDaemon(d.getIpAddress(), d.getRegName(), d.getRegPort(), d.getRegServicePort(), d.getUpdatePeriod());
+        log("Registry created: "
+                + "\n    - ip: " + d.getIpAddress()
+                + "\n    - port " + d.getRegPort()
+                + "\n    - serv. port " + d.getRegServicePort()
+                + "\n    - serv. name: " + d.getRegName()
+        );
 
         //Also connect
-        
-        connectToRegistry("//localhost/" + registryName);
+        connectToRegistry("rmi://" + d.getIpAddress() + ":" + d.getRegPort() + "/" + d.getRegName());
     }
 
     private void connectToRegistry(String registryURL) throws RemoteException {
@@ -113,8 +119,8 @@ public class Monitor extends javax.swing.JFrame {
         id = registryConnection.connect(AgentType.Monitor);
 
         if (checkConnection()) {
-            log("Connected to " + registryURL + "!");
-            statusTextField.setText("Connected!");
+            log("Connected!");
+            statusTextField.setText("Connected to " + registryURL);
             monitorIdTextField.setText(id.toString());
         }
     }
@@ -127,7 +133,7 @@ public class Monitor extends javax.swing.JFrame {
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 null,
-                "");
+                "rmi://");
         if ((registryURL == null) || registryURL.isEmpty()) {
             return;
         }
@@ -186,6 +192,31 @@ public class Monitor extends javax.swing.JFrame {
         alert("Registry says " + registryConnection.sayHello());
     }
 
+    private ArrayList<String> getAllIPs() {
+        ArrayList<String> result = new ArrayList<>();
+        try {
+            InetAddress localhost = InetAddress.getLocalHost();
+            InetAddress[] ips = InetAddress.getAllByName(localhost.getCanonicalHostName());
+            for (InetAddress ip : ips) {
+                String ipString = ip.getHostAddress();
+                if (!ipString.contains(":")) {
+                    result.add(ipString);
+                }
+            }
+        } catch (UnknownHostException e) {
+            System.out.println("Error resolving own IPs");
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    void disconnect() throws RemoteException {
+        registryConnection.disconnect(id);
+        registryConnection = null;
+        id = null;
+        checkConnection();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -210,6 +241,7 @@ public class Monitor extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
         startLocalRegistryMenuItem = new javax.swing.JMenuItem();
         connectToRemoteRegistryMenuItem = new javax.swing.JMenuItem();
+        disconnectBtn = new javax.swing.JMenuItem();
         agentsMenu = new javax.swing.JMenu();
         jMenu4 = new javax.swing.JMenu();
         addAiPerformerMenuItem = new javax.swing.JMenuItem();
@@ -225,7 +257,7 @@ public class Monitor extends javax.swing.JFrame {
         jMenuItem2.setText("jMenuItem2");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("SiMusic");
+        setTitle("SiMusic Monitor");
         setMinimumSize(new java.awt.Dimension(800, 600));
 
         logField.setEditable(false);
@@ -244,9 +276,11 @@ public class Monitor extends javax.swing.JFrame {
         jLabel2.setText("Monitor ID");
 
         statusTextField.setEditable(false);
+        statusTextField.setFont(new java.awt.Font("Verdana", 0, 11)); // NOI18N
         statusTextField.setText("Disconnected");
 
         monitorIdTextField.setEditable(false);
+        monitorIdTextField.setFont(new java.awt.Font("Verdana", 0, 11)); // NOI18N
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -266,8 +300,8 @@ public class Monitor extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(17, 17, 17)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGap(23, 23, 23)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
@@ -294,6 +328,15 @@ public class Monitor extends javax.swing.JFrame {
             }
         });
         jMenu1.add(connectToRemoteRegistryMenuItem);
+
+        disconnectBtn.setText("Disconnect");
+        disconnectBtn.setEnabled(false);
+        disconnectBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                disconnectBtnActionPerformed(evt);
+            }
+        });
+        jMenu1.add(disconnectBtn);
 
         jMenuBar1.add(jMenu1);
 
@@ -364,7 +407,7 @@ public class Monitor extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(workingPane, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
+                        .addComponent(workingPane, javax.swing.GroupLayout.DEFAULT_SIZE, 334, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1))
@@ -378,6 +421,7 @@ public class Monitor extends javax.swing.JFrame {
         try {
             addAiPerformer();
         } catch (RemoteException e) {
+            log(e.getLocalizedMessage());
             e.printStackTrace();
         }
     }//GEN-LAST:event_addAiPerformerMenuItemActionPerformed
@@ -386,6 +430,7 @@ public class Monitor extends javax.swing.JFrame {
         try {
             addHumanPerformer();
         } catch (RemoteException e) {
+            log(e.getLocalizedMessage());
             e.printStackTrace();
         }
     }//GEN-LAST:event_addHumanPerformerMenuItemActionPerformed
@@ -398,6 +443,7 @@ public class Monitor extends javax.swing.JFrame {
         try {
             startNewRegistry();
         } catch (RemoteException e) {
+            log(e.getLocalizedMessage());
             e.printStackTrace();
         }
     }//GEN-LAST:event_startLocalRegistryMenuItemActionPerformed
@@ -406,6 +452,7 @@ public class Monitor extends javax.swing.JFrame {
         try {
             connectToRegistry();
         } catch (RemoteException e) {
+            log(e.getLocalizedMessage());
             e.printStackTrace();
         }
     }//GEN-LAST:event_connectToRemoteRegistryMenuItemActionPerformed
@@ -414,9 +461,19 @@ public class Monitor extends javax.swing.JFrame {
         try {
             test();
         } catch (RemoteException e) {
+            log(e.getLocalizedMessage());
             e.printStackTrace();
         }
     }//GEN-LAST:event_testMenuItemActionPerformed
+
+    private void disconnectBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_disconnectBtnActionPerformed
+        try {
+            disconnect();
+        } catch (RemoteException e) {
+            log(e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_disconnectBtnActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;
@@ -424,6 +481,7 @@ public class Monitor extends javax.swing.JFrame {
     private javax.swing.JMenuItem addHumanPerformerMenuItem;
     private javax.swing.JMenu agentsMenu;
     private javax.swing.JMenuItem connectToRemoteRegistryMenuItem;
+    private javax.swing.JMenuItem disconnectBtn;
     private javax.swing.JMenu helpMenu;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

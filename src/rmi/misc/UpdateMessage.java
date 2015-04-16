@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.elements;
+package rmi.misc;
 
 import java.util.ArrayList;
 import rmi.dummies.AgentDummy;
@@ -15,10 +15,15 @@ import rmi.dummies.AgentDummy;
 public class UpdateMessage {
     ArrayList<AgentDummy> updatedDummies;
     ArrayList<DummyLink> updatedLinks;
+    boolean isShuttingDown;
+    int updatePeriod;
     
     public UpdateMessage() {
         updatedDummies = new ArrayList<>();
         updatedLinks = new ArrayList<>();
+    }
+    public UpdateMessage(boolean isShuttingDown) {
+        isShuttingDown = true;
     }
     
     public void addUpdatedDummy(AgentDummy newDummy) {

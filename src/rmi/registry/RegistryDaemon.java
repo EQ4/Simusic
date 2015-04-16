@@ -5,7 +5,11 @@
  */
 package rmi.registry;
 
+import java.math.BigInteger;
 import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import javax.swing.JTextArea;
 
 /**
  *
@@ -13,11 +17,29 @@ import java.rmi.Naming;
  */
 public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
 
-    String registryName;
-    Registry localRegistry;
+    public static final int SHUTDOWN_TIME_MULTIPLIER = 5;
 
-    public RegistryDaemon(String registryName) {
+    public String ipAddress;
+    public String registryName;
+    public int registryPort;
+    public int servicePort;
+    public int updatePeriod;
+    public JTextArea logOfRegistry;
+
+    Registry myRegistryObject;
+    java.rmi.registry.Registry rmiRegistryLocated;
+
+    public Boolean shuttingDown;
+    public Boolean doShutDown;
+
+    public RegistryDaemon(String ipAddress, String registryName, int regPort, int regSport, int updatePeriod) throws RemoteException {
+        this.ipAddress = ipAddress;
         this.registryName = registryName;
+        this.registryPort = regPort;
+        this.servicePort = regSport;
+        this.updatePeriod = updatePeriod;
+        this.shuttingDown = false;
+        this.doShutDown = false;
     }
 
     @Override
@@ -25,14 +47,58 @@ public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
         try {
             initComponents();
             this.setVisible(true);
-            this.setSize(400, 400);
-            registryLog.setVisible(true);
-            localRegistry = new Registry(registryName, registryLog);
-            java.rmi.registry.LocateRegistry.createRegistry(1099);
-            Naming.rebind(registryName, localRegistry);
+            this.logOfRegistry = registryLog;
+            myRegistryObject = new Registry(this);
+            rmiRegistryLocated = java.rmi.registry.LocateRegistry.createRegistry(registryPort);
+            Naming.rebind("rmi://" + ipAddress + ":" + registryPort + "/" + registryName, myRegistryObject);
+
+            //Done
+            registryLog.append("SiMusic Daemon\nRegistry created: "
+                    + "\n    - ip: " + ipAddress
+                    + "\n    - port " + registryPort
+                    + "\n    - serv. port " + servicePort
+                    + "\n    - serv. name: " + registryName
+                    + "\n    - upd. period: " + updatePeriod
+                    + "\n");
+            statusTextField.setText("Daemon running");
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void shutDown() {
+        stopButton.setEnabled(false);
+        statusTextField.setText("Stopping daemon...");
+        shuttingDown = true;
+        
+        revalidate();
+
+        while (!doShutDown) {
+            wait(updatePeriod);
+        }
+
+        try {
+            rmiRegistryLocated.unbind(registryName);
+            myRegistryObject = null;
+        } catch (Exception e) {
+            statusTextField.setText("Error.");
+            e.printStackTrace();
+        }
+
+        changeStatus("Daemon stopped");
+        registryLog.append("Daemon has been stopped.\n");
+    }
+
+    public void wait(int ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    void changeStatus(String newStatus) {
+        statusTextField.setText(newStatus);
     }
 
     /**
@@ -54,8 +120,13 @@ public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         registryLog = new javax.swing.JTextArea();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        statusTextField = new javax.swing.JTextField();
+        stopButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("SiMusic Registry Daemon");
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         jLabel1.setText("SiMusic Registry Daemon");
@@ -65,6 +136,20 @@ public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
         registryLog.setRows(5);
         jScrollPane1.setViewportView(registryLog);
 
+        jLabel2.setText("Registry log");
+
+        jLabel4.setText("Status");
+
+        statusTextField.setEditable(false);
+        statusTextField.setText("Starting...");
+
+        stopButton.setText("Stop daemon");
+        stopButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stopButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -72,29 +157,58 @@ public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(jScrollPane1)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2))
+                        .addContainerGap(334, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(stopButton))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel4)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 378, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(31, 31, 31))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
+                .addGap(25, 25, 25)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(stopButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
+                .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 411, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
+        shutDown();
+    }//GEN-LAST:event_stopButtonActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea registryLog;
+    private javax.swing.JTextField statusTextField;
+    private javax.swing.JButton stopButton;
     // End of variables declaration//GEN-END:variables
 }

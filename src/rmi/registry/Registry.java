@@ -5,7 +5,7 @@
  */
 package rmi.registry;
 
-import rmi.elements.UpdateMessage;
+import rmi.misc.UpdateMessage;
 import rmi.interfaces.MonitorInterface;
 import rmi.interfaces.AiPerformerInterface;
 import rmi.interfaces.HumanPerformerInterface;
@@ -25,19 +25,17 @@ import javax.swing.JTextArea;
  * @author Martin
  */
 public class Registry extends UnicastRemoteObject implements AiPerformerInterface, HumanPerformerInterface, MonitorInterface {
-    public static int MAX_REGISTRY_ID = 100;
+
     public static enum AgentType {
 
         AIPerformer, HumanPerformer, Monitor
     }
-    
-    
-    public String name;
-    JTextArea registryLog;
 
-    public Registry(String name, JTextArea registryLog) throws RemoteException {
-        this.name = name;
-        this.registryLog = registryLog;
+    RegistryDaemon daemon;
+
+    public Registry(RegistryDaemon daemon) throws RemoteException {
+        super(daemon.servicePort);
+        this.daemon = daemon;
 
         System.setProperty("java.security.policy", "simusic.policy");
         System.setSecurityManager(new SecurityManager());
@@ -79,43 +77,46 @@ public class Registry extends UnicastRemoteObject implements AiPerformerInterfac
     }
 
     @Override
-    public UpdateMessage getFullUpdate() {
-        //TODO: Implement
-        return null;
-    }
-
-    @Override
-    public UpdateMessage getPartialUpdate() {
-        //TODO: Implement
-        return null;
-    }
-    
-    @Override
     public int connect(AgentType agentType) {
         int id = -1;
         log(agentType + " has connected! Assigning id = " + id);
         return id;
     }
-    
+
     @Override
     public boolean ping(int id) {
-        log("Agent " + id + " pings! Ponging...");
+        log("Agent " + id + " pinged and got ponged!");
         return true;
     }
-    
+
     @Override
     public boolean disconnect(int id) {
         log("Agent " + id + " has disconnected!");
         return true;
     }
-    
+
     @Override
     public String sayHello() {
         log("Someone made me say hello!");
         return "Hello from registry!";
     }
-    
-    private void log(String message) {
-        registryLog.append(message + "\n");
+
+    @Override
+    public UpdateMessage getUpdate() {
+        if (daemon.shuttingDown) {
+            return getDeadUpdate();
+        }
+        return null;
     }
+
+    private UpdateMessage getDeadUpdate() {
+        //Some shutdown logic? (it's still enough)
+        daemon.doShutDown = true;
+        return new UpdateMessage(true);
+    }
+
+    private void log(String message) {
+        daemon.logOfRegistry.append(message + "\n");
+    }
+
 }

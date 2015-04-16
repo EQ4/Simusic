@@ -19,7 +19,7 @@ import rmi.agents.Monitor;
 public class Main {
 
     public static Monitor mainMonitor;
-    public static RegistryDaemon localRegistryWorker;
+    public static Thread localRegistryWorker;
 
     /**
      * @param args the command line arguments
@@ -59,11 +59,11 @@ public class Main {
         });
     }
 
-    public static void startLocalRegistryDaemon(String registryName) throws RemoteException {
-        localRegistryWorker = new RegistryDaemon(registryName);
-        Thread myThread = new Thread(localRegistryWorker);
-        myThread.setDaemon(true);
-        myThread.start();
+    public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport, int updatePeriod) throws RemoteException {
+        RegistryDaemon registryDaemon = new RegistryDaemon(ipAddress, registryName, regPort, regSport, updatePeriod);
+        localRegistryWorker = new Thread(registryDaemon);
+        localRegistryWorker.setDaemon(true);
+        localRegistryWorker.start();
     }
 
 }
