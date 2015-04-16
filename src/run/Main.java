@@ -20,33 +20,6 @@ import rmi.monitor.MonitorFrame;
  * @author Martin
  */
 public class Main {
-    public static final Random rand = new Random();
-    
-    public static enum AgentType {
-
-        AIPerformer, HumanPerformer, Monitor
-    }
-    
-    //Monitor vars
-    public static MonitorFrame monitorFrame;
-    public static int portCounter = 51000 + rand.nextInt(5000);
-    public static RegistryInterface registryConnection;
-    public static Integer monitorID;
-    public static int updateDelay;
-    //New
-    
-    
-    //Registry vars
-    public static String registryIPAddress;
-    public static String registryName;
-    public static int registryPort;
-    public static int registryServicePort;
-    public static JTextArea logOfRegistry;
-    public static Registry myRegistryObject;
-    public static java.rmi.registry.Registry rmiRegistryLocated;
-    //New
-    
-
     /**
      * @param args the command line arguments
      */
@@ -82,16 +55,21 @@ public class Main {
             @Override
             public void run() {
                 //Start main monitor frame
-                monitorFrame = new MonitorFrame();
+                new MonitorFrame();
             }
         });
     }
 
-    public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport, int updatePeriod) throws RemoteException {
-        RegistryFrame registryDaemon = new RegistryFrame(ipAddress, registryName, regPort, regSport, updatePeriod);
+    public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport) throws RemoteException {
+        RegistryFrame registryDaemon = new RegistryFrame(ipAddress, registryName, regPort, regSport);
         Thread localRegistryWorker = new Thread(registryDaemon);
         localRegistryWorker.setDaemon(true);
         localRegistryWorker.start();
+    }
+
+    public static int getRandomPort() {
+        Random rand = new Random();
+        return 51000 + rand.nextInt(8000);
     }
 
 }

@@ -18,12 +18,21 @@ import run.Main;
  */
 public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
+    //Registry vars
+    public String registryIPAddress;
+    public String registryName;
+    public int registryPort;
+    public int registryServicePort;
+    public JTextArea logOfRegistry;
+    public Registry myRegistryObject;
+    public java.rmi.registry.Registry rmiRegistryLocated;
+    //New
 
-    public RegistryFrame(String ipAddress, String registryName, int regPort, int regSport, int updatePeriod) throws RemoteException {
-        Main.registryIPAddress = ipAddress;
-        Main.registryName = registryName;
-        Main.registryPort = regPort;
-        Main.registryServicePort = regSport;
+    public RegistryFrame(String registryIPAddress, String registryName, int registryPort, int registryServicePort) throws RemoteException {
+        this.registryIPAddress = registryIPAddress;
+        this.registryName = registryName;
+        this.registryPort = registryPort;
+        this.registryServicePort = registryServicePort;
     }
 
     @Override
@@ -31,17 +40,17 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         try {
             initComponents();
             this.setVisible(true);
-            Main.logOfRegistry = registryLog;
-            Main.myRegistryObject = new Registry();
-            Main.rmiRegistryLocated = java.rmi.registry.LocateRegistry.createRegistry(Main.registryPort);
-            Naming.rebind("rmi://" + Main.registryIPAddress + ":" + Main.registryPort + "/" + Main.registryName, Main.myRegistryObject);
+            logOfRegistry = registryLog;
+            myRegistryObject = new Registry(this);
+            rmiRegistryLocated = java.rmi.registry.LocateRegistry.createRegistry(registryPort);
+            Naming.rebind("rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName, myRegistryObject);
 
             //Done
             registryLog.append("SiMusic Daemon\nRegistry created: "
-                    + "\n    - ip: " + Main.registryIPAddress
-                    + "\n    - port " + Main.registryPort
-                    + "\n    - serv. port " + Main.registryServicePort
-                    + "\n    - serv. name: " + Main.registryName
+                    + "\n    - ip: " + registryIPAddress
+                    + "\n    - port " + registryPort
+                    + "\n    - serv. port " + registryServicePort
+                    + "\n    - serv. name: " + registryName
                     + "\n");
             statusTextField.setText("Daemon running");
         } catch (Exception e) {
@@ -54,8 +63,8 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         statusTextField.setText("Stopping daemon...");
 
         try {
-            Main.rmiRegistryLocated.unbind(Main.registryName);
-            Main.myRegistryObject = null;
+            rmiRegistryLocated.unbind(registryName);
+            myRegistryObject = null;
         } catch (Exception e) {
             statusTextField.setText("Error.");
             e.printStackTrace();

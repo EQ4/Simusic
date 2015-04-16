@@ -18,7 +18,7 @@ import java.rmi.registry.*;
 import java.util.ArrayList;
 import javax.swing.JTextArea;
 import run.Main;
-import static run.Main.AgentType;
+import rmi.misc.AgentType;
 
 /**
  *
@@ -26,10 +26,11 @@ import static run.Main.AgentType;
  */
 public class Registry extends UnicastRemoteObject implements RegistryInterface {
 
+    RegistryFrame frame;
 
-    public Registry() throws RemoteException {
-        super(Main.registryServicePort);
-
+    public Registry(RegistryFrame frame) throws RemoteException {
+        super(frame.registryServicePort);
+        this.frame = frame;
         System.setProperty("java.security.policy", "simusic.policy");
         System.setSecurityManager(new SecurityManager());
     }
@@ -95,7 +96,7 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
     }
 
     private void log(String message) {
-        Main.logOfRegistry.append(message + "\n");
+        frame.logOfRegistry.append(message + "\n");
     }
 
 }
