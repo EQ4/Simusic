@@ -24,11 +24,11 @@ import rmi.misc.AgentType;
  *
  * @author Martin
  */
-public class Registry extends UnicastRemoteObject implements RegistryInterface {
+public class RegistryDaemon extends UnicastRemoteObject implements RegistryInterface {
 
     RegistryFrame frame;
 
-    public Registry(RegistryFrame frame) throws RemoteException {
+    public RegistryDaemon(RegistryFrame frame) throws RemoteException {
         super(frame.registryServicePort);
         this.frame = frame;
         System.setProperty("java.security.policy", "simusic.policy");

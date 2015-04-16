@@ -17,17 +17,13 @@ public class NewRegistryDialog extends javax.swing.JDialog {
 
     boolean submit = false;
 
-    public NewRegistryDialog(java.awt.Frame parent, boolean modal, ArrayList<String> ipAddresses) {
+    public NewRegistryDialog(java.awt.Frame parent, boolean modal, String ipAddress) {
         super(parent, modal);
         initComponents();
-        ipCombo.setModel(new DefaultComboBoxModel(ipAddresses.toArray()));
+        interfaceField.setText(ipAddress);
         regPortText.setText(Main.getRandomPort() + "");
         regSportText.setText(Main.getRandomPort() + "");
         this.setVisible(true);
-    }
-
-    public String getIpAddress() {
-        return (String)ipCombo.getSelectedItem();
     }
 
     public String getRegName() {
@@ -65,8 +61,8 @@ public class NewRegistryDialog extends javax.swing.JDialog {
         regSportText = new javax.swing.JTextField();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
-        ipCombo = new javax.swing.JComboBox();
         jLabel2 = new javax.swing.JLabel();
+        interfaceField = new javax.swing.JTextField();
 
         jLabel4.setText("jLabel4");
 
@@ -100,6 +96,8 @@ public class NewRegistryDialog extends javax.swing.JDialog {
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel2.setText("Start new Registry");
 
+        interfaceField.setEnabled(false);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -118,7 +116,7 @@ public class NewRegistryDialog extends javax.swing.JDialog {
                                 .addComponent(jLabel2))
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(40, 40, 40)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addGroup(layout.createSequentialGroup()
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                             .addComponent(jLabel6)
@@ -131,8 +129,8 @@ public class NewRegistryDialog extends javax.swing.JDialog {
                                             .addComponent(regSportText, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)))
                                     .addGroup(layout.createSequentialGroup()
                                         .addComponent(jLabel3)
-                                        .addGap(70, 70, 70)
-                                        .addComponent(ipCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(interfaceField, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                         .addGap(0, 45, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -143,8 +141,8 @@ public class NewRegistryDialog extends javax.swing.JDialog {
                 .addComponent(jLabel2)
                 .addGap(33, 33, 33)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(ipCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
+                    .addComponent(jLabel3)
+                    .addComponent(interfaceField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(regPortText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -179,7 +177,7 @@ public class NewRegistryDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
-    private javax.swing.JComboBox ipCombo;
+    private javax.swing.JTextField interfaceField;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;

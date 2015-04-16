@@ -9,7 +9,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import rmi.monitor.UpdateMessage;
-import rmi.registry.Registry;
+import rmi.registry.RegistryDaemon;
 import rmi.misc.AgentType;
 
 /**

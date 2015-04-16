@@ -11,7 +11,7 @@ import java.rmi.RemoteException;
 import java.util.Random;
 import javax.swing.JTextArea;
 import rmi.interfaces.RegistryInterface;
-import rmi.registry.Registry;
+import rmi.registry.RegistryDaemon;
 import rmi.registry.RegistryFrame;
 import rmi.monitor.MonitorFrame;
 
@@ -61,10 +61,7 @@ public class Main {
     }
 
     public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport) throws RemoteException {
-        RegistryFrame registryDaemon = new RegistryFrame(ipAddress, registryName, regPort, regSport);
-        Thread localRegistryWorker = new Thread(registryDaemon);
-        localRegistryWorker.setDaemon(true);
-        localRegistryWorker.start();
+        new RegistryFrame(ipAddress, registryName, regPort, regSport).startDaemon();
     }
 
     public static int getRandomPort() {

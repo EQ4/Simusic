@@ -11,6 +11,7 @@ import rmi.dummies.AgentDummy;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -27,16 +28,18 @@ import java.util.ArrayList;
 import java.util.Random;
 import javafx.scene.paint.Color;
 import javax.imageio.ImageIO;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import rmi.misc.AgentType;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
 import rmi.interfaces.RegistryInterface;
-import rmi.registry.Registry;
+import rmi.registry.RegistryDaemon;
 import rmi.monitor.NewRegistryDialog;
 import run.Main;
 
@@ -44,21 +47,57 @@ import run.Main;
  *
  * @author Martin
  */
-public class MonitorFrame extends javax.swing.JFrame {
-    
-    
+public class MonitorFrame extends javax.swing.JFrame implements Runnable {
+
     public RegistryInterface registryConnection;
     public Integer monitorID;
     public int updateDelay;
-    
+
+    public String selectedIPInterface;
+    public String monitorName;
+    public int monitorPort;
+    public int monitorServicePort;
+    public JTextArea logOfMonitor;
+
+    public MonitorDaemon monitorDaemon;
+    public java.rmi.registry.Registry rmiRegistryLocation;
+
+    @Override
+    public void run() {
+        try {
+            monitorDaemon = new MonitorDaemon(this);
+            rmiRegistryLocation = java.rmi.registry.LocateRegistry.createRegistry(monitorPort);
+            Naming.rebind("rmi://" + selectedIPInterface + ":" + monitorPort + "/" + monitorName, monitorDaemon);
+
+            //Done
+            log("SiMusic Daemon\nRegistry created: "
+                    + "\n    - ip: " + selectedIPInterface
+                    + "\n    - port " + monitorPort
+                    + "\n    - serv. port " + monitorServicePort
+                    + "\n    - serv. name: " + monitorName
+                    + "\n");
+            statusTextField.setText("Daemon running");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public MonitorFrame() {
         initComponents();
+
+        //Set some values
+        monitorPortField.setText(Main.getRandomPort() + "");
+        monitorServicePortField.setText(Main.getRandomPort() + "");
+
+        //Set IP combo box
+        ipCombo.setModel(new DefaultComboBoxModel(getAllIPs()));
+
         this.setVisible(true);
         DefaultCaret logCaret = (DefaultCaret) this.logField.getCaret();
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
 
         workingPane.getViewport().setBackground(new java.awt.Color(240, 248, 255));
+        logOfMonitor = logField;
     }
 
     public boolean pingRegistry() throws RemoteException {
@@ -75,36 +114,36 @@ public class MonitorFrame extends javax.swing.JFrame {
     public boolean checkConnection() throws RemoteException {
         boolean truthValue = (pingRegistry() && isAssignedID());
         if (truthValue) {
-            agentsMenu.setEnabled(true);
-            disconnectBtn.setEnabled(true);
             startNewRegistryBtn.setEnabled(false);
+            discBtn.setEnabled(true);
             connectBtn.setEnabled(false);
         } else {
-            agentsMenu.setEnabled(false);
+            startNewRegistryBtn.setEnabled(true);
+            discBtn.setEnabled(false);
+            connectBtn.setEnabled(true);
             statusTextField.setText("Disconnected");
             monitorIdTextField.setText("");
-            disconnectBtn.setEnabled(false);
-            startNewRegistryBtn.setEnabled(true);
-            connectBtn.setEnabled(true);
+            agentsMenu.setEnabled(false);
+            log("Disconnected");
         }
         return truthValue;
     }
 
     private void startNewRegistry() throws RemoteException {
-        NewRegistryDialog d = new NewRegistryDialog(this, true, getAllIPs());
+        NewRegistryDialog d = new NewRegistryDialog(this, true, selectedIPInterface);
         if (!d.getResult()) {
             return;
         }
-        Main.startLocalRegistryDaemon(d.getIpAddress(), d.getRegName(), d.getRegPort(), d.getRegServicePort());
+        Main.startLocalRegistryDaemon(selectedIPInterface, d.getRegName(), d.getRegPort(), d.getRegServicePort());
         log("Registry created: "
-                + "\n    - ip: " + d.getIpAddress()
+                + "\n    - ip: " + selectedIPInterface
                 + "\n    - port " + d.getRegPort()
                 + "\n    - serv. port " + d.getRegServicePort()
                 + "\n    - serv. name: " + d.getRegName()
         );
 
         //Also connect
-        connectToRegistry("rmi://" + d.getIpAddress() + ":" + d.getRegPort() + "/" + d.getRegName());
+        connectToRegistry("rmi://" + selectedIPInterface + ":" + d.getRegPort() + "/" + d.getRegName());
     }
 
     private void connectToRegistry(String registryURL) throws RemoteException {
@@ -123,6 +162,7 @@ public class MonitorFrame extends javax.swing.JFrame {
             log("Connected!");
             statusTextField.setText("Connected to " + registryURL);
             monitorIdTextField.setText(monitorID.toString());
+            agentsMenu.setEnabled(true);
         }
     }
 
@@ -190,10 +230,10 @@ public class MonitorFrame extends javax.swing.JFrame {
     }
 
     private void test() throws RemoteException {
-        alert("Registry says " + registryConnection.sayHello());
+        alert("Testing!");
     }
 
-    private ArrayList<String> getAllIPs() {
+    private String[] getAllIPs() {
         ArrayList<String> result = new ArrayList<>();
         try {
             InetAddress localhost = InetAddress.getLocalHost();
@@ -208,7 +248,7 @@ public class MonitorFrame extends javax.swing.JFrame {
             System.out.println("Error resolving own IPs");
             e.printStackTrace();
         }
-        return result;
+        return result.toArray(new String[result.size()]);
     }
 
     void disconnect() throws RemoteException {
@@ -216,6 +256,27 @@ public class MonitorFrame extends javax.swing.JFrame {
         registryConnection = null;
         monitorID = null;
         checkConnection();
+    }
+
+    void startMonitor() throws RemoteException {
+        startMonitorBtn.setText("Monitor started");
+        startMonitorBtn.setEnabled(false);
+        monitorNameField.setEnabled(false);
+        monitorPortField.setEnabled(false);
+        monitorServicePortField.setEnabled(false);
+        registryMenu.setEnabled(true);
+        ipCombo.setEnabled(false);
+
+        //Set variables
+        selectedIPInterface = (String) ipCombo.getSelectedItem();
+        monitorName = monitorNameField.getText();
+        monitorPort = Integer.parseInt(monitorPortField.getText());
+        monitorServicePort = Integer.parseInt(monitorServicePortField.getText());
+
+        //Start monitor daemon
+        Thread localMonitorWorker = new Thread(this);
+        localMonitorWorker.setDaemon(true);
+        localMonitorWorker.start();
     }
 
     /**
@@ -239,8 +300,17 @@ public class MonitorFrame extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         statusTextField = new javax.swing.JTextField();
         monitorIdTextField = new javax.swing.JTextField();
+        monitorNameField = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        monitorPortField = new javax.swing.JTextField();
+        monitorServicePortField = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        startMonitorBtn = new javax.swing.JButton();
+        ipCombo = new javax.swing.JComboBox();
+        jLabel6 = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
-        disconnectBtn = new javax.swing.JMenu();
+        registryMenu = new javax.swing.JMenu();
         startNewRegistryBtn = new javax.swing.JMenuItem();
         connectBtn = new javax.swing.JMenuItem();
         discBtn = new javax.swing.JMenuItem();
@@ -262,7 +332,7 @@ public class MonitorFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("SiMusic Monitor");
-        setMinimumSize(new java.awt.Dimension(800, 600));
+        setMinimumSize(new java.awt.Dimension(1000, 640));
 
         logField.setEditable(false);
         logField.setColumns(20);
@@ -282,24 +352,67 @@ public class MonitorFrame extends javax.swing.JFrame {
         statusTextField.setEditable(false);
         statusTextField.setFont(new java.awt.Font("Verdana", 0, 11)); // NOI18N
         statusTextField.setText("Disconnected");
+        statusTextField.setEnabled(false);
 
         monitorIdTextField.setEditable(false);
         monitorIdTextField.setFont(new java.awt.Font("Verdana", 0, 11)); // NOI18N
+        monitorIdTextField.setEnabled(false);
+
+        monitorNameField.setText("SiMonitor");
+
+        jLabel3.setText("Monitor Name");
+
+        jLabel4.setText("RMI Port");
+
+        jLabel5.setText("Service Port");
+
+        startMonitorBtn.setText("Start Monitor");
+        startMonitorBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startMonitorBtnActionPerformed(evt);
+            }
+        });
+
+        jLabel6.setText("Interface");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(26, 26, 26)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2))
-                .addGap(53, 53, 53)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(monitorIdTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 356, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(23, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(44, 44, 44)
+                        .addComponent(jLabel1)
+                        .addGap(18, 18, 18)
+                        .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 356, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(31, 31, 31)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel6))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(ipCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jLabel5))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(monitorNameField, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(45, 45, 45)
+                                .addComponent(jLabel4)))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(monitorPortField, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(monitorServicePortField, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(23, 23, 23)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addGap(18, 18, 18)
+                        .addComponent(monitorIdTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(startMonitorBtn))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -307,15 +420,29 @@ public class MonitorFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
                     .addComponent(monitorIdTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(96, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(monitorNameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel4)
+                            .addComponent(monitorPortField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5)
+                            .addComponent(monitorServicePortField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(ipCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel6)))
+                    .addComponent(startMonitorBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 28, Short.MAX_VALUE))
         );
 
-        disconnectBtn.setText("Registry");
+        registryMenu.setText("Registry");
+        registryMenu.setEnabled(false);
 
         startNewRegistryBtn.setText("Start new local registry...");
         startNewRegistryBtn.addActionListener(new java.awt.event.ActionListener() {
@@ -323,7 +450,7 @@ public class MonitorFrame extends javax.swing.JFrame {
                 startNewRegistryBtnActionPerformed(evt);
             }
         });
-        disconnectBtn.add(startNewRegistryBtn);
+        registryMenu.add(startNewRegistryBtn);
 
         connectBtn.setText("Connect to existing registry...");
         connectBtn.addActionListener(new java.awt.event.ActionListener() {
@@ -331,17 +458,18 @@ public class MonitorFrame extends javax.swing.JFrame {
                 connectBtnActionPerformed(evt);
             }
         });
-        disconnectBtn.add(connectBtn);
+        registryMenu.add(connectBtn);
 
         discBtn.setText("Disconnect");
+        discBtn.setEnabled(false);
         discBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 discBtnActionPerformed(evt);
             }
         });
-        disconnectBtn.add(discBtn);
+        registryMenu.add(discBtn);
 
-        jMenuBar1.add(disconnectBtn);
+        jMenuBar1.add(registryMenu);
 
         agentsMenu.setText("Agents");
         agentsMenu.setEnabled(false);
@@ -400,7 +528,7 @@ public class MonitorFrame extends javax.swing.JFrame {
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(workingPane)
+                    .addComponent(workingPane, javax.swing.GroupLayout.DEFAULT_SIZE, 629, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -410,11 +538,11 @@ public class MonitorFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(workingPane, javax.swing.GroupLayout.DEFAULT_SIZE, 334, Short.MAX_VALUE)
+                        .addComponent(workingPane, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1))
-                .addContainerGap())
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addComponent(jScrollPane1)))
         );
 
         pack();
@@ -475,6 +603,14 @@ public class MonitorFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_discBtnActionPerformed
 
+    private void startMonitorBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startMonitorBtnActionPerformed
+        try {
+            startMonitor();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_startMonitorBtnActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;
     private javax.swing.JMenuItem addAiPerformerMenuItem;
@@ -482,10 +618,14 @@ public class MonitorFrame extends javax.swing.JFrame {
     private javax.swing.JMenu agentsMenu;
     private javax.swing.JMenuItem connectBtn;
     private javax.swing.JMenuItem discBtn;
-    private javax.swing.JMenu disconnectBtn;
     private javax.swing.JMenu helpMenu;
+    private javax.swing.JComboBox ipCombo;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu4;
@@ -496,6 +636,11 @@ public class MonitorFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea logField;
     private javax.swing.JTextField monitorIdTextField;
+    private javax.swing.JTextField monitorNameField;
+    private javax.swing.JTextField monitorPortField;
+    private javax.swing.JTextField monitorServicePortField;
+    private javax.swing.JMenu registryMenu;
+    private javax.swing.JButton startMonitorBtn;
     private javax.swing.JMenuItem startNewRegistryBtn;
     private javax.swing.JTextField statusTextField;
     private javax.swing.JMenuItem testMenuItem;

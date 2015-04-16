@@ -24,8 +24,8 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     public int registryPort;
     public int registryServicePort;
     public JTextArea logOfRegistry;
-    public Registry myRegistryObject;
-    public java.rmi.registry.Registry rmiRegistryLocated;
+    public RegistryDaemon registryDaemon;
+    public java.rmi.registry.Registry rmiRegistryLocation;
     //New
 
     public RegistryFrame(String registryIPAddress, String registryName, int registryPort, int registryServicePort) throws RemoteException {
@@ -33,17 +33,23 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         this.registryName = registryName;
         this.registryPort = registryPort;
         this.registryServicePort = registryServicePort;
+        this.logOfRegistry = registryLog;
+        initComponents();
+        this.setVisible(true);
+    }
+
+    public void startDaemon() {
+        Thread localRegistryWorker = new Thread(this);
+        localRegistryWorker.setDaemon(true);
+        localRegistryWorker.start();
     }
 
     @Override
     public void run() {
         try {
-            initComponents();
-            this.setVisible(true);
-            logOfRegistry = registryLog;
-            myRegistryObject = new Registry(this);
-            rmiRegistryLocated = java.rmi.registry.LocateRegistry.createRegistry(registryPort);
-            Naming.rebind("rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName, myRegistryObject);
+            registryDaemon = new RegistryDaemon(this);
+            rmiRegistryLocation = java.rmi.registry.LocateRegistry.createRegistry(registryPort);
+            Naming.rebind("rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName, registryDaemon);
 
             //Done
             registryLog.append("SiMusic Daemon\nRegistry created: "
@@ -63,8 +69,8 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         statusTextField.setText("Stopping daemon...");
 
         try {
-            rmiRegistryLocated.unbind(registryName);
-            myRegistryObject = null;
+            rmiRegistryLocation.unbind(registryName);
+            registryDaemon = null;
         } catch (Exception e) {
             statusTextField.setText("Error.");
             e.printStackTrace();
@@ -110,7 +116,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         statusTextField = new javax.swing.JTextField();
         stopButton = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("SiMusic Registry Daemon");
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
