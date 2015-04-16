@@ -5,10 +5,8 @@
  */
 package rmi.registry;
 
-import rmi.misc.UpdateMessage;
-import rmi.interfaces.MonitorInterface;
-import rmi.interfaces.AiPerformerInterface;
-import rmi.interfaces.HumanPerformerInterface;
+import rmi.monitor.UpdateMessage;
+import rmi.interfaces.RegistryInterface;
 import java.rmi.Naming;
 import java.lang.SecurityManager;
 import java.rmi.server.UnicastRemoteObject;
@@ -19,23 +17,18 @@ import java.rmi.RemoteException;
 import java.rmi.registry.*;
 import java.util.ArrayList;
 import javax.swing.JTextArea;
+import run.Main;
+import static run.Main.AgentType;
 
 /**
  *
  * @author Martin
  */
-public class Registry extends UnicastRemoteObject implements AiPerformerInterface, HumanPerformerInterface, MonitorInterface {
+public class Registry extends UnicastRemoteObject implements RegistryInterface {
 
-    public static enum AgentType {
 
-        AIPerformer, HumanPerformer, Monitor
-    }
-
-    RegistryDaemon daemon;
-
-    public Registry(RegistryDaemon daemon) throws RemoteException {
-        super(daemon.servicePort);
-        this.daemon = daemon;
+    public Registry() throws RemoteException {
+        super(Main.registryServicePort);
 
         System.setProperty("java.security.policy", "simusic.policy");
         System.setSecurityManager(new SecurityManager());
@@ -101,22 +94,8 @@ public class Registry extends UnicastRemoteObject implements AiPerformerInterfac
         return "Hello from registry!";
     }
 
-    @Override
-    public UpdateMessage getUpdate() {
-        if (daemon.shuttingDown) {
-            return getDeadUpdate();
-        }
-        return null;
-    }
-
-    private UpdateMessage getDeadUpdate() {
-        //Some shutdown logic? (it's still enough)
-        daemon.doShutDown = true;
-        return new UpdateMessage(true);
-    }
-
     private void log(String message) {
-        daemon.logOfRegistry.append(message + "\n");
+        Main.logOfRegistry.append(message + "\n");
     }
 
 }

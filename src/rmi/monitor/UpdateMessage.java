@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.misc;
+package rmi.monitor;
 
+import rmi.monitor.DummyLink;
 import java.util.ArrayList;
 import rmi.dummies.AgentDummy;
 

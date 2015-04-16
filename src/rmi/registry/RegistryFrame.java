@@ -10,36 +10,20 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import javax.swing.JTextArea;
+import run.Main;
 
 /**
  *
  * @author Martin
  */
-public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
+public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
-    public static final int SHUTDOWN_TIME_MULTIPLIER = 5;
 
-    public String ipAddress;
-    public String registryName;
-    public int registryPort;
-    public int servicePort;
-    public int updatePeriod;
-    public JTextArea logOfRegistry;
-
-    Registry myRegistryObject;
-    java.rmi.registry.Registry rmiRegistryLocated;
-
-    public Boolean shuttingDown;
-    public Boolean doShutDown;
-
-    public RegistryDaemon(String ipAddress, String registryName, int regPort, int regSport, int updatePeriod) throws RemoteException {
-        this.ipAddress = ipAddress;
-        this.registryName = registryName;
-        this.registryPort = regPort;
-        this.servicePort = regSport;
-        this.updatePeriod = updatePeriod;
-        this.shuttingDown = false;
-        this.doShutDown = false;
+    public RegistryFrame(String ipAddress, String registryName, int regPort, int regSport, int updatePeriod) throws RemoteException {
+        Main.registryIPAddress = ipAddress;
+        Main.registryName = registryName;
+        Main.registryPort = regPort;
+        Main.registryServicePort = regSport;
     }
 
     @Override
@@ -47,18 +31,17 @@ public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
         try {
             initComponents();
             this.setVisible(true);
-            this.logOfRegistry = registryLog;
-            myRegistryObject = new Registry(this);
-            rmiRegistryLocated = java.rmi.registry.LocateRegistry.createRegistry(registryPort);
-            Naming.rebind("rmi://" + ipAddress + ":" + registryPort + "/" + registryName, myRegistryObject);
+            Main.logOfRegistry = registryLog;
+            Main.myRegistryObject = new Registry();
+            Main.rmiRegistryLocated = java.rmi.registry.LocateRegistry.createRegistry(Main.registryPort);
+            Naming.rebind("rmi://" + Main.registryIPAddress + ":" + Main.registryPort + "/" + Main.registryName, Main.myRegistryObject);
 
             //Done
             registryLog.append("SiMusic Daemon\nRegistry created: "
-                    + "\n    - ip: " + ipAddress
-                    + "\n    - port " + registryPort
-                    + "\n    - serv. port " + servicePort
-                    + "\n    - serv. name: " + registryName
-                    + "\n    - upd. period: " + updatePeriod
+                    + "\n    - ip: " + Main.registryIPAddress
+                    + "\n    - port " + Main.registryPort
+                    + "\n    - serv. port " + Main.registryServicePort
+                    + "\n    - serv. name: " + Main.registryName
                     + "\n");
             statusTextField.setText("Daemon running");
         } catch (Exception e) {
@@ -69,17 +52,10 @@ public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
     private void shutDown() {
         stopButton.setEnabled(false);
         statusTextField.setText("Stopping daemon...");
-        shuttingDown = true;
-        
-        revalidate();
-
-        while (!doShutDown) {
-            wait(updatePeriod);
-        }
 
         try {
-            rmiRegistryLocated.unbind(registryName);
-            myRegistryObject = null;
+            Main.rmiRegistryLocated.unbind(Main.registryName);
+            Main.myRegistryObject = null;
         } catch (Exception e) {
             statusTextField.setText("Error.");
             e.printStackTrace();
@@ -104,7 +80,7 @@ public class RegistryDaemon extends javax.swing.JFrame implements Runnable {
     /**
      * Creates new form RegistryDaemon
      */
-    public RegistryDaemon() {
+    public RegistryFrame() {
         initComponents();
     }
 

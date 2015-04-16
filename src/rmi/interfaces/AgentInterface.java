@@ -8,19 +8,24 @@ package rmi.interfaces;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import rmi.monitor.UpdateMessage;
 import rmi.registry.Registry;
-import rmi.misc.UpdateMessage;
 
 /**
  *
  * @author Martin
  */
-public interface MonitorInterface extends Remote {
+public interface AgentInterface extends Remote {
+    //AI methods
+    public void unicast(String message, int senderID) throws RemoteException;
+    public boolean ping() throws RemoteException;
+    public boolean disconnect() throws RemoteException; // also human
+    
+    //Monitor methods
+    
     public String sayHello() throws RemoteException;
+    public void update(UpdateMessage update) throws RemoteException;
     
-    public int connect(Registry.AgentType agentType) throws RemoteException;
-    public boolean ping(int id) throws RemoteException;
-    public boolean disconnect(int id) throws RemoteException;
     
-    public UpdateMessage getUpdate() throws RemoteException;
+    //Human methods
 }

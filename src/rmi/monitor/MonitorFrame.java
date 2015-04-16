@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.agents;
+package rmi.monitor;
 
 import com.sun.corba.se.spi.ior.iiop.IIOPAddress;
 import rmi.dummies.MonitorDummy;
@@ -32,26 +32,22 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import static rmi.registry.Registry.AgentType;
+import static run.Main.AgentType;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
+import rmi.interfaces.RegistryInterface;
 import rmi.registry.Registry;
-import rmi.interfaces.MonitorInterface;
-import rmi.misc.NewRegistryDialog;
+import rmi.monitor.NewRegistryDialog;
 import run.Main;
 
 /**
  *
  * @author Martin
  */
-public class Monitor extends javax.swing.JFrame {
+public class MonitorFrame extends javax.swing.JFrame {
 
-    MonitorInterface registryConnection;
 
-    Integer id;
-    int updateDelay;
-
-    public Monitor() {
+    public MonitorFrame() {
         initComponents();
         this.setVisible(true);
         DefaultCaret logCaret = (DefaultCaret) this.logField.getCaret();
@@ -61,14 +57,14 @@ public class Monitor extends javax.swing.JFrame {
     }
 
     public boolean pingRegistry() throws RemoteException {
-        if (registryConnection == null) {
+        if (Main.registryConnection == null) {
             return false;
         }
-        return registryConnection.ping(id);
+        return Main.registryConnection.ping(Main.monitorID);
     }
 
     public boolean isAssignedID() throws RemoteException {
-        return (id != null);
+        return (Main.monitorID != null);
     }
 
     public boolean checkConnection() throws RemoteException {
@@ -110,18 +106,18 @@ public class Monitor extends javax.swing.JFrame {
         log("Connecting to " + registryURL);
         System.setSecurityManager(new SecurityManager());
         try {
-            registryConnection = (MonitorInterface) Naming.lookup(registryURL);
+            Main.registryConnection = (RegistryInterface) Naming.lookup(registryURL);
         } catch (Exception e) {
             System.out.println("Monitor to registry connection exception: " + e.getMessage());
             e.printStackTrace();
         }
 
-        id = registryConnection.connect(AgentType.Monitor);
+        Main.monitorID = Main.registryConnection.connect(AgentType.Monitor);
 
         if (checkConnection()) {
             log("Connected!");
             statusTextField.setText("Connected to " + registryURL);
-            monitorIdTextField.setText(id.toString());
+            monitorIdTextField.setText(Main.monitorID.toString());
         }
     }
 
@@ -189,7 +185,7 @@ public class Monitor extends javax.swing.JFrame {
     }
 
     private void test() throws RemoteException {
-        alert("Registry says " + registryConnection.sayHello());
+        alert("Registry says " + Main.registryConnection.sayHello());
     }
 
     private ArrayList<String> getAllIPs() {
@@ -211,9 +207,9 @@ public class Monitor extends javax.swing.JFrame {
     }
 
     void disconnect() throws RemoteException {
-        registryConnection.disconnect(id);
-        registryConnection = null;
-        id = null;
+        Main.registryConnection.disconnect(Main.monitorID);
+        Main.registryConnection = null;
+        Main.monitorID = null;
         checkConnection();
     }
 
@@ -238,10 +234,6 @@ public class Monitor extends javax.swing.JFrame {
         statusTextField = new javax.swing.JTextField();
         monitorIdTextField = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        startLocalRegistryMenuItem = new javax.swing.JMenuItem();
-        connectToRemoteRegistryMenuItem = new javax.swing.JMenuItem();
-        disconnectBtn = new javax.swing.JMenuItem();
         agentsMenu = new javax.swing.JMenu();
         jMenu4 = new javax.swing.JMenu();
         addAiPerformerMenuItem = new javax.swing.JMenuItem();
@@ -310,35 +302,6 @@ public class Monitor extends javax.swing.JFrame {
                     .addComponent(monitorIdTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(72, Short.MAX_VALUE))
         );
-
-        jMenu1.setText("Registry");
-
-        startLocalRegistryMenuItem.setText("Start local registry daemon");
-        startLocalRegistryMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                startLocalRegistryMenuItemActionPerformed(evt);
-            }
-        });
-        jMenu1.add(startLocalRegistryMenuItem);
-
-        connectToRemoteRegistryMenuItem.setText("Connect to existing registry");
-        connectToRemoteRegistryMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                connectToRemoteRegistryMenuItemActionPerformed(evt);
-            }
-        });
-        jMenu1.add(connectToRemoteRegistryMenuItem);
-
-        disconnectBtn.setText("Disconnect");
-        disconnectBtn.setEnabled(false);
-        disconnectBtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                disconnectBtnActionPerformed(evt);
-            }
-        });
-        jMenu1.add(disconnectBtn);
-
-        jMenuBar1.add(jMenu1);
 
         agentsMenu.setText("Agents");
         agentsMenu.setEnabled(false);
@@ -439,24 +402,6 @@ public class Monitor extends javax.swing.JFrame {
         showAbout();
     }//GEN-LAST:event_aboutMenuItemActionPerformed
 
-    private void startLocalRegistryMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startLocalRegistryMenuItemActionPerformed
-        try {
-            startNewRegistry();
-        } catch (RemoteException e) {
-            log(e.getLocalizedMessage());
-            e.printStackTrace();
-        }
-    }//GEN-LAST:event_startLocalRegistryMenuItemActionPerformed
-
-    private void connectToRemoteRegistryMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectToRemoteRegistryMenuItemActionPerformed
-        try {
-            connectToRegistry();
-        } catch (RemoteException e) {
-            log(e.getLocalizedMessage());
-            e.printStackTrace();
-        }
-    }//GEN-LAST:event_connectToRemoteRegistryMenuItemActionPerformed
-
     private void testMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testMenuItemActionPerformed
         try {
             test();
@@ -466,26 +411,14 @@ public class Monitor extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_testMenuItemActionPerformed
 
-    private void disconnectBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_disconnectBtnActionPerformed
-        try {
-            disconnect();
-        } catch (RemoteException e) {
-            log(e.getLocalizedMessage());
-            e.printStackTrace();
-        }
-    }//GEN-LAST:event_disconnectBtnActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;
     private javax.swing.JMenuItem addAiPerformerMenuItem;
     private javax.swing.JMenuItem addHumanPerformerMenuItem;
     private javax.swing.JMenu agentsMenu;
-    private javax.swing.JMenuItem connectToRemoteRegistryMenuItem;
-    private javax.swing.JMenuItem disconnectBtn;
     private javax.swing.JMenu helpMenu;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
@@ -495,7 +428,6 @@ public class Monitor extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea logField;
     private javax.swing.JTextField monitorIdTextField;
-    private javax.swing.JMenuItem startLocalRegistryMenuItem;
     private javax.swing.JTextField statusTextField;
     private javax.swing.JMenuItem testMenuItem;
     private javax.swing.JScrollPane workingPane;

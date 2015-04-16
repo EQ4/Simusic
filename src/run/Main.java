@@ -8,18 +8,44 @@ package run;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.util.Random;
+import javax.swing.JTextArea;
+import rmi.interfaces.RegistryInterface;
 import rmi.registry.Registry;
-import rmi.registry.RegistryDaemon;
-import rmi.agents.Monitor;
+import rmi.registry.RegistryFrame;
+import rmi.monitor.MonitorFrame;
 
 /**
  *
  * @author Martin
  */
 public class Main {
+    public static final Random rand = new Random();
+    
+    public static enum AgentType {
 
-    public static Monitor mainMonitor;
-    public static Thread localRegistryWorker;
+        AIPerformer, HumanPerformer, Monitor
+    }
+    
+    //Monitor vars
+    public static MonitorFrame monitorFrame;
+    public static int portCounter = 51000 + rand.nextInt(5000);
+    public static RegistryInterface registryConnection;
+    public static Integer monitorID;
+    public static int updateDelay;
+    //New
+    
+    
+    //Registry vars
+    public static String registryIPAddress;
+    public static String registryName;
+    public static int registryPort;
+    public static int registryServicePort;
+    public static JTextArea logOfRegistry;
+    public static Registry myRegistryObject;
+    public static java.rmi.registry.Registry rmiRegistryLocated;
+    //New
+    
 
     /**
      * @param args the command line arguments
@@ -38,14 +64,16 @@ public class Main {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Monitor.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MonitorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Monitor.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MonitorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Monitor.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MonitorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Monitor.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MonitorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
         //</editor-fold>
 
@@ -54,14 +82,14 @@ public class Main {
             @Override
             public void run() {
                 //Start main monitor frame
-                mainMonitor = new Monitor();
+                monitorFrame = new MonitorFrame();
             }
         });
     }
 
     public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport, int updatePeriod) throws RemoteException {
-        RegistryDaemon registryDaemon = new RegistryDaemon(ipAddress, registryName, regPort, regSport, updatePeriod);
-        localRegistryWorker = new Thread(registryDaemon);
+        RegistryFrame registryDaemon = new RegistryFrame(ipAddress, registryName, regPort, regSport, updatePeriod);
+        Thread localRegistryWorker = new Thread(registryDaemon);
         localRegistryWorker.setDaemon(true);
         localRegistryWorker.start();
     }

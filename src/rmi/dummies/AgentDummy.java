@@ -20,9 +20,12 @@ import javax.swing.JPanel;
  */
 public abstract class AgentDummy extends JPanel {
     String name;
-    int ID;
     InetAddress address;
+    int port;
+    int ID;
     Point position;
+    
+    
     
     public AgentDummy(String name, int ID, InetAddress address) {
         this.name = name;
