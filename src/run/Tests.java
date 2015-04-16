@@ -1,6 +1,5 @@
 package run;
 
-import agents.AgentManager;
 import player.Arpeggiator;
 import elements.Chord;
 import java.util.*;
