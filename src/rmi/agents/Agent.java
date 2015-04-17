@@ -7,6 +7,7 @@ package rmi.agents;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
 import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
@@ -56,6 +57,8 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
             Naming.rebind(agentRmiAddress, this);
             connectToRegistry();
             runBehaviour();
+        } catch (ExportException e) {
+            System.out.println("<" + agentRmiAddress + "> Port is already in use! Please try again later.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,8 +74,8 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         }
 
         //Connect & Update
-        UpdateMessage fullUpdate = registryConnection.connect(getAgentType(), name, ip, port, masterMonitorID);
-        this.id = fullUpdate.newAgentID;
+        UpdateMessage firstUpdate = registryConnection.connect(getAgentType(), name, ip, port, masterMonitorID);
+        this.id = firstUpdate.welcomePack.ID;
     }
 
     public abstract void runBehaviour();

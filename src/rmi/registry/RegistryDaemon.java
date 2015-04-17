@@ -75,7 +75,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     @Override
     public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException {
-        int id = frame.agentConnections.size();
+        int id = frame.agentDummies.size();
         AgentDummy newAgentDummy = new AgentDummy(agentType, agentName, id, agentIP, agentPort, masterMonitorID);
         frame.agentDummies.add(newAgentDummy);
         try {
@@ -84,47 +84,74 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
             System.out.println("Registry to agent connection exception: " + e.getMessage());
             e.printStackTrace();
         }
-        log(agentType + " has connected! Assigning id = " + id);
-        
+        log("A new agent has connected!\n"
+                + "    - name: " + agentName + "\n"
+                + "    - type: " + agentType.toString() + "\n"
+                + "    - ip: " + agentIP + "\n"
+                + "    - port: " + agentName + "\n"
+                + "    - ID: " + id + "\n"
+                + "    - owned by: " + masterMonitorID
+        );
+
         //Say hello
         frame.agentConnections.get(id).sayHello();
-        
-        broadcastUpdates();
-        
-        return getFullUpdate();
+
+        triggerGlobalUpdate();
+
+        return getFirstUpdate(newAgentDummy);
     }
-    
-    public void broadcastUpdates() throws RemoteException {
+
+    public void triggerGlobalUpdate() throws RemoteException {
         for (AgentInterface agent : frame.agentConnections) {
-            agent.update(getFullUpdate());
+            if (agent != null) {
+                agent.update(getRegularUpdate());
+            }
         }
     }
-    
-    private UpdateMessage getFullUpdate() {
+
+    private UpdateMessage getRegularUpdate() {
         UpdateMessage result = new UpdateMessage();
         result.updatedDummies = frame.agentDummies;
         return result;
     }
 
+    private UpdateMessage getFirstUpdate(AgentDummy newAgentDummy) {
+        UpdateMessage result = new UpdateMessage();
+        result.updatedDummies = frame.agentDummies;
+        result.welcomePack = newAgentDummy;
+        return result;
+    }
+
     @Override
-    public boolean ping(int id) {
+    public boolean ping(int id) throws RemoteException {
         log("Agent " + id + " pinged and got ponged!");
         return true;
     }
 
     @Override
-    public boolean disconnect(int id) {
-        log("Agent " + id + " has disconnected!");
+    public boolean disconnect(int id) throws RemoteException {
+        AgentDummy agent = frame.agentDummies.get(id);
+        frame.agentConnections.set(id, null);
+        log(agent.name + " (#" + id + ") has disconnected.");
+        if (agent.masterMonitorID == null) {
+            for (AgentDummy dummy : frame.agentDummies) {
+                if (dummy.masterMonitorID == id) {
+                    dummy.isOffline = true;
+                }
+            }
+        }
+        //Update agents
+        triggerGlobalUpdate();
         return true;
     }
 
     @Override
-    public String sayHello(int id) {
+    public String sayHello(int id) throws RemoteException {
         log("Agent " + id + " says hi!");
         return "Hello from registry!";
     }
 
-    private void log(String message) {
+    private void log(String message) throws RemoteException {
         frame.log(message);
     }
 

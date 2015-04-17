@@ -16,8 +16,8 @@ import java.util.ArrayList;
 public class UpdateMessage implements Serializable {
     public ArrayList<AgentDummy> updatedDummies;
     public ArrayList<AgentDummyLink> updatedLinks;
+    public AgentDummy welcomePack;
     public boolean shutDown;
-    public int newAgentID;
     
     public UpdateMessage() {
         updatedDummies = new ArrayList<>();

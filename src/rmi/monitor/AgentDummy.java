@@ -26,15 +26,15 @@ public class AgentDummy extends JPanel implements Serializable {
     public static final int CANVAS_MAX_X = 500;
     public static final int CANVAS_MAX_Y = 500;
     
-    AgentType agentType;
-    String name;
-    String address;
-    int port;
-    int ID;
-    Point position;
-    Integer masterMonitorID;
+    public AgentType agentType;
+    public String name;
+    public String address;
+    public int port;
+    public int ID;
+    public Point position;
+    public Integer masterMonitorID;
     
-    boolean isOffline;
+    public boolean isOffline;
     
     
     public AgentDummy(AgentType agentType, String name, int ID, String address, int port, Integer masterMonitorID) {

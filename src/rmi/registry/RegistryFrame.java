@@ -6,11 +6,16 @@
 package rmi.registry;
 
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.server.ExportException;
 import java.util.ArrayList;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
+import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
 import rmi.monitor.AgentDummy;
 import rmi.interfaces.AgentInterface;
 import run.Main;
@@ -27,6 +32,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
     public String registryIPAddress;
     public String registryName;
+    public String registryFullAddress;
     public int registryPort;
     public int registryServicePort;
     public RegistryDaemon registryDaemon;
@@ -43,6 +49,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         this.registryName = registryName;
         this.registryPort = registryPort;
         this.registryServicePort = registryServicePort;
+        this.registryFullAddress = "rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName;
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
@@ -59,7 +66,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         try {
             registryDaemon = new RegistryDaemon(this);
             rmiRegistryLocation = java.rmi.registry.LocateRegistry.createRegistry(registryPort);
-            Naming.rebind("rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName, registryDaemon);
+            Naming.rebind(registryFullAddress, registryDaemon);
 
             //Done
             registryLog.append("--- SiMusic ---\nRegistry created: "
@@ -67,9 +74,18 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
                     + "\n    - port " + registryPort
                     + "\n    - serv. port " + registryServicePort
                     + "\n    - serv. name: " + registryName
+                    + "\n    - address: " + registryFullAddress
                     + "\n");
             statusTextField.setText("Daemon running");
-        } catch (Exception e) {
+        } catch (ExportException e) {
+            if (e.getMessage().contains("already in use")) {
+                alert("Port is already in use!");
+            } else {
+                e.printStackTrace();
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         }
     }
@@ -77,6 +93,15 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     private void shutDown() {
         stopButton.setEnabled(false);
         statusTextField.setText("Stopping daemon...");
+
+        //Broadcast shutdown message
+        for (AgentInterface agent : agentConnections) {
+            try {
+                agent.disconnect();
+            } catch (Exception e) {
+                //Shouldn't be a problem since we're shutting down
+            }
+        }
 
         try {
             rmiRegistryLocation.unbind(registryName);
@@ -99,10 +124,17 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
      */
     public RegistryFrame() {
         initComponents();
+
+        DefaultCaret logCaret = (DefaultCaret) this.registryLog.getCaret();
+        logCaret.setUpdatePolicy(ALWAYS_UPDATE);
     }
 
     public void log(String message) {
         registryLog.append(message + "\n");
+    }
+
+    private void alert(String message) {
+        JOptionPane.showMessageDialog(this, message);
     }
 
     /**

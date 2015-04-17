@@ -12,6 +12,8 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.LayoutManager;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -23,6 +25,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.server.ExportException;
 import java.util.ArrayList;
 import java.util.Random;
 import javafx.scene.paint.Color;
@@ -34,6 +37,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 import rmi.misc.AgentType;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
@@ -82,6 +87,12 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     + "\n    - serv. name: " + monitorName
                     + "\n");
             statusTextField.setText("Daemon running");
+        } catch (ExportException e) {
+            if (e.getMessage().contains("already in use")) {
+                alert("Port is already in use!");
+            } else {
+                e.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -103,9 +114,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         DefaultCaret logCaret = (DefaultCaret) this.logField.getCaret();
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
 
-        workingPane.getViewport().setBackground(new java.awt.Color(240, 248, 255));
-
         spawnedComputers = new ArrayList<>();
+
     }
 
     public boolean pingRegistry() throws RemoteException {
@@ -126,6 +136,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             discBtn.setEnabled(true);
             connectBtn.setEnabled(false);
         } else {
+            canvas.setViewport(null);
+            canvas.revalidate();
             registryURL = null;
             startNewRegistryBtn.setEnabled(true);
             discBtn.setEnabled(false);
@@ -134,6 +146,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             monitorIdTextField.setText("");
             agentsMenu.setEnabled(false);
             log("Disconnected");
+            revalidate();
         }
         return truthValue;
     }
@@ -168,7 +181,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         UpdateMessage fullUpdate = registryConnection.connect(AgentType.Monitor, monitorName, selectedIPInterface, monitorPort, null);
 
         //Unpack and process update
-        monitorID = fullUpdate.newAgentID;
+        monitorID = fullUpdate.welcomePack.ID;
         processUpdate(fullUpdate);
 
         monitorIdTextField.setText(monitorID + "");
@@ -209,28 +222,36 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     private void createAgent(AgentType agentType) throws RemoteException {
-        String name = (String) JOptionPane.showInputDialog(
-                this,
-                "Enter agent name",
-                "Create new agent",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                Main.getRandomName());
-        switch (agentType) {
-            case AIPerformer:
-                Agent spawnedComputer = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
-                spawnedComputers.add(spawnedComputer);
-                spawnedComputer.startAgentDaemon();
-                break;
-            case HumanPerformer:
-                if (spawnedHuman != null) {
-                    alert("Only 1 human performer can be created per monitor!");
-                    return;
-                }
-                spawnedHuman = new Human(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
-                spawnedHuman.startAgentDaemon();
-                break;
+        try {
+            String name = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Enter agent name",
+                    "Create new agent",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    Main.getRandomName());
+            switch (agentType) {
+                case AIPerformer:
+                    Agent spawnedComputer = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
+                    spawnedComputers.add(spawnedComputer);
+                    spawnedComputer.startAgentDaemon();
+                    break;
+                case HumanPerformer:
+                    if (spawnedHuman != null) {
+                        alert("Only 1 human performer can be created per monitor!");
+                        return;
+                    }
+                    spawnedHuman = new Human(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
+                    spawnedHuman.startAgentDaemon();
+                    break;
+            }
+        } catch (ExportException e) {
+            if (e.getMessage().contains("already in use")) {
+                alert("Port is already in use!");
+            } else {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -278,11 +299,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     void startMonitor() throws RemoteException {
         startMonitorBtn.setText("Monitor started");
         startMonitorBtn.setEnabled(false);
-        monitorNameField.setEnabled(false);
-        monitorPortField.setEnabled(false);
-        monitorServicePortField.setEnabled(false);
+        monitorNameField.setEditable(false);
+        monitorPortField.setEditable(false);
+        monitorServicePortField.setEditable(false);
         registryMenu.setEnabled(true);
-        ipCombo.setEnabled(false);
+        ipCombo.setEditable(false);
 
         //Set variables
         selectedIPInterface = (String) ipCombo.getSelectedItem();
@@ -297,25 +318,50 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     void processUpdate(UpdateMessage update) {
-        workingPane.repaint();
-        try {
-            for (AgentDummy dummy : update.updatedDummies) {
+        JPanel newPanel = new JPanel(new GridLayout(0, 3, 32, 48));
+
+        update.updatedDummies.stream().filter((dummy) -> (!dummy.isOffline)).forEach((dummy) -> {
+            try {
+                ImageIcon img = null;
                 try {
-                    BufferedImage img = ImageIO.read(new File("resources/" + dummy.getIconFilename() + ".jpg"));
-                    ImageIcon icon = new ImageIcon(img);
-                    JLabel label = new JLabel(icon);
-                    //label.setLocation(dummy.position);
-                    workingPane.getViewport().add(label, null);
-                    label.setBounds(new Rectangle(dummy.position, label.getPreferredSize()));
-                    //workingPane.getViewport().revalidate();
-                    //workingPane.getViewport().repaint();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    img = new ImageIcon(ImageIO.read(new File("resources/" + dummy.getIconFilename() + ".png")));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
+
+                AgentIcon icon = new AgentIcon(img, "<html><b>"
+                        + dummy.name + "</b><br />"
+                        + dummy.address + ":"
+                        + dummy.port + "<br />ID: "
+                        + dummy.ID
+                        + ((dummy.masterMonitorID == null) ? "" : (", owned by M" + dummy.masterMonitorID))
+                        + (dummy.isOffline() ? "<br />OFFLINE" : "")
+                        + "</html>") {
+                            @Override
+                            void iconClicked() {
+                                System.out.println("Icon clicked");
+                            }
+
+                            @Override
+                            void textClicked() {
+                                System.out.println("Text clicked");
+                            }
+                        };
+                icon.setOpaque(false);
+                newPanel.add(icon);
+                //icon.setLocation(dummy.position);
+                //icon.repaint();
+                //icon.setLocation(dummy.position);
+                pack();
+                revalidate();
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
+
+        canvas.setViewportView(newPanel);
+
     }
 
     /**
@@ -333,7 +379,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         jMenu1 = new javax.swing.JMenu();
         jScrollPane1 = new javax.swing.JScrollPane();
         logField = new javax.swing.JTextArea();
-        workingPane = new javax.swing.JScrollPane();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
@@ -348,6 +393,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         startMonitorBtn = new javax.swing.JButton();
         ipCombo = new javax.swing.JComboBox();
         jLabel6 = new javax.swing.JLabel();
+        canvas = new javax.swing.JScrollPane();
         jMenuBar1 = new javax.swing.JMenuBar();
         registryMenu = new javax.swing.JMenu();
         startNewRegistryBtn = new javax.swing.JMenuItem();
@@ -379,11 +425,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         logField.setRows(5);
         jScrollPane1.setViewportView(logField);
 
-        workingPane.setBackground(new java.awt.Color(255, 255, 255));
-        workingPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        workingPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        workingPane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jLabel1.setText("Status");
@@ -393,11 +434,9 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         statusTextField.setEditable(false);
         statusTextField.setFont(new java.awt.Font("Verdana", 0, 11)); // NOI18N
         statusTextField.setText("Disconnected");
-        statusTextField.setEnabled(false);
 
         monitorIdTextField.setEditable(false);
         monitorIdTextField.setFont(new java.awt.Font("Verdana", 0, 11)); // NOI18N
-        monitorIdTextField.setEnabled(false);
 
         jLabel3.setText("Monitor Name");
 
@@ -451,7 +490,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                         .addGap(18, 18, 18)
                         .addComponent(monitorIdTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(startMonitorBtn))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(38, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -479,6 +518,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     .addComponent(startMonitorBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 28, Short.MAX_VALUE))
         );
+
+        canvas.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
         registryMenu.setText("Registry");
         registryMenu.setEnabled(false);
@@ -567,8 +608,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(workingPane, javax.swing.GroupLayout.DEFAULT_SIZE, 629, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(canvas))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -576,8 +617,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(workingPane, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(canvas, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())
@@ -647,6 +688,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             startMonitor();
         } catch (RemoteException e) {
             e.printStackTrace();
+            startMonitorBtn.setEnabled(true);
+            startMonitorBtn.setText("Start Monitor");
         }
     }//GEN-LAST:event_startMonitorBtnActionPerformed
 
@@ -655,6 +698,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     private javax.swing.JMenuItem addAiPerformerMenuItem;
     private javax.swing.JMenuItem addHumanPerformerMenuItem;
     private javax.swing.JMenu agentsMenu;
+    private javax.swing.JScrollPane canvas;
     private javax.swing.JMenuItem connectBtn;
     private javax.swing.JMenuItem discBtn;
     private javax.swing.JMenu helpMenu;
@@ -683,6 +727,5 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     private javax.swing.JMenuItem startNewRegistryBtn;
     private javax.swing.JTextField statusTextField;
     private javax.swing.JMenuItem testMenuItem;
-    private javax.swing.JScrollPane workingPane;
     // End of variables declaration//GEN-END:variables
 }
