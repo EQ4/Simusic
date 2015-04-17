@@ -5,10 +5,27 @@
  */
 package rmi.agents;
 
+import java.rmi.RemoteException;
+import rmi.misc.AgentType;
+import run.Main;
+
 /**
  *
  * @author Martin
  */
-public class Human {
-    
+public class Human extends Agent {
+
+    public Human(String name, String registryURL, String ip, int port, int servicePort, int masterMonitorID) throws RemoteException {
+        super(name, registryURL, ip, port, servicePort, masterMonitorID);
+    }
+
+    @Override
+    public void runBehaviour() {
+        System.out.println("Human is playing");
+    }
+
+    @Override
+    public AgentType getAgentType() {
+        return AgentType.HumanPerformer;
+    }
 }

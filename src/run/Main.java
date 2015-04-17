@@ -5,9 +5,14 @@
  */
 package run;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import javax.swing.JTextArea;
 import rmi.interfaces.RegistryInterface;
@@ -20,10 +25,24 @@ import rmi.monitor.MonitorFrame;
  * @author Martin
  */
 public class Main {
+
+    public static String[] names;
+    public static Random rand;
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) throws RemoteException {
+        //Initialise random
+        rand = new Random();
+
+        //Get some agent names
+        try {
+            names = readLines("resources/names.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -65,8 +84,31 @@ public class Main {
     }
 
     public static int getRandomPort() {
-        Random rand = new Random();
         return 51000 + rand.nextInt(8000);
+    }
+
+    public static String[] readLines(String filename) throws IOException {
+        FileReader fileReader = new FileReader(filename);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        List<String> lines = new ArrayList<String>();
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null) {
+            lines.add(line);
+        }
+        bufferedReader.close();
+        return lines.toArray(new String[lines.size()]);
+    }
+    
+    public static String getRandomName() {
+        return names[rand.nextInt(names.length)];
+    }
+    
+    public static void wait(int ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

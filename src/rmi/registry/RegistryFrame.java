@@ -9,7 +9,10 @@ import java.math.BigInteger;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.util.ArrayList;
 import javax.swing.JTextArea;
+import rmi.monitor.AgentDummy;
+import rmi.interfaces.AgentInterface;
 import run.Main;
 
 /**
@@ -18,30 +21,37 @@ import run.Main;
  */
 public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
-    //Registry vars
+    public boolean lock;
+    public ArrayList<AgentInterface> agentConnections;
+    public ArrayList<AgentDummy> agentDummies;
+
     public String registryIPAddress;
     public String registryName;
     public int registryPort;
     public int registryServicePort;
-    public JTextArea logOfRegistry;
     public RegistryDaemon registryDaemon;
     public java.rmi.registry.Registry rmiRegistryLocation;
-    //New
 
     public RegistryFrame(String registryIPAddress, String registryName, int registryPort, int registryServicePort) throws RemoteException {
+        initComponents();
+
+        //Maybe implement locks?
+        this.agentConnections = new ArrayList<>();
+        this.agentDummies = new ArrayList<>();
+
         this.registryIPAddress = registryIPAddress;
         this.registryName = registryName;
         this.registryPort = registryPort;
         this.registryServicePort = registryServicePort;
-        this.logOfRegistry = registryLog;
-        initComponents();
+
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
 
     public void startDaemon() {
-        Thread localRegistryWorker = new Thread(this);
-        localRegistryWorker.setDaemon(true);
-        localRegistryWorker.start();
+        Thread registryDaemon = new Thread(this);
+        registryDaemon.setDaemon(true);
+        registryDaemon.start();
     }
 
     @Override
@@ -52,7 +62,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
             Naming.rebind("rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName, registryDaemon);
 
             //Done
-            registryLog.append("SiMusic Daemon\nRegistry created: "
+            registryLog.append("--- SiMusic ---\nRegistry created: "
                     + "\n    - ip: " + registryIPAddress
                     + "\n    - port " + registryPort
                     + "\n    - serv. port " + registryServicePort
@@ -80,14 +90,6 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         registryLog.append("Daemon has been stopped.\n");
     }
 
-    public void wait(int ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     void changeStatus(String newStatus) {
         statusTextField.setText(newStatus);
     }
@@ -97,6 +99,10 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
      */
     public RegistryFrame() {
         initComponents();
+    }
+
+    public void log(String message) {
+        registryLog.append(message + "\n");
     }
 
     /**

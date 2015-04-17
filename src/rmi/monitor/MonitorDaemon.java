@@ -45,12 +45,14 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     
     @Override
     public String sayHello() throws RemoteException {
+        frame.log("Registry says hi!");
         return "Hi from agent!";
     };
     
     @Override
     public void update(UpdateMessage update) throws RemoteException {
-        
+        //Process update:
+        frame.processUpdate(update);
     };
     
 }

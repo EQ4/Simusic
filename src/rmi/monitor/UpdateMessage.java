@@ -5,33 +5,30 @@
  */
 package rmi.monitor;
 
-import rmi.monitor.DummyLink;
+import java.io.Serializable;
+import rmi.monitor.AgentDummyLink;
 import java.util.ArrayList;
-import rmi.dummies.AgentDummy;
 
 /**
  *
  * @author Martin
  */
-public class UpdateMessage {
-    ArrayList<AgentDummy> updatedDummies;
-    ArrayList<DummyLink> updatedLinks;
-    boolean isShuttingDown;
-    int updatePeriod;
+public class UpdateMessage implements Serializable {
+    public ArrayList<AgentDummy> updatedDummies;
+    public ArrayList<AgentDummyLink> updatedLinks;
+    public boolean shutDown;
+    public int newAgentID;
     
     public UpdateMessage() {
         updatedDummies = new ArrayList<>();
         updatedLinks = new ArrayList<>();
-    }
-    public UpdateMessage(boolean isShuttingDown) {
-        isShuttingDown = true;
     }
     
     public void addUpdatedDummy(AgentDummy newDummy) {
         updatedDummies.add(newDummy);
     }
     
-    public void addUpdatedLink(DummyLink newLink) {
+    public void addUpdatedLink(AgentDummyLink newLink) {
         updatedLinks.add(newLink);
     }
     
@@ -40,7 +37,7 @@ public class UpdateMessage {
         return updatedDummies;
     }
     
-    public ArrayList<DummyLink> getUpdatedLinks() {
+    public ArrayList<AgentDummyLink> getUpdatedLinks() {
         return updatedLinks;
     }
 }

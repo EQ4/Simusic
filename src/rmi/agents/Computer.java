@@ -5,10 +5,28 @@
  */
 package rmi.agents;
 
+import java.rmi.RemoteException;
+import rmi.misc.AgentType;
+import run.Main;
+
 /**
  *
  * @author Martin
  */
-public class Computer {
+public class Computer extends Agent {
+    
+    public Computer(String name, String registryURL, String ip, int port, int servicePort, int masterMonitorID) throws RemoteException {
+        super(name, registryURL, ip, port, servicePort, masterMonitorID);
+    }
+    
+    @Override
+    public void runBehaviour() {
+        System.out.println("Computer is playing");
+    }
+    
+    @Override
+    public AgentType getAgentType() {
+        return AgentType.AIPerformer;
+    }
     
 }

@@ -9,6 +9,7 @@ import rmi.monitor.UpdateMessage;
 import rmi.interfaces.RegistryInterface;
 import java.rmi.Naming;
 import java.lang.SecurityManager;
+import java.net.Inet4Address;
 import java.rmi.server.UnicastRemoteObject;
 
 import java.net.InetAddress;
@@ -17,6 +18,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.*;
 import java.util.ArrayList;
 import javax.swing.JTextArea;
+import rmi.monitor.AgentDummy;
+import rmi.interfaces.AgentInterface;
 import run.Main;
 import rmi.misc.AgentType;
 
@@ -71,10 +74,36 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     @Override
-    public int connect(AgentType agentType) {
-        int id = -1;
+    public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException {
+        int id = frame.agentConnections.size();
+        AgentDummy newAgentDummy = new AgentDummy(agentType, agentName, id, agentIP, agentPort, masterMonitorID);
+        frame.agentDummies.add(newAgentDummy);
+        try {
+            frame.agentConnections.add((AgentInterface) Naming.lookup("rmi://" + agentIP + ":" + agentPort + "/" + agentName));
+        } catch (Exception e) {
+            System.out.println("Registry to agent connection exception: " + e.getMessage());
+            e.printStackTrace();
+        }
         log(agentType + " has connected! Assigning id = " + id);
-        return id;
+        
+        //Say hello
+        frame.agentConnections.get(id).sayHello();
+        
+        broadcastUpdates();
+        
+        return getFullUpdate();
+    }
+    
+    public void broadcastUpdates() throws RemoteException {
+        for (AgentInterface agent : frame.agentConnections) {
+            agent.update(getFullUpdate());
+        }
+    }
+    
+    private UpdateMessage getFullUpdate() {
+        UpdateMessage result = new UpdateMessage();
+        result.updatedDummies = frame.agentDummies;
+        return result;
     }
 
     @Override
@@ -90,13 +119,13 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     @Override
-    public String sayHello() {
-        log("Someone made me say hello!");
+    public String sayHello(int id) {
+        log("Agent " + id + " says hi!");
         return "Hello from registry!";
     }
 
     private void log(String message) {
-        frame.logOfRegistry.append(message + "\n");
+        frame.log(message);
     }
 
 }

@@ -2,11 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package extractors.chord;
+package music.extractors.chord;
 
-import elements.Chord;
-import elements.Playable;
-import elements.Sequence;
+import music.elements.Chord;
+import music.elements.Playable;
+import music.elements.Sequence;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;

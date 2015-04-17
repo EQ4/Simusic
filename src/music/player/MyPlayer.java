@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package player;
+package music.player;
 
 import org.jfugue.player.Player;
 

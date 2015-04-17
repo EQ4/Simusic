@@ -21,13 +21,13 @@ public interface RegistryInterface extends Remote {
     public void broadcast(String message) throws RemoteException;
     public void unicast(String message, String recipient) throws RemoteException;
     public void multicast(String message, ArrayList<String> recipients) throws RemoteException;
-    public int connect(AgentType agentType) throws RemoteException;
+    public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException;
     public boolean ping(int id) throws RemoteException;
     public boolean disconnect(int id) throws RemoteException;
     
     //Monitor methods
     
-    public String sayHello() throws RemoteException;
+    public String sayHello(int id) throws RemoteException;
     
     
     //Human methods

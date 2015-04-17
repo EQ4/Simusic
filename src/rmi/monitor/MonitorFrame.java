@@ -6,14 +6,13 @@
 package rmi.monitor;
 
 import com.sun.corba.se.spi.ior.iiop.IIOPAddress;
-import rmi.dummies.MonitorDummy;
-import rmi.dummies.AgentDummy;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.LayoutManager;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -38,9 +37,12 @@ import javax.swing.JTextArea;
 import rmi.misc.AgentType;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
+import rmi.agents.Agent;
+import rmi.agents.Computer;
+import rmi.agents.Human;
 import rmi.interfaces.RegistryInterface;
 import rmi.registry.RegistryDaemon;
-import rmi.monitor.NewRegistryDialog;
+import rmi.registry.NewRegistryDialog;
 import run.Main;
 
 /**
@@ -50,6 +52,7 @@ import run.Main;
 public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     public RegistryInterface registryConnection;
+    public String registryURL;
     public Integer monitorID;
     public int updateDelay;
 
@@ -57,10 +60,12 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     public String monitorName;
     public int monitorPort;
     public int monitorServicePort;
-    public JTextArea logOfMonitor;
 
     public MonitorDaemon monitorDaemon;
     public java.rmi.registry.Registry rmiRegistryLocation;
+
+    private ArrayList<Agent> spawnedComputers;
+    private Human spawnedHuman;
 
     @Override
     public void run() {
@@ -70,7 +75,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             Naming.rebind("rmi://" + selectedIPInterface + ":" + monitorPort + "/" + monitorName, monitorDaemon);
 
             //Done
-            log("SiMusic Daemon\nRegistry created: "
+            log("--- SiMusic ---\nMonitor created: "
                     + "\n    - ip: " + selectedIPInterface
                     + "\n    - port " + monitorPort
                     + "\n    - serv. port " + monitorServicePort
@@ -89,15 +94,18 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         monitorPortField.setText(Main.getRandomPort() + "");
         monitorServicePortField.setText(Main.getRandomPort() + "");
 
-        //Set IP combo box
+        //Set up controls
         ipCombo.setModel(new DefaultComboBoxModel(getAllIPs()));
+        monitorNameField.setText(Main.getRandomName());
 
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
         DefaultCaret logCaret = (DefaultCaret) this.logField.getCaret();
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
 
         workingPane.getViewport().setBackground(new java.awt.Color(240, 248, 255));
-        logOfMonitor = logField;
+
+        spawnedComputers = new ArrayList<>();
     }
 
     public boolean pingRegistry() throws RemoteException {
@@ -118,6 +126,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             discBtn.setEnabled(true);
             connectBtn.setEnabled(false);
         } else {
+            registryURL = null;
             startNewRegistryBtn.setEnabled(true);
             discBtn.setEnabled(false);
             connectBtn.setEnabled(true);
@@ -135,7 +144,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             return;
         }
         Main.startLocalRegistryDaemon(selectedIPInterface, d.getRegName(), d.getRegPort(), d.getRegServicePort());
-        log("Registry created: "
+        log("Registry spawned: "
                 + "\n    - ip: " + selectedIPInterface
                 + "\n    - port " + d.getRegPort()
                 + "\n    - serv. port " + d.getRegServicePort()
@@ -156,14 +165,23 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             e.printStackTrace();
         }
 
-        monitorID = registryConnection.connect(AgentType.Monitor);
+        UpdateMessage fullUpdate = registryConnection.connect(AgentType.Monitor, monitorName, selectedIPInterface, monitorPort, null);
+
+        //Unpack and process update
+        monitorID = fullUpdate.newAgentID;
+        processUpdate(fullUpdate);
+
+        monitorIdTextField.setText(monitorID + "");
 
         if (checkConnection()) {
             log("Connected!");
             statusTextField.setText("Connected to " + registryURL);
             monitorIdTextField.setText(monitorID.toString());
             agentsMenu.setEnabled(true);
+            this.registryURL = registryURL;
         }
+
+        registryConnection.sayHello(monitorID);
     }
 
     private void connectToRegistry() throws RemoteException {
@@ -183,38 +201,37 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     private void addAiPerformer() throws RemoteException {
-        createAgent("ai1", AgentType.AIPerformer);
+        createAgent(AgentType.AIPerformer);
     }
 
     private void addHumanPerformer() throws RemoteException {
-        createAgent("h1", AgentType.HumanPerformer);
+        createAgent(AgentType.HumanPerformer);
     }
 
-    private void createAgent(String name, AgentType agentType) throws RemoteException {
-        AgentDummy newAgentDummy;
-
-        try {
-            switch (agentType) {
-                case AIPerformer:
-                    newAgentDummy = new MonitorDummy(name, -1, Inet4Address.getLocalHost());
-                    break;
-                case HumanPerformer:
-                    break;
-                case Monitor:
-                    newAgentDummy = new MonitorDummy(name, -1, InetAddress.getLocalHost());
-                    break;
-            }
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+    private void createAgent(AgentType agentType) throws RemoteException {
+        String name = (String) JOptionPane.showInputDialog(
+                this,
+                "Enter agent name",
+                "Create new agent",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                Main.getRandomName());
+        switch (agentType) {
+            case AIPerformer:
+                Agent spawnedComputer = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
+                spawnedComputers.add(spawnedComputer);
+                spawnedComputer.startAgentDaemon();
+                break;
+            case HumanPerformer:
+                if (spawnedHuman != null) {
+                    alert("Only 1 human performer can be created per monitor!");
+                    return;
+                }
+                spawnedHuman = new Human(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
+                spawnedHuman.startAgentDaemon();
+                break;
         }
-
-        workingPane.revalidate();
-        workingPane.repaint();
-
-        revalidate();
-        repaint();
-
-        //agentDummies.add(newAgentDummy);
     }
 
     private void showAbout() {
@@ -225,12 +242,12 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         JOptionPane.showMessageDialog(this, message);
     }
 
-    private void log(String message) {
+    public void log(String message) {
         logField.append(message + "\n");
     }
 
     private void test() throws RemoteException {
-        alert("Testing!");
+        alert("Testing");
     }
 
     private String[] getAllIPs() {
@@ -277,6 +294,28 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         Thread localMonitorWorker = new Thread(this);
         localMonitorWorker.setDaemon(true);
         localMonitorWorker.start();
+    }
+
+    void processUpdate(UpdateMessage update) {
+        workingPane.repaint();
+        try {
+            for (AgentDummy dummy : update.updatedDummies) {
+                try {
+                    BufferedImage img = ImageIO.read(new File("resources/" + dummy.getIconFilename() + ".jpg"));
+                    ImageIcon icon = new ImageIcon(img);
+                    JLabel label = new JLabel(icon);
+                    //label.setLocation(dummy.position);
+                    workingPane.getViewport().add(label, null);
+                    label.setBounds(new Rectangle(dummy.position, label.getPreferredSize()));
+                    //workingPane.getViewport().revalidate();
+                    //workingPane.getViewport().repaint();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -342,6 +381,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         workingPane.setBackground(new java.awt.Color(255, 255, 255));
         workingPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        workingPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        workingPane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -357,8 +398,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         monitorIdTextField.setEditable(false);
         monitorIdTextField.setFont(new java.awt.Font("Verdana", 0, 11)); // NOI18N
         monitorIdTextField.setEnabled(false);
-
-        monitorNameField.setText("SiMonitor");
 
         jLabel3.setText("Monitor Name");
 

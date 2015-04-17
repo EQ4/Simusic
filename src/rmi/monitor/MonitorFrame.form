@@ -209,6 +209,8 @@
             <LineBorder/>
           </Border>
         </Property>
+        <Property name="horizontalScrollBarPolicy" type="int" value="32"/>
+        <Property name="verticalScrollBarPolicy" type="int" value="22"/>
       </Properties>
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
@@ -337,9 +339,6 @@
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="monitorNameField">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="SiMonitor"/>
-          </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel3">
           <Properties>

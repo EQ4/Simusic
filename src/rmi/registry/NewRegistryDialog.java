@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.monitor;
+package rmi.registry;
 
 import java.util.ArrayList;
 import javax.swing.DefaultComboBoxModel;
@@ -23,6 +23,8 @@ public class NewRegistryDialog extends javax.swing.JDialog {
         interfaceField.setText(ipAddress);
         regPortText.setText(Main.getRandomPort() + "");
         regSportText.setText(Main.getRandomPort() + "");
+        
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
 

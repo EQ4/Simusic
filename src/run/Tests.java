@@ -1,14 +1,14 @@
 package run;
 
-import player.Arpeggiator;
-import elements.Chord;
+import music.player.Arpeggiator;
+import music.elements.Chord;
 import java.util.*;
 import org.jfugue.player.Player;
-import markov.MarkovModel;
-import extractors.chord.ChordExtractor;
-import elements.Playable;
-import elements.Sequence;
-import extractors.feature.FeatureExtractor;
+import music.markov.MarkovModel;
+import music.extractors.chord.ChordExtractor;
+import music.elements.Playable;
+import music.elements.Sequence;
+import music.extractors.feature.FeatureExtractor;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import sun.audio.AudioPlayer;

@@ -5,13 +5,11 @@
  */
 package rmi.monitor;
 
-import rmi.dummies.AgentDummy;
-
 /**
  *
  * @author Martin
  */
-public class DummyLink {
+public class AgentDummyLink {
     int ID;
     AgentDummy fromDummy;
     AgentDummy toDummy;
