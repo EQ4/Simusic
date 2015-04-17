@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import rmi.monitor.UpdateMessage;
 import rmi.registry.RegistryDaemon;
 import rmi.misc.AgentType;
+import rmi.monitor.AgentDummy;
 
 /**
  *
@@ -24,6 +25,7 @@ public interface RegistryInterface extends Remote {
     public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException;
     public boolean ping(int id) throws RemoteException;
     public boolean disconnect(int id) throws RemoteException;
+    public AgentDummy getAgentDummyByID(int id) throws RemoteException;
     
     //Monitor methods
     

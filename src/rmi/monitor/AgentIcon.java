@@ -39,7 +39,6 @@ abstract class AgentIcon extends JPanel {
             @Override
             public void mouseClicked(MouseEvent me) {
                 super.mouseClicked(me);
-                textClicked();
             }
         };
         iconLabel.addMouseListener(iconMA);
@@ -49,8 +48,6 @@ abstract class AgentIcon extends JPanel {
     }
 
     abstract void iconClicked();
-
-    abstract void textClicked();
 
     public JLabel getIconLabel() {
         return iconLabel;

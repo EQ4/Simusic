@@ -339,12 +339,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                         + "</html>") {
                             @Override
                             void iconClicked() {
-                                System.out.println("Icon clicked");
-                            }
-
-                            @Override
-                            void textClicked() {
-                                System.out.println("Text clicked");
+                                openAgentMenu(dummy);
                             }
                         };
                 icon.setOpaque(false);
@@ -361,7 +356,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         });
 
         canvas.setViewportView(newPanel);
+    }
 
+    private void openAgentMenu(AgentDummy dummy) {
+        new Thread(new AgentControlPanel(dummy)).start();
     }
 
     /**
@@ -415,9 +413,14 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         jMenu1.setText("jMenu1");
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("SiMusic Monitor");
         setMinimumSize(new java.awt.Dimension(1000, 640));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         logField.setEditable(false);
         logField.setColumns(20);
@@ -692,6 +695,14 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             startMonitorBtn.setText("Start Monitor");
         }
     }//GEN-LAST:event_startMonitorBtnActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        int dialogResult = JOptionPane.showConfirmDialog(null, "Closing the monitor will also terminate any registry processes.\n Are you sure you want to exit?", "Warning", JOptionPane.YES_NO_OPTION);
+        if (dialogResult == JOptionPane.YES_OPTION) {
+            System.exit(1);
+        }
+
+    }//GEN-LAST:event_formWindowClosing
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;

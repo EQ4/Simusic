@@ -135,11 +135,15 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         log(agent.name + " (#" + id + ") has disconnected.");
         if (agent.masterMonitorID == null) {
             for (AgentDummy dummy : frame.agentDummies) {
-                if (dummy.masterMonitorID == id) {
-                    dummy.isOffline = true;
+                if (dummy.masterMonitorID != null) {
+                    if (dummy.masterMonitorID == id) {
+                        dummy.isOffline = true;
+                        log("    - " + dummy.name + " died because his master monitor left");
+                    }
                 }
             }
         }
+        agent.isOffline = true;
         //Update agents
         triggerGlobalUpdate();
         return true;
@@ -153,6 +157,11 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     private void log(String message) throws RemoteException {
         frame.log(message);
+    }
+    
+    @Override
+    public AgentDummy getAgentDummyByID(int agentID) {
+        return frame.agentDummies.get(agentID);
     }
 
 }

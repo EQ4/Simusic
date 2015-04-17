@@ -15,7 +15,7 @@ import rmi.registry.RegistryDaemon;
  *
  * @author Martin
  */
-public interface AgentInterface extends Remote {
+public interface AgentInterface extends Remote  {
     //AI methods
     public void unicast(String message, int senderID) throws RemoteException;
     public boolean ping() throws RemoteException;
