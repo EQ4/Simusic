@@ -24,6 +24,7 @@ public interface AgentInterface extends Remote  {
     public boolean disconnectNeighbour(int agentID) throws RemoteException;
     public boolean shutdown() throws RemoteException;
     
+    public abstract String getAgentTypeSpecificInfo() throws RemoteException;
     
     //Test
     public String sayHello() throws RemoteException;

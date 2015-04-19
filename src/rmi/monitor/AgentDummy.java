@@ -30,7 +30,7 @@ public class AgentDummy extends JPanel implements Serializable {
     public String name;
     public String ip;
     public int port;
-    public int ID;
+    public int agentID;
     public Point position;
     public Integer masterMonitorID;
     
@@ -40,7 +40,7 @@ public class AgentDummy extends JPanel implements Serializable {
     public AgentDummy(AgentType agentType, String name, int ID, String ip, int port, Integer masterMonitorID) {
         this.agentType = agentType;
         this.name = name;
-        this.ID = ID;
+        this.agentID = ID;
         this.ip = ip;
         this.port = port;
         this.isOffline = false;

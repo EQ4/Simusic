@@ -35,12 +35,15 @@ import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import rmi.misc.AgentType;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
@@ -83,7 +86,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             rmiRegistryLocation = java.rmi.registry.LocateRegistry.createRegistry(monitorPort);
             monitorRMIAddress = "rmi://" + selectedIPInterface + ":" + monitorPort + "/" + monitorName;
             Naming.rebind(monitorRMIAddress, monitorDaemon);
-            
+
             log("--- SiMusic Monitor Log ---\nMonitor information: "
                     + "\n    - ip: " + selectedIPInterface
                     + "\n    - port " + monitorPort
@@ -186,7 +189,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         UpdateMessage fullUpdate = registryConnection.connect(AgentType.Monitor, monitorName, selectedIPInterface, monitorPort, null);
 
         //Unpack and process update
-        monitorID = fullUpdate.welcomePack.ID;
+        monitorID = fullUpdate.welcomePack.agentID;
         processUpdate(fullUpdate);
 
         monitorIdTextField.setText(monitorID + "");
@@ -238,8 +241,27 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     Main.getRandomName());
             Agent newAgent;
             if (agentType == AgentType.AIPerformer) {
-                newAgent = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
+                //Load midi files
+                JOptionPane.showMessageDialog(this, "Select repertoire MIDI files...");
+                File[] agentFiles;
+                final JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setMultiSelectionEnabled(true);
+                fileChooser.setDialogTitle("Select repertoire MIDI files");
+                FileFilter fileFilter = new FileNameExtensionFilter("Midi Files (*.mid, *.midi)", "mid", "midi");
+                fileChooser.setFileFilter(fileFilter);
+                int fcReturnVal = fileChooser.showOpenDialog(this);
+                if (fcReturnVal == JFileChooser.APPROVE_OPTION) {
+                    agentFiles = fileChooser.getSelectedFiles();
+                } else {
+                    agentFiles = new File[0];
+                }
+
+                //Create agent
+                newAgent = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, agentFiles);
             } else {
+                //TODO: Select USB MIDI interface
+
+                //Create agent
                 newAgent = new Human(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
             }
             newAgent.start();
@@ -266,7 +288,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     public void log(String message) {
-        logField.append(message + "\n");
+        logField.append(Main.getCurrentTimestamp() + message + "\n");
     }
 
     private void test() throws RemoteException {
@@ -335,7 +357,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                         + dummy.name + "</b><br />"
                         + dummy.ip + ":"
                         + dummy.port + "<br />ID: "
-                        + dummy.ID
+                        + dummy.agentID
                         + ((dummy.masterMonitorID == null) ? "" : (", owned by M" + dummy.masterMonitorID))
                         + (dummy.isOffline() ? "<br />OFFLINE" : "")
                         + "</html>") {
@@ -346,22 +368,19 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                         };
                 icon.setOpaque(false);
                 newPanel.add(icon);
-                //icon.setLocation(dummy.position);
-                //icon.repaint();
-                //icon.setLocation(dummy.position);
-                pack();
-                revalidate();
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
 
+        pack();
+        revalidate();
         canvas.setViewportView(newPanel);
     }
 
     private void openAgentMenu(AgentDummy dummy) {
-        AgentControlPanel newControlPanel = new AgentControlPanel(dummy, monitorID);
+        AgentControlPanel newControlPanel = new AgentControlPanel(dummy, monitorID, registryConnection);
         newControlPanel.setLocationRelativeTo(this);
         new Thread(newControlPanel).start();
     }
@@ -376,10 +395,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             //Remove RMI naming
             try {
                 rmiRegistryLocation.unbind(monitorName);
-            } catch (NotBoundException e) {
+            } catch (Exception e) {
                 System.out.println("Monitor RMI address already unbound");
             }
-            
+
             Main.closeWindow(this);
         }
     }
@@ -448,7 +467,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         logField.setColumns(20);
         logField.setFont(new java.awt.Font("Verdana", 0, 10)); // NOI18N
         logField.setRows(5);
-        logField.setText("How to get started:\n1) Press 'Start Monitor' button\n2) Registry > Start new local registry\n3) Agents > Add...\n4) Agent icons are clickable.\n\n*Names and ports are randomly generated.\n\n--------------------------------------------------\n\n");
+        logField.setText("How to get started:\n1) Press 'Start Monitor' button\n2) Registry > Start new local registry\n3) Agents > Add...\n4) Agent icons are clickable.\n\n*Names and ports are randomly generated.\n\n-------------------------------------------------\n\n");
         jScrollPane1.setViewportView(logField);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());

@@ -7,6 +7,7 @@ package rmi.monitor;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.SimpleDateFormat;
 import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
 
@@ -15,9 +16,9 @@ import rmi.interfaces.RegistryInterface;
  * @author Martin
  */
 public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface {
-
+    
     MonitorFrame frame;
-
+    
     public MonitorDaemon(MonitorFrame frame) throws RemoteException {
         super(frame.monitorServicePort);
         this.frame = frame;
@@ -28,53 +29,50 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     //AI methods
     @Override
     public void unicast(String message, int senderID) throws RemoteException {
-
+        frame.log("Agent " + senderID + " told me '" + message + "'");
     }
-
-    ;
     
     @Override
     public boolean ping() throws RemoteException {
         return true;
     }
 
-    ;
-    
     //Monitor methods
-    
     @Override
     public String sayHello() throws RemoteException {
         frame.log("Registry says hi!");
         return "Hi from agent!";
     }
-
-    ;
     
     @Override
     public void update(UpdateMessage update) throws RemoteException {
-        //Process the update:
+        frame.log("Monitor view updated");
         frame.processUpdate(update);
     }
-
-    ;
     
     @Override
-    public boolean connectNeighbour(int neighbourID) {
-        //No agent becomes neighbour with monitor
+    public boolean connectNeighbour(int optimisticAgentID) {
+        frame.log("Agent #" + optimisticAgentID + " is trying to neighbour a monitor.");
         return false;
     }
-
+    
     @Override
     public boolean disconnectNeighbour(int neighbourID) throws RemoteException {
-        //No agent becomes neighbour with monitor
+        frame.log("Impossible!");
         return false;
     }
-
+    
     @Override
     public boolean shutdown() throws RemoteException {
         //Simply disconnect from registry
         frame.disconnect();
         frame.log("Registry has shut itself down.");
         return false;
+    }
+    
+    @Override
+    public String getAgentTypeSpecificInfo() {
+        //Used mainly in Human and AI performers
+        return "I am monitor!";
     }
 }

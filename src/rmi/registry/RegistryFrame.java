@@ -18,6 +18,7 @@ import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
 import rmi.monitor.AgentDummy;
 import rmi.interfaces.AgentInterface;
+import rmi.monitor.AgentDummyLink;
 import run.Main;
 
 /**
@@ -31,6 +32,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     public boolean lock;
     public ArrayList<AgentInterface> agentConnections;
     public ArrayList<AgentDummy> agentDummies;
+    public ArrayList<AgentDummyLink> agentDummyLinks;
 
     public String registryIPAddress;
     public String registryName;
@@ -47,6 +49,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         //Maybe implement locks?
         this.agentConnections = new ArrayList<>();
         this.agentDummies = new ArrayList<>();
+        this.agentDummyLinks = new ArrayList<>();
 
         this.registryIPAddress = registryIPAddress;
         this.registryName = registryName;
@@ -143,7 +146,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     }
 
     public void log(String message) {
-        registryLog.append(message + "\n");
+        registryLog.append(Main.getCurrentTimestamp() + message + "\n");
     }
 
     private void alert(String message) {
@@ -249,7 +252,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     }//GEN-LAST:event_stopButtonActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        int dialogResult = JOptionPane.showConfirmDialog(this, "Closing the registry will also terminate any registered agents.\n Are you sure you want to kill " + registryName + "?", "Warning", JOptionPane.YES_NO_OPTION);
+        int dialogResult = JOptionPane.showConfirmDialog(this, "Closing the registry will also terminate any registered agents.\nAre you sure you want to stop registry '" + registryName + "'?", "Warning", JOptionPane.YES_NO_OPTION);
         if (dialogResult == JOptionPane.YES_OPTION) {
             shutdown();
             

@@ -22,6 +22,7 @@ public interface RegistryInterface extends Remote {
     public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException;
     public boolean ping(int id) throws RemoteException;
     public AgentDummy getAgentDummyByID(int id) throws RemoteException;
+    public void reportNeighbourConnection(int fromAgentID, int toAgentID) throws RemoteException;
     public void log(String message, int loggerID) throws RemoteException;
     public boolean disconnect(int id) throws RemoteException;
     

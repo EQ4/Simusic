@@ -19,25 +19,8 @@ public class UpdateMessage implements Serializable {
     public AgentDummy welcomePack;
     public boolean shutDown;
     
-    public UpdateMessage() {
-        updatedDummies = new ArrayList<>();
-        updatedLinks = new ArrayList<>();
-    }
-    
-    public void addUpdatedDummy(AgentDummy newDummy) {
-        updatedDummies.add(newDummy);
-    }
-    
-    public void addUpdatedLink(AgentDummyLink newLink) {
-        updatedLinks.add(newLink);
-    }
-    
-    
-    public ArrayList<AgentDummy> getUpdatedDummies() {
-        return updatedDummies;
-    }
-    
-    public ArrayList<AgentDummyLink> getUpdatedLinks() {
-        return updatedLinks;
+    public UpdateMessage(ArrayList<AgentDummy> updatedDummies, ArrayList<AgentDummyLink> updatedLinks) {
+        this.updatedDummies = updatedDummies;
+        this.updatedLinks = updatedLinks;
     }
 }

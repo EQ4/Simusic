@@ -5,20 +5,33 @@
  */
 package rmi.monitor;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Martin
  */
-public class AgentDummyLink {
-    int ID;
-    AgentDummy fromDummy;
-    AgentDummy toDummy;
+public class AgentDummyLink implements Serializable {
     
-    //Maybe:
-    public enum LinkType {
+    AgentLinkType linkType;
+    int ID;
+    int fromAgentID;
+    int toAgentID;
+    
+    //Not used yet, just ideas
+    boolean isActive = true;
+    int strength = 1;
+    
+    public AgentDummyLink(AgentLinkType linkType, int ID, int fromAgentID, int toAgentID) {
+        this.linkType = linkType;
+        this.ID = ID;
+        this.fromAgentID = fromAgentID;
+        this.toAgentID = toAgentID;
+    }
+    
+    
+    public enum AgentLinkType {
         //Nice!
-        InterAIPerformerLink, HumanToPerformerLink, MonitorOwnLink
+        AINeighbourLink, HumanToPerformerLink, MonitorOwnLink
     };
-    LinkType linkType;
-    int strength; // From 0 to 10
 }

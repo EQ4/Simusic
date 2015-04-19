@@ -22,6 +22,8 @@ import rmi.monitor.AgentDummy;
 import rmi.interfaces.AgentInterface;
 import run.Main;
 import rmi.misc.AgentType;
+import rmi.monitor.AgentDummyLink;
+import rmi.monitor.AgentDummyLink.AgentLinkType;
 
 /**
  *
@@ -61,6 +63,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Say hello
         frame.agentConnections.get(id).sayHello();
 
+        //Update agents
         triggerGlobalUpdate();
 
         return getFirstUpdate(newAgentDummy);
@@ -75,14 +78,12 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     private UpdateMessage getRegularUpdate() {
-        UpdateMessage result = new UpdateMessage();
-        result.updatedDummies = frame.agentDummies;
+        UpdateMessage result = new UpdateMessage(frame.agentDummies, frame.agentDummyLinks);
         return result;
     }
 
     private UpdateMessage getFirstUpdate(AgentDummy newAgentDummy) {
-        UpdateMessage result = new UpdateMessage();
-        result.updatedDummies = frame.agentDummies;
+        UpdateMessage result = getRegularUpdate();
         result.welcomePack = newAgentDummy;
         return result;
     }
@@ -99,6 +100,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         frame.agentConnections.set(id, null);
         frame.log(agent.name + " (#" + id + ") has disconnected.");
         agent.isOffline = true;
+        
         //Update agents
         triggerGlobalUpdate();
         
@@ -120,6 +122,16 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     @Override
     public AgentDummy getAgentDummyByID(int agentID) {
         return frame.agentDummies.get(agentID);
+    }
+    
+    @Override
+    public void reportNeighbourConnection(int fromAgentID, int toAgentID) throws RemoteException {
+        int newLinkID = frame.agentDummyLinks.size();
+        AgentDummyLink newAgentLink = new AgentDummyLink(AgentLinkType.AINeighbourLink, newLinkID, fromAgentID, toAgentID);
+        frame.agentDummyLinks.add(newAgentLink);
+        
+        //Update agents
+        triggerGlobalUpdate();
     }
 
 }

@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import javax.swing.JFrame;
@@ -89,8 +91,7 @@ public class Main {
     public static void closeWindow(JFrame window) {
         if (--windowsOpened == 0) {
             System.exit(1);
-        }
-        else {
+        } else {
             JOptionPane.showMessageDialog(window, "Simusic will exit once all windows are closed.");
         }
         window.dispose();
@@ -127,6 +128,12 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getCurrentTimestamp() {
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        return dateFormat.format(currentDate) + " ";
     }
 
 }

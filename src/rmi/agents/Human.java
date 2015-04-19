@@ -28,4 +28,9 @@ public class Human extends Agent {
     public AgentType getAgentType() {
         return AgentType.HumanPerformer;
     }
+    
+    @Override
+    public String getAgentTypeSpecificInfo() throws RemoteException {
+        return "I am human!";
+    }
 }
