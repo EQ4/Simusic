@@ -5,6 +5,9 @@
  */
 package rmi.monitor;
 
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import javax.swing.JOptionPane;
 import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
 
@@ -14,34 +17,42 @@ import rmi.interfaces.RegistryInterface;
  */
 public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
 
-    int agentID;
+    AgentDummy agentDummy;
+    AgentInterface agentConnection;
+    int monitorID;
 
-    public AgentControlPanel(AgentDummy dummy) {
+    public AgentControlPanel(AgentDummy dummy, int monitorID) {
 
         initComponents();
 
+        agentDummy = dummy;
+        this.monitorID = monitorID;
+        
+        //Connect to agent
         try {
-
+            agentConnection = (AgentInterface) Naming.lookup(dummy.getRMIAddress());
         } catch (Exception e) {
+            System.out.println("Monitor to agent connection exception: " + e.getMessage());
             e.printStackTrace();
         }
 
         nameLabel.setText(dummy.name + ", " + dummy.agentType.toString());
-        addressField.setText(dummy.address + ":" + dummy.port);
+        connectLabel.setText(connectLabel.getText().replace("%agentname", agentDummy.name));
+        sendLabel.setText(sendLabel.getText().replace("%agentname", agentDummy.name));
+        addressField.setText(dummy.ip + ":" + dummy.port);
         if (dummy.masterMonitorID != null) {
             masterMonitorField.setText(dummy.masterMonitorID.toString());
         }
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+
     }
 
     @Override
     public void run() {
 
     }
-
-    ;
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -56,8 +67,16 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         addressField = new javax.swing.JLabel();
         masterMonitorField = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
+        sendButton = new javax.swing.JButton();
+        messageField = new javax.swing.JTextField();
+        sendLabel = new javax.swing.JLabel();
+        connectLabel = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        connectAgentIdField = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        connectButton = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setResizable(false);
 
         nameLabel.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
@@ -67,6 +86,30 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         addressField.setText("Agent address");
 
         masterMonitorField.setText("No master monitor");
+
+        sendButton.setText("Send");
+        sendButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sendButtonActionPerformed(evt);
+            }
+        });
+
+        messageField.setText("Hello!");
+
+        sendLabel.setText("Send message to %agentname");
+
+        connectLabel.setText("Connect %agentname to another agent");
+
+        jLabel3.setText("Message");
+
+        jLabel4.setText("Agent ID");
+
+        connectButton.setText("Connect");
+        connectButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                connectButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -85,7 +128,27 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                         .addGap(119, 119, 119))))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jSeparator1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator1)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(10, 10, 10)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(connectLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jLabel4)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(connectAgentIdField, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(sendLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jLabel3)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(messageField, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(connectButton)
+                            .addComponent(sendButton))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -99,17 +162,53 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                     .addComponent(masterMonitorField))
                 .addGap(28, 28, 28)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(357, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(messageField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(sendButton)
+                    .addComponent(sendLabel)
+                    .addComponent(jLabel3))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(connectLabel)
+                    .addComponent(connectAgentIdField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4)
+                    .addComponent(connectButton))
+                .addContainerGap(287, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
+        try {
+            agentConnection.unicast(messageField.getText(), monitorID);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_sendButtonActionPerformed
+
+    private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
+        try {
+            agentConnection.connectNeighbour(Integer.parseInt(connectAgentIdField.getText()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_connectButtonActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel addressField;
+    private javax.swing.JTextField connectAgentIdField;
+    private javax.swing.JButton connectButton;
+    private javax.swing.JLabel connectLabel;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JLabel masterMonitorField;
+    private javax.swing.JTextField messageField;
     private javax.swing.JLabel nameLabel;
+    private javax.swing.JButton sendButton;
+    private javax.swing.JLabel sendLabel;
     // End of variables declaration//GEN-END:variables
 }

@@ -17,15 +17,14 @@ import rmi.registry.RegistryDaemon;
  */
 public interface AgentInterface extends Remote  {
     //AI methods
-    public void unicast(String message, int senderID) throws RemoteException;
+    public boolean connectNeighbour(int agentID) throws RemoteException;
     public boolean ping() throws RemoteException;
-    public boolean disconnect() throws RemoteException; // also human
-    
-    //Monitor methods
-    
-    public String sayHello() throws RemoteException;
     public void update(UpdateMessage update) throws RemoteException;
+    public void unicast(String message, int senderID) throws RemoteException;
+    public boolean disconnectNeighbour(int agentID) throws RemoteException;
+    public boolean shutdown() throws RemoteException;
     
     
-    //Human methods
+    //Test
+    public String sayHello() throws RemoteException;
 }

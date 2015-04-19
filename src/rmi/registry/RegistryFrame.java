@@ -25,6 +25,8 @@ import run.Main;
  * @author Martin
  */
 public class RegistryFrame extends javax.swing.JFrame implements Runnable {
+    static final int DISCONNECT_REQUEST_WAIT_TIME = 500;
+    static final int DISCONNECT_REQUEST_ATTEMPTS = 5;
 
     public boolean lock;
     public ArrayList<AgentInterface> agentConnections;
@@ -40,6 +42,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
     public RegistryFrame(String registryIPAddress, String registryName, int registryPort, int registryServicePort) throws RemoteException {
         initComponents();
+        Main.windowsOpened++;
 
         //Maybe implement locks?
         this.agentConnections = new ArrayList<>();
@@ -51,8 +54,12 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         this.registryServicePort = registryServicePort;
         this.registryFullAddress = "rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName;
 
-        this.setLocationRelativeTo(null);
         this.setVisible(true);
+        
+        //Log field auto scroll
+        DefaultCaret logCaret = (DefaultCaret) registryLog.getCaret();
+        logCaret.setUpdatePolicy(ALWAYS_UPDATE);
+
     }
 
     public void startDaemon() {
@@ -69,7 +76,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
             Naming.rebind(registryFullAddress, registryDaemon);
 
             //Done
-            registryLog.append("--- SiMusic ---\nRegistry created: "
+            registryLog.append("--- SiMusic Registry Log ---\nRegistry information: "
                     + "\n    - ip: " + registryIPAddress
                     + "\n    - port " + registryPort
                     + "\n    - serv. port " + registryServicePort
@@ -90,29 +97,35 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         }
     }
 
-    private void shutDown() {
+    private void shutdown() {
         stopButton.setEnabled(false);
         statusTextField.setText("Stopping daemon...");
 
-        //Broadcast shutdown message
+        //Broadcast shutdown
         for (AgentInterface agent : agentConnections) {
             try {
-                agent.disconnect();
+                for (int i = 0; i < DISCONNECT_REQUEST_ATTEMPTS; i++) {
+                    if (agent.shutdown()) {
+                        break;
+                    }
+                    Main.wait(DISCONNECT_REQUEST_WAIT_TIME);
+                }
             } catch (Exception e) {
                 //Shouldn't be a problem since we're shutting down
             }
         }
 
+        //Remove RMI naming
         try {
             rmiRegistryLocation.unbind(registryName);
             registryDaemon = null;
         } catch (Exception e) {
-            statusTextField.setText("Error.");
-            e.printStackTrace();
+            System.out.println("Registry RMI naming already unbound.");
         }
-
+        
+        //Log shutdown
         changeStatus("Daemon stopped");
-        registryLog.append("Daemon has been stopped.\n");
+        log("Daemon has been stopped.");
     }
 
     void changeStatus(String newStatus) {
@@ -154,8 +167,13 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         statusTextField = new javax.swing.JTextField();
         stopButton = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("SiMusic Registry Daemon");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         jLabel1.setText("SiMusic Registry Daemon");
@@ -227,8 +245,17 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     }// </editor-fold>//GEN-END:initComponents
 
     private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
-        shutDown();
+        shutdown();
     }//GEN-LAST:event_stopButtonActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        int dialogResult = JOptionPane.showConfirmDialog(this, "Closing the registry will also terminate any registered agents.\n Are you sure you want to kill " + registryName + "?", "Warning", JOptionPane.YES_NO_OPTION);
+        if (dialogResult == JOptionPane.YES_OPTION) {
+            shutdown();
+            
+            Main.closeWindow(this);
+        }
+    }//GEN-LAST:event_formWindowClosing
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

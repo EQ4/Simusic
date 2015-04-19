@@ -39,42 +39,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     @Override
-    public void broadcast(String message) {
-        //TODO: Implement
-    }
-
-    @Override
-    public void unicast(String message, String recipient) {
-        //TODO: Implement
-    }
-
-    @Override
-    public void multicast(String message, ArrayList<String> recipients) {
-        //TODO: Implement
-    }
-
-    @Override
-    public void noteOn(int pitch, int velocity) {
-        //TODO: Implement
-    }
-
-    @Override
-    public void noteOff(int pitch) {
-        //TODO: Implement
-    }
-
-    @Override
-    public void sustainOn() {
-        //TODO: Implement
-    }
-
-    @Override
-    public void sustainOff() {
-        //TODO: Implement
-    }
-
-    @Override
-    public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException {
+    public synchronized UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException {
         int id = frame.agentDummies.size();
         AgentDummy newAgentDummy = new AgentDummy(agentType, agentName, id, agentIP, agentPort, masterMonitorID);
         frame.agentDummies.add(newAgentDummy);
@@ -84,7 +49,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
             System.out.println("Registry to agent connection exception: " + e.getMessage());
             e.printStackTrace();
         }
-        log("A new agent has connected!\n"
+        frame.log("A new agent has connected!\n"
                 + "    - name: " + agentName + "\n"
                 + "    - type: " + agentType.toString() + "\n"
                 + "    - ip: " + agentIP + "\n"
@@ -124,39 +89,32 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     @Override
     public boolean ping(int id) throws RemoteException {
-        log("Agent " + id + " pinged and got ponged!");
+        frame.log("Agent " + id + " pinged and got ponged!");
         return true;
     }
 
     @Override
-    public boolean disconnect(int id) throws RemoteException {
+    public synchronized boolean disconnect(int id) throws RemoteException {
         AgentDummy agent = frame.agentDummies.get(id);
         frame.agentConnections.set(id, null);
-        log(agent.name + " (#" + id + ") has disconnected.");
-        if (agent.masterMonitorID == null) {
-            for (AgentDummy dummy : frame.agentDummies) {
-                if (dummy.masterMonitorID != null) {
-                    if (dummy.masterMonitorID == id) {
-                        dummy.isOffline = true;
-                        log("    - " + dummy.name + " died because his master monitor left");
-                    }
-                }
-            }
-        }
+        frame.log(agent.name + " (#" + id + ") has disconnected.");
         agent.isOffline = true;
         //Update agents
         triggerGlobalUpdate();
+        
+        frame.log(agent.agentType + " " + agent.name + " has disconnected.");
         return true;
     }
 
     @Override
-    public String sayHello(int id) throws RemoteException {
-        log("Agent " + id + " says hi!");
+    public String sayHello(String sender) throws RemoteException {
+        frame.log(sender + " says hi!");
         return "Hello from registry!";
     }
 
-    private void log(String message) throws RemoteException {
-        frame.log(message);
+    @Override
+    public void log(String message, int loggerID) throws RemoteException {
+        frame.log("<" + frame.agentDummies.get(loggerID).name + "> " + message);
     }
     
     @Override

@@ -9,9 +9,11 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
 import rmi.misc.AgentType;
+import rmi.monitor.AgentDummy;
 import rmi.monitor.UpdateMessage;
 import run.Main;
 
@@ -30,8 +32,10 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     public String registryURL;
     public int masterMonitorID;
 
-    private java.rmi.registry.Registry rmiRegistryLocation;
+    public java.rmi.registry.Registry rmiRegistryLocation;
     private RegistryInterface registryConnection;
+    private HashMap<Integer, AgentInterface> neighbourConnections;
+    private HashMap<Integer, AgentDummy> neighbourDummies;
 
     public Agent(String name, String registryURL, String ip, int port, int servicePort, int masterMonitorID) throws RemoteException {
         super(servicePort);
@@ -42,9 +46,12 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         this.servicePort = servicePort;
         this.masterMonitorID = masterMonitorID;
         this.agentRmiAddress = "rmi://" + ip + ":" + port + "/" + name;
+
+        this.neighbourConnections = new HashMap<>();
+        this.neighbourDummies = new HashMap<>();
     }
 
-    public void startAgentDaemon() {
+    public void start() {
         Thread agentDaemon = new Thread(this);
         agentDaemon.setDaemon(true);
         agentDaemon.start();
@@ -64,14 +71,18 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         }
     }
 
-    private void connectToRegistry() throws RemoteException {
-        System.setSecurityManager(new SecurityManager());
+    private Object RMIconnect(String url) {
         try {
-            registryConnection = (RegistryInterface) Naming.lookup(registryURL);
+            return Naming.lookup(url);
         } catch (Exception e) {
             System.out.println("Agent to registry connection exception: " + e.getMessage());
             e.printStackTrace();
         }
+        return null;
+    }
+
+    private void connectToRegistry() throws RemoteException {
+        registryConnection = (RegistryInterface) RMIconnect(registryURL);
 
         //Connect & Update
         UpdateMessage firstUpdate = registryConnection.connect(getAgentType(), name, ip, port, masterMonitorID);
@@ -84,7 +95,39 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
 
     @Override
     public void unicast(String message, int senderID) throws RemoteException {
+        String logMessage;
+        if (senderID == masterMonitorID) {
+            logMessage = "My master monitor sent me '" + message + "'";
+        } else if (neighbourDummies.containsKey(senderID)) {
+            logMessage = neighbourDummies.get(senderID).name + " sent me '" + message + "'";
+        } else {
+            logMessage = "Non-neighbour (id=" + senderID + " sent me '" + message + "'";
+        }
+        logInRegistry(logMessage);
+    }
+    
+    private void logInRegistry(String logMessage) throws RemoteException {
+        registryConnection.log(logMessage, id);
+    }
+    
+    private void disconnectFromRegistry() throws RemoteException  {
+        registryConnection.disconnect(id);
+    }
 
+    //Sent by registry or monitor to
+    @Override
+    public boolean shutdown() throws RemoteException {
+        logInRegistry("Shutdown triggered by master monitor #" + masterMonitorID);
+        disconnectFromRegistry();
+        
+        //Remove RMI naming
+        try {
+            rmiRegistryLocation.unbind(name);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return true;
     }
 
     @Override
@@ -92,8 +135,24 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         return true;
     }
 
+    //Sent by other agents to become neighbours
     @Override
-    public boolean disconnect() throws RemoteException {
+    public boolean connectNeighbour(int neighbourID) throws RemoteException {
+        AgentDummy newNeighbourDummy = registryConnection.getAgentDummyByID(neighbourID);
+        AgentInterface newNeighbourConnection = (AgentInterface) RMIconnect(newNeighbourDummy.getRMIAddress());
+        if (newNeighbourConnection != null) {
+            neighbourDummies.put(neighbourID, newNeighbourDummy);
+            neighbourConnections.put(neighbourID, newNeighbourConnection);
+            logInRegistry(newNeighbourDummy.name + " connected to me! We are now neighbours.");
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean disconnectNeighbour(int agentID) throws RemoteException {
+        neighbourDummies.remove(agentID);
+        neighbourConnections.remove(agentID);
         return true;
     }
 
@@ -105,7 +164,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
 
     @Override
     public void update(UpdateMessage update) throws RemoteException {
-
+        //TODO: Check dummies and links for ones that contain this agent
     }
 
 }

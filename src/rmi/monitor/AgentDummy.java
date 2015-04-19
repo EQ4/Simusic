@@ -28,7 +28,7 @@ public class AgentDummy extends JPanel implements Serializable {
     
     public AgentType agentType;
     public String name;
-    public String address;
+    public String ip;
     public int port;
     public int ID;
     public Point position;
@@ -37,11 +37,11 @@ public class AgentDummy extends JPanel implements Serializable {
     public boolean isOffline;
     
     
-    public AgentDummy(AgentType agentType, String name, int ID, String address, int port, Integer masterMonitorID) {
+    public AgentDummy(AgentType agentType, String name, int ID, String ip, int port, Integer masterMonitorID) {
         this.agentType = agentType;
         this.name = name;
         this.ID = ID;
-        this.address = address;
+        this.ip = ip;
         this.port = port;
         this.isOffline = false;
         this.masterMonitorID = masterMonitorID;
@@ -62,6 +62,10 @@ public class AgentDummy extends JPanel implements Serializable {
             }
         return null;
     };
+    
+    public String getRMIAddress() {
+        return "rmi://" + ip + ":" + port + "/" + name;
+    }
     
     public void disconnect() {
         this.isOffline = true;

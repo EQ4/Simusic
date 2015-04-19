@@ -5,6 +5,7 @@
  */
 package run;
 
+import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,6 +15,8 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import rmi.interfaces.RegistryInterface;
 import rmi.registry.RegistryDaemon;
@@ -28,13 +31,17 @@ public class Main {
 
     public static String[] names;
     public static Random rand;
+    public static int windowsOpened;
+
+    private static MonitorFrame mainMonitorWindow;
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) throws RemoteException {
-        //Initialise random
+        //Initialise static variables
         rand = new Random();
+        windowsOpened = 0;
 
         //Get some agent names
         try {
@@ -74,13 +81,24 @@ public class Main {
             @Override
             public void run() {
                 //Start main monitor frame
-                new MonitorFrame();
+                mainMonitorWindow = new MonitorFrame();
             }
         });
     }
 
+    public static void closeWindow(JFrame window) {
+        if (--windowsOpened == 0) {
+            System.exit(1);
+        }
+        else {
+            JOptionPane.showMessageDialog(window, "Simusic will exit once all windows are closed.");
+        }
+        window.dispose();
+    }
+
     public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport) throws RemoteException {
-        new RegistryFrame(ipAddress, registryName, regPort, regSport).startDaemon();
+        RegistryFrame newRegistrtFrame = new RegistryFrame(ipAddress, registryName, regPort, regSport);
+        newRegistrtFrame.startDaemon();
     }
 
     public static int getRandomPort() {
@@ -98,11 +116,11 @@ public class Main {
         bufferedReader.close();
         return lines.toArray(new String[lines.size()]);
     }
-    
+
     public static String getRandomName() {
         return names[rand.nextInt(names.length)];
     }
-    
+
     public static void wait(int ms) {
         try {
             Thread.sleep(ms);

@@ -24,9 +24,11 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ExportException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import javafx.scene.paint.Color;
 import javax.imageio.ImageIO;
@@ -45,6 +47,7 @@ import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
 import rmi.agents.Agent;
 import rmi.agents.Computer;
 import rmi.agents.Human;
+import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
 import rmi.registry.RegistryDaemon;
 import rmi.registry.NewRegistryDialog;
@@ -56,11 +59,13 @@ import run.Main;
  */
 public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
+    static final int NEW_AGENT_INITIALIZE_TIME = 200;
+
     public RegistryInterface registryConnection;
     public String registryURL;
     public Integer monitorID;
     public int updateDelay;
-
+    public String monitorRMIAddress;
     public String selectedIPInterface;
     public String monitorName;
     public int monitorPort;
@@ -69,24 +74,23 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     public MonitorDaemon monitorDaemon;
     public java.rmi.registry.Registry rmiRegistryLocation;
 
-    private ArrayList<Agent> spawnedComputers;
-    private Human spawnedHuman;
+    public HashMap<Integer, AgentInterface> spawnedAgentConnections;
 
     @Override
     public void run() {
         try {
             monitorDaemon = new MonitorDaemon(this);
             rmiRegistryLocation = java.rmi.registry.LocateRegistry.createRegistry(monitorPort);
-            Naming.rebind("rmi://" + selectedIPInterface + ":" + monitorPort + "/" + monitorName, monitorDaemon);
-
-            //Done
-            log("--- SiMusic ---\nMonitor created: "
+            monitorRMIAddress = "rmi://" + selectedIPInterface + ":" + monitorPort + "/" + monitorName;
+            Naming.rebind(monitorRMIAddress, monitorDaemon);
+            
+            log("--- SiMusic Monitor Log ---\nMonitor information: "
                     + "\n    - ip: " + selectedIPInterface
                     + "\n    - port " + monitorPort
                     + "\n    - serv. port " + monitorServicePort
                     + "\n    - serv. name: " + monitorName
                     + "\n");
-            statusTextField.setText("Daemon running");
+            statusTextField.setText("Monitor is alive");
         } catch (ExportException e) {
             if (e.getMessage().contains("already in use")) {
                 alert("Port is already in use!");
@@ -100,6 +104,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     public MonitorFrame() {
         initComponents();
+        Main.windowsOpened++;
 
         //Set some values
         monitorPortField.setText(Main.getRandomPort() + "");
@@ -111,10 +116,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
-        DefaultCaret logCaret = (DefaultCaret) this.logField.getCaret();
+        DefaultCaret logCaret = (DefaultCaret) logField.getCaret();
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
 
-        spawnedComputers = new ArrayList<>();
+        spawnedAgentConnections = new HashMap<>();
 
     }
 
@@ -194,7 +199,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             this.registryURL = registryURL;
         }
 
-        registryConnection.sayHello(monitorID);
+        registryConnection.sayHello(monitorName);
     }
 
     private void connectToRegistry() throws RemoteException {
@@ -231,27 +236,24 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     null,
                     null,
                     Main.getRandomName());
-            switch (agentType) {
-                case AIPerformer:
-                    Agent spawnedComputer = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
-                    spawnedComputers.add(spawnedComputer);
-                    spawnedComputer.startAgentDaemon();
-                    break;
-                case HumanPerformer:
-                    if (spawnedHuman != null) {
-                        alert("Only 1 human performer can be created per monitor!");
-                        return;
-                    }
-                    spawnedHuman = new Human(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
-                    spawnedHuman.startAgentDaemon();
-                    break;
+            Agent newAgent;
+            if (agentType == AgentType.AIPerformer) {
+                newAgent = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
+            } else {
+                newAgent = new Human(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
             }
+            newAgent.start();
+            //Wait for agent to initialize
+            Main.wait(NEW_AGENT_INITIALIZE_TIME);
+            spawnedAgentConnections.put(newAgent.id, (AgentInterface) Naming.lookup(newAgent.agentRmiAddress));
         } catch (ExportException e) {
             if (e.getMessage().contains("already in use")) {
                 alert("Port is already in use!");
             } else {
                 e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -289,7 +291,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         return result.toArray(new String[result.size()]);
     }
 
-    void disconnect() throws RemoteException {
+    public void disconnect() throws RemoteException {
         registryConnection.disconnect(monitorID);
         registryConnection = null;
         monitorID = null;
@@ -303,7 +305,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         monitorPortField.setEditable(false);
         monitorServicePortField.setEditable(false);
         registryMenu.setEnabled(true);
-        ipCombo.setEditable(false);
+        ipCombo.setEnabled(false);
 
         //Set variables
         selectedIPInterface = (String) ipCombo.getSelectedItem();
@@ -331,7 +333,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
                 AgentIcon icon = new AgentIcon(img, "<html><b>"
                         + dummy.name + "</b><br />"
-                        + dummy.address + ":"
+                        + dummy.ip + ":"
                         + dummy.port + "<br />ID: "
                         + dummy.ID
                         + ((dummy.masterMonitorID == null) ? "" : (", owned by M" + dummy.masterMonitorID))
@@ -359,7 +361,27 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     private void openAgentMenu(AgentDummy dummy) {
-        new Thread(new AgentControlPanel(dummy)).start();
+        AgentControlPanel newControlPanel = new AgentControlPanel(dummy, monitorID);
+        newControlPanel.setLocationRelativeTo(this);
+        new Thread(newControlPanel).start();
+    }
+
+    private void shutdown() throws RemoteException {
+        int dialogResult = JOptionPane.showConfirmDialog(this, "Shutting down the monitor will also terminate any agents associated with this monitor.\n Are you sure you want to kill " + monitorNameField.getText() + "?", "Warning", JOptionPane.YES_NO_OPTION);
+        if (dialogResult == JOptionPane.YES_OPTION) {
+            for (AgentInterface agentConnection : spawnedAgentConnections.values()) {
+                agentConnection.shutdown();
+            }
+
+            //Remove RMI naming
+            try {
+                rmiRegistryLocation.unbind(monitorName);
+            } catch (NotBoundException e) {
+                System.out.println("Monitor RMI address already unbound");
+            }
+            
+            Main.closeWindow(this);
+        }
     }
 
     /**
@@ -424,8 +446,9 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         logField.setEditable(false);
         logField.setColumns(20);
-        logField.setFont(new java.awt.Font("Verdana", 0, 12)); // NOI18N
+        logField.setFont(new java.awt.Font("Verdana", 0, 10)); // NOI18N
         logField.setRows(5);
+        logField.setText("How to get started:\n1) Press 'Start Monitor' button\n2) Registry > Start new local registry\n3) Agents > Add...\n4) Agent icons are clickable.\n\n*Names and ports are randomly generated.\n\n--------------------------------------------------\n\n");
         jScrollPane1.setViewportView(logField);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -608,8 +631,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(canvas))
@@ -617,15 +640,15 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(canvas, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addComponent(jScrollPane1)))
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
 
         pack();
@@ -697,11 +720,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }//GEN-LAST:event_startMonitorBtnActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        int dialogResult = JOptionPane.showConfirmDialog(null, "Closing the monitor will also terminate any registry processes.\n Are you sure you want to exit?", "Warning", JOptionPane.YES_NO_OPTION);
-        if (dialogResult == JOptionPane.YES_OPTION) {
-            System.exit(1);
+        try {
+            shutdown();
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
-
     }//GEN-LAST:event_formWindowClosing
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
