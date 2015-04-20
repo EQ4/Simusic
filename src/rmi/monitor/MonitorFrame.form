@@ -95,6 +95,30 @@
                 </MenuItem>
               </SubComponents>
             </Menu>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem3">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Import AI Performers from folder"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem3ActionPerformed"/>
+              </Events>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
+        <Menu class="javax.swing.JMenu" name="performanceMenu">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Performance"/>
+            <Property name="enabled" type="boolean" value="false"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="startPerformanceItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Start performance"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startPerformanceItemActionPerformed"/>
+              </Events>
+            </MenuItem>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="helpMenu">
@@ -198,7 +222,7 @@
               <Font name="Verdana" size="10" style="0"/>
             </Property>
             <Property name="rows" type="int" value="5"/>
-            <Property name="text" type="java.lang.String" value="How to get started:&#xa;1) Press &apos;Start Monitor&apos; button&#xa;2) Registry &gt; Start new local registry&#xa;3) Agents &gt; Add...&#xa;4) Agent icons are clickable.&#xa;&#xa;*Names and ports are randomly generated.&#xa;&#xa;-------------------------------------------------&#xa;&#xa;"/>
+            <Property name="text" type="java.lang.String" value="How to get started:&#xa;1) Press &apos;Start Monitor&apos; button&#xa;2) Registry &gt; Start new local registry&#xa;3) Agents &gt; Add...&#xa;4) Performance &gt; Start performance&#xa;&#xa;* Agent icons are clickable&#xa;** Names and ports are randomly generated&#xa;&#xa;-------------------------------------------------&#xa;&#xa;"/>
           </Properties>
         </Component>
       </SubComponents>
@@ -347,7 +371,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="startMonitorBtn">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Start Monitor"/>
+            <Property name="text" type="java.lang.String" value="Start Monitor!"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startMonitorBtnActionPerformed"/>

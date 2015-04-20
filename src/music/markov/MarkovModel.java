@@ -14,7 +14,7 @@ import java.util.*;
  * @author Martin
  */
 public class MarkovModel {
-
+    
     private Playable modelType;
     private int depth;
     private int length;
@@ -26,7 +26,7 @@ public class MarkovModel {
     
     private int emptyInputSequences;
     private int allPlayablesRecorded;
-
+    
     public MarkovModel(int depth, Playable modelType) {
         this.modelType = modelType;
         this.depth = depth;

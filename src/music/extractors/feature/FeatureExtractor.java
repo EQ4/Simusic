@@ -17,50 +17,49 @@ import org.w3c.dom.*;
  */
 public class FeatureExtractor {
 
-    String midiPath;
+    File[] midiFiles;
     String featurePath;
     HashMap<String, ArrayList<Double>> mapOfSongListsOfFeatures;
     HashMap<String, Double> mapOfAverageFeatures;
     ArrayList<String> listOfSongNames;
+    String agentName;
     int numberOfSongs;
 
-    boolean log = false;
+    public FeatureExtractor(File[] midiFiles, File featureFolder, boolean overwrite, String agentName) {
+        boolean log = (agentName != null);
 
-    public FeatureExtractor(String midiPath, String featurePath, boolean overwrite) {
-        this.midiPath = midiPath;
-        this.featurePath = featurePath;
+        this.midiFiles = midiFiles;
+        try {
+            this.featurePath = featureFolder.getCanonicalPath() + "/";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         this.mapOfSongListsOfFeatures = new HashMap<>();
         mapOfAverageFeatures = new HashMap<>();
         this.listOfSongNames = new ArrayList<>();
         this.numberOfSongs = 0;
 
-        File folder = new File(midiPath);
-        File[] files = folder.listFiles();
-
         if (log) {
-            System.out.println("Extracting features from " + files.length + " files...");
+            System.out.println("<" + agentName + "> " + "Extracting features from " + midiFiles.length + " files...");
         }
         int counter = 0;
 
         //Write loop
-        for (File file : files) {
-
-            //Ignore folders
-            if (!file.isFile()) {
-                continue;
-            }
+        for (File file : midiFiles) {
 
             try {
                 //If not (overwrite), check if xml already exists
                 if (!overwrite) {
                     File f = new File(featurePath + file.getName() + ".xml");
                     if (f.exists() && !f.isDirectory()) {
-                        System.out.println("\t" + ++counter + "/" + files.length + " - XML already exsists");
+                        System.out.println("<" + agentName + "> " + "\t" + ++counter + "/" + midiFiles.length + " - XML already exsists");
                         continue;
                     }
                 }
 
-                System.out.println("\t" + ++counter + "/" + files.length);
+                if (log) {
+                    System.out.println("<" + agentName + "> " + "\t" + ++counter + "/" + midiFiles.length);
+                }
 
                 //Extract features to XML
                 CommandLine.extractFeatures(
@@ -75,7 +74,7 @@ public class FeatureExtractor {
         }
 
         //Read loop
-        for (File file : files) {
+        for (File file : midiFiles) {
             try {
 
                 //Store features from XML to hashmap
@@ -126,7 +125,7 @@ public class FeatureExtractor {
         }
 
         if (log) {
-            System.out.println("Features extracted!");
+            System.out.println("<" + agentName + "> " + "Features extracted!");
         }
     }
 
@@ -168,5 +167,9 @@ public class FeatureExtractor {
         for (Map.Entry<String, Double> entry : mapOfAverageFeatures.entrySet()) {
             System.out.println("\t" + entry.getKey() + " - " + entry.getValue());
         }
+    }
+    
+    public Double[] getAverageFeatureValues() {
+        return mapOfAverageFeatures.values().toArray(new Double[mapOfAverageFeatures.size()]);
     }
 }

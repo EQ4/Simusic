@@ -20,15 +20,27 @@ public class Human extends Agent {
     }
 
     @Override
-    public void runBehaviour() {
-        System.out.println("Human is playing");
+    public void loadAgent() {
+        //Select MIDI USB port, etc.
+        
+        //Finished loading
+        try {
+            registryConnection.agentLoaded(id);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void startPerformance() {
+        System.out.println("Human is performing");
     }
 
     @Override
     public AgentType getAgentType() {
         return AgentType.HumanPerformer;
     }
-    
+
     @Override
     public String getAgentTypeSpecificInfo() throws RemoteException {
         return "I am human!";

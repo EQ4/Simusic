@@ -5,10 +5,10 @@
  */
 package rmi.registry;
 
+import static java.lang.Math.abs;
 import rmi.monitor.UpdateMessage;
 import rmi.interfaces.RegistryInterface;
 import java.rmi.Naming;
-import java.lang.SecurityManager;
 import java.net.Inet4Address;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -30,38 +30,58 @@ import rmi.monitor.AgentDummyLink.AgentLinkType;
  * @author Martin
  */
 public class RegistryDaemon extends UnicastRemoteObject implements RegistryInterface {
+    static final int LATENCY_PINGS_PER_AGENT = 10;
+    static final int DELAY_BETWEEN_LATENCY_PINGS = 100;
+    
+    ArrayList<AgentDummy> agentFeatureStorage;
 
     RegistryFrame frame;
+    boolean sessionLocked;
 
     public RegistryDaemon(RegistryFrame frame) throws RemoteException {
         super(frame.registryServicePort);
         this.frame = frame;
-        System.setProperty("java.security.policy", "simusic.policy");
-        System.setSecurityManager(new SecurityManager());
+        sessionLocked = false;
+        this.agentFeatureStorage = new ArrayList<>();
     }
 
     @Override
     public synchronized UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException {
+        //If performance has started, no more agents can connect
+        if (sessionLocked) {
+            return null;
+        }
+        
         int id = frame.agentDummies.size();
         AgentDummy newAgentDummy = new AgentDummy(agentType, agentName, id, agentIP, agentPort, masterMonitorID);
-        frame.agentDummies.add(newAgentDummy);
+        AgentInterface agentConnection;
         try {
-            frame.agentConnections.add((AgentInterface) Naming.lookup("rmi://" + agentIP + ":" + agentPort + "/" + agentName));
+            agentConnection = (AgentInterface) Naming.lookup("rmi://" + agentIP + ":" + agentPort + "/" + agentName);
         } catch (Exception e) {
             System.out.println("Registry to agent connection exception: " + e.getMessage());
             e.printStackTrace();
+            return null;
         }
+        
+        //Measure latency
+        newAgentDummy.latency = measureAgentLatency(agentConnection);
+        frame.agentDummies.add(newAgentDummy);
+        
         frame.log("A new agent has connected!\n"
                 + "    - name: " + agentName + "\n"
                 + "    - type: " + agentType.toString() + "\n"
                 + "    - ip: " + agentIP + "\n"
                 + "    - port: " + agentName + "\n"
+                + "    - latency: " + newAgentDummy.latency + "\n"
                 + "    - ID: " + id + "\n"
                 + "    - owned by: " + masterMonitorID
         );
 
         //Say hello
-        frame.agentConnections.get(id).sayHello();
+        agentConnection.sayHello();
+        
+        //Store connection
+        frame.agentConnections.add(agentConnection);
 
         //Update agents
         triggerGlobalUpdate();
@@ -86,6 +106,18 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         UpdateMessage result = getRegularUpdate();
         result.welcomePack = newAgentDummy;
         return result;
+    }
+    
+    private int measureAgentLatency(AgentInterface agentConnection) throws RemoteException {
+        int latencySum = 0;
+        long timeOnPingSend;
+        for (int i = 0; i < LATENCY_PINGS_PER_AGENT; i++) {
+            timeOnPingSend = System.currentTimeMillis();
+            agentConnection.ping();
+            latencySum += (System.currentTimeMillis() - timeOnPingSend);
+            Main.wait(DELAY_BETWEEN_LATENCY_PINGS);
+        }
+        return (latencySum / LATENCY_PINGS_PER_AGENT) / 2;
     }
 
     @Override
@@ -133,5 +165,73 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Update agents
         triggerGlobalUpdate();
     }
-
+    
+    @Override
+    public void agentLoaded(int agentID) throws RemoteException {
+        frame.agentDummies.get(agentID).isReady = true;
+        triggerGlobalUpdate();
+    }
+    
+    @Override
+    public AgentDummy getRoleModel(int agentID, Double[] featureValues) throws RemoteException {
+        AgentDummy roleModel = null;
+        double minDistance = Double.MAX_VALUE;
+        for (AgentDummy agent : agentFeatureStorage) {
+            double distanceToAgent = 0;
+            for (int i = 0; i < featureValues.length; i++) {
+                distanceToAgent += abs(featureValues[i] - agent.features[i]);
+            }
+            if (distanceToAgent < minDistance) {
+                minDistance = distanceToAgent;
+                roleModel = agent;
+                agent.roleModelMessage = minDistance + "";
+            }
+        }
+        //Store this agent
+        AgentDummy newRoleModel = frame.agentDummies.get(agentID);
+        newRoleModel.features = featureValues;
+        agentFeatureStorage.add(newRoleModel);
+        return roleModel;
+    }
+    
+    @Override
+    public String startPerformance() throws RemoteException {
+        //Check if there is at least one AI agent
+        for (int i = 0; i < frame.agentDummies.size(); i++) {
+            if (frame.agentDummies.get(i).agentType == AgentType.AIPerformer) {
+                //All good - continue
+                break;
+            }
+            if (i == frame.agentDummies.size() - 1) {
+                return "There are no AI Performers!";
+            }
+        }
+        
+        //Ensure that no agent is loading.
+        for (AgentDummy agentDummy : frame.agentDummies) {
+            if (!agentDummy.isReady) {
+                return "One or more agents are still loading!";
+            }
+        }
+        
+        //No more agents can connect
+        sessionLocked = true;
+        
+        //TODO: Take ping into consideration?
+        
+        //Start performance:
+        for (AgentInterface agentConnection : frame.agentConnections) {
+            agentConnection.startPerformance();
+        }
+        
+        frame.log("Performance started!");
+        
+        return null;
+    }
+    
+    @Override
+    public boolean isPerforming() throws RemoteException {
+        return sessionLocked;
+    }
+    
 }

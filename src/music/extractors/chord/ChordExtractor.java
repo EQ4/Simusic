@@ -11,6 +11,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import sun.security.krb5.internal.SeqNumber;
 
 /**
  *
@@ -18,21 +19,20 @@ import java.util.Map;
  */
 public class ChordExtractor {
 
-    static boolean log = false;
+    public static ArrayList<Sequence> extractChordsFromMidiFiles(File[] files, String agentName) {
 
-    public static ArrayList<Sequence> extractChordsFromMidiFiles(String path) {
-
-        File folder = new File(path);
-        File[] files = folder.listFiles();
+        boolean log = (agentName != null);
 
         ArrayList<Sequence> fullSequence = new ArrayList<>();
 
         if (log) {
-            System.out.println("Extracting chords from " + files.length + " files...");
+            System.out.println("<" + agentName + "> " + "Extracting chords from " + files.length + " files...");
         }
         for (int i = 0; i < files.length; i++) {
 
-            System.out.println("\t" + (i + 1) + "/" + files.length);
+            if (log) {
+                System.out.println("<" + agentName + "> " + "\t" + (i + 1) + "/" + files.length);
+            }
 
             Sequence normalizedSequence = new Sequence();
             try {
@@ -63,14 +63,14 @@ public class ChordExtractor {
 
                 }
             } catch (Exception e) {
-                System.out.println("Chord Extractor exception.");
+                System.out.println("<" + agentName + "> " + "Chord Extractor exception.");
                 e.printStackTrace();
             }
             fullSequence.add(normalizedSequence);
         }
 
         if (log) {
-            System.out.println("Done!");
+            System.out.println("<" + agentName + "> " + "Chords have been extracted!");
         }
 
         return fullSequence;

@@ -32,14 +32,16 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     public String registryURL;
     public int masterMonitorID;
 
-    public java.rmi.registry.Registry rmiRegistryLocation;
-    private RegistryInterface registryConnection;
-    private HashMap<Integer, AgentInterface> neighbourConnections;
-    private HashMap<Integer, AgentDummy> neighbourDummies;
+    private java.rmi.registry.Registry rmiRegistryLocation;
+    public HashMap<Integer, AgentInterface> neighbourConnections;
+    public HashMap<Integer, AgentDummy> neighbourDummies;
+    public RegistryInterface registryConnection;
 
     //Abstract methods
-    public abstract void runBehaviour();
+    public abstract void loadAgent();
     public abstract AgentType getAgentType();
+    @Override
+    public abstract void startPerformance();
     @Override
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
 
@@ -69,9 +71,9 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
             rmiRegistryLocation = java.rmi.registry.LocateRegistry.createRegistry(port);
             Naming.rebind(agentRmiAddress, this);
             connectToRegistry();
-            runBehaviour();
+            loadAgent();
         } catch (ExportException e) {
-            System.out.println("<" + agentRmiAddress + "> Port is already in use! Please try again later.");
+            log("Port is already in use! Please try again later.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -81,7 +83,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         try {
             return Naming.lookup(url);
         } catch (Exception e) {
-            System.out.println("Agent to registry connection exception: " + e.getMessage());
+            log("Agent to registry connection exception: " + e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -101,6 +103,10 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
 
     private void disconnectFromRegistry() throws RemoteException {
         registryConnection.disconnect(id);
+    }
+    
+    public void log(String message) {
+        System.out.println("<" + name + "> " + message);
     }
 
     @Override
@@ -146,7 +152,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
             neighbourDummies.put(neighbourID, newNeighbourDummy);
             neighbourConnections.put(neighbourID, newNeighbourConnection);
             registryConnection.reportNeighbourConnection(neighbourID, id);
-            logInRegistry(newNeighbourDummy.name + " connected to me! We are now neighbours.");
+            logInRegistry(newNeighbourDummy.name + " connected to me! I am his role model.");
             return true;
         }
         return false;
@@ -161,13 +167,13 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
 
     @Override
     public String sayHello() throws RemoteException {
-        System.out.println("<" + name + "> Someone said hi!");
+        log("Someone said hi!");
         return "Hi from " + name + "!";
     }
 
     @Override
     public void update(UpdateMessage update) throws RemoteException {
-        //TODO: Check dummies and links for ones that contain this agent - NICE
+        //TODO: Check dummies and links for ones that contain this agent
     }
 
 }

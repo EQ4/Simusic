@@ -57,10 +57,10 @@ public class Tests {
 
     static void testFeatures() {
         //Extract features
-        FeatureExtractor fextract = new FeatureExtractor(midiPath, featurePath, true);
+        //FeatureExtractor fextract = new FeatureExtractor(midiPath, featurePath, true);
 
         //Print all average features
-        fextract.printAverageFeatures();
+        //fextract.printAverageFeatures();
     }
 
     static void testPlayer() {
@@ -86,6 +86,6 @@ public class Tests {
     }
 
     static void extractChords() {
-        chords = ChordExtractor.extractChordsFromMidiFiles(midiPath);
+        //chords = ChordExtractor.extractChordsFromMidiFiles(midiPath);
     }
 }

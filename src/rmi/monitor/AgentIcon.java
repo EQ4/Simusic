@@ -25,7 +25,9 @@ abstract class AgentIcon extends JPanel {
     MouseAdapter iconMA;
     MouseAdapter textMA;
 
-    public AgentIcon(ImageIcon icon, String text) {
+    public int agentIDNote;
+    
+    public AgentIcon(ImageIcon icon, String text, int agentIDNote) {
         iconLabel = new JLabel(icon);
         textLabel = new JLabel(text);
         iconMA = new MouseAdapter() {
@@ -45,6 +47,8 @@ abstract class AgentIcon extends JPanel {
         textLabel.addMouseListener(textMA);
         add(iconLabel);
         add(textLabel);
+        
+        this.agentIDNote = agentIDNote;
     }
 
     abstract void iconClicked();

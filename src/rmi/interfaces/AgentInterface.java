@@ -26,6 +26,8 @@ public interface AgentInterface extends Remote  {
     
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
     
+    public abstract void startPerformance() throws RemoteException;
+    
     //Test
     public String sayHello() throws RemoteException;
 }

@@ -10,6 +10,12 @@
 <project name="Simusic" default="default" basedir=".">
     <description>Builds, tests, and runs the project Simusic.</description>
     <import file="nbproject/build-impl.xml"/>
+    <target name="-post-jar">
+        <mkdir dir="${dist.dir}/resources"/>
+        <copy todir="${dist.dir}/resources">
+            <fileset dir="${basedir}/resources" />
+        </copy>
+    </target>
     <!--
 
     There exist several targets which are by default empty and which can be 

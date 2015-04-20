@@ -44,6 +44,10 @@ public class Main {
         //Initialise static variables
         rand = new Random();
         windowsOpened = 0;
+        
+        //Set RMI policy variables
+        System.setProperty("java.security.policy", "resources/simusic.policy");
+        System.setSecurityManager(new SecurityManager());
 
         //Get some agent names
         try {
@@ -98,8 +102,8 @@ public class Main {
     }
 
     public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport) throws RemoteException {
-        RegistryFrame newRegistrtFrame = new RegistryFrame(ipAddress, registryName, regPort, regSport);
-        newRegistrtFrame.startDaemon();
+        RegistryFrame newRegistryFrame = new RegistryFrame(ipAddress, registryName, regPort, regSport);
+        newRegistryFrame.startDaemon();
     }
 
     public static int getRandomPort() {

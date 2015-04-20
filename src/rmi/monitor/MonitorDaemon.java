@@ -22,8 +22,6 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     public MonitorDaemon(MonitorFrame frame) throws RemoteException {
         super(frame.monitorServicePort);
         this.frame = frame;
-        System.setProperty("java.security.policy", "simusic.policy");
-        System.setSecurityManager(new SecurityManager());
     }
 
     //AI methods
@@ -71,8 +69,14 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     }
     
     @Override
-    public String getAgentTypeSpecificInfo() {
+    public String getAgentTypeSpecificInfo() throws RemoteException {
         //Used mainly in Human and AI performers
         return "I am monitor!";
+    }
+    
+    @Override
+    public void startPerformance() throws RemoteException {
+        frame.log("Performance started!");
+        frame.setPerformingStatus();
     }
 }

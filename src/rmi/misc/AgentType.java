@@ -5,10 +5,12 @@
  */
 package rmi.misc;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Martin
  */
-public enum AgentType {
+public enum AgentType implements Serializable {
         AIPerformer, HumanPerformer, Monitor
 }

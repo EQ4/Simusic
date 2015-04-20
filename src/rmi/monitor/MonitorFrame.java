@@ -17,18 +17,23 @@ import java.awt.Image;
 import java.awt.LayoutManager;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ExportException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import javafx.scene.paint.Color;
 import javax.imageio.ImageIO;
@@ -87,6 +92,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             monitorRMIAddress = "rmi://" + selectedIPInterface + ":" + monitorPort + "/" + monitorName;
             Naming.rebind(monitorRMIAddress, monitorDaemon);
 
+            setTitle("Simusic Monitor '" + monitorName + "'");
             log("--- SiMusic Monitor Log ---\nMonitor information: "
                     + "\n    - ip: " + selectedIPInterface
                     + "\n    - port " + monitorPort
@@ -153,6 +159,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             statusTextField.setText("Disconnected");
             monitorIdTextField.setText("");
             agentsMenu.setEnabled(false);
+            performanceMenu.setEnabled(false);
             log("Disconnected");
             revalidate();
         }
@@ -172,13 +179,14 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 + "\n    - serv. name: " + d.getRegName()
         );
 
+        Main.wait(NEW_AGENT_INITIALIZE_TIME);
+
         //Also connect
         connectToRegistry("rmi://" + selectedIPInterface + ":" + d.getRegPort() + "/" + d.getRegName());
     }
 
     private void connectToRegistry(String registryURL) throws RemoteException {
         log("Connecting to " + registryURL);
-        System.setSecurityManager(new SecurityManager());
         try {
             registryConnection = (RegistryInterface) Naming.lookup(registryURL);
         } catch (Exception e) {
@@ -186,11 +194,16 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             e.printStackTrace();
         }
 
-        UpdateMessage fullUpdate = registryConnection.connect(AgentType.Monitor, monitorName, selectedIPInterface, monitorPort, null);
+        UpdateMessage firstUpdate = registryConnection.connect(AgentType.Monitor, monitorName, selectedIPInterface, monitorPort, null);
+
+        if (firstUpdate == null) {
+            alert("Registry has already started performance. Cannot connect.");
+            return;
+        }
 
         //Unpack and process update
-        monitorID = fullUpdate.welcomePack.agentID;
-        processUpdate(fullUpdate);
+        monitorID = firstUpdate.welcomePack.agentID;
+        processUpdate(firstUpdate);
 
         monitorIdTextField.setText(monitorID + "");
 
@@ -199,6 +212,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             statusTextField.setText("Connected to " + registryURL);
             monitorIdTextField.setText(monitorID.toString());
             agentsMenu.setEnabled(true);
+            performanceMenu.setEnabled(true);
             this.registryURL = registryURL;
         }
 
@@ -231,18 +245,29 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     private void createAgent(AgentType agentType) throws RemoteException {
         try {
+            if (registryConnection.isPerforming()) {
+                alert("Registry has already started performance. Cannot create agent.");
+                return;
+            }
             String name = (String) JOptionPane.showInputDialog(
                     this,
-                    "Enter agent name",
-                    "Create new agent",
+                    "Enter new agent name",
+                    "Creating new agent...",
                     JOptionPane.PLAIN_MESSAGE,
                     null,
                     null,
                     Main.getRandomName());
             Agent newAgent;
             if (agentType == AgentType.AIPerformer) {
+                int maxMarkovChainLevel = Integer.parseInt((String) JOptionPane.showInputDialog(
+                        this,
+                        "Specify maximum Markov chain depth\n(press OK if unsure)",
+                        "Creating new agent...",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        null,
+                        "3"));
                 //Load midi files
-                JOptionPane.showMessageDialog(this, "Select repertoire MIDI files...");
                 File[] agentFiles;
                 final JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setMultiSelectionEnabled(true);
@@ -253,11 +278,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 if (fcReturnVal == JFileChooser.APPROVE_OPTION) {
                     agentFiles = fileChooser.getSelectedFiles();
                 } else {
-                    agentFiles = new File[0];
+                    return;
                 }
 
                 //Create agent
-                newAgent = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, agentFiles);
+                newAgent = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, agentFiles, maxMarkovChainLevel);
             } else {
                 //TODO: Select USB MIDI interface
 
@@ -284,7 +309,9 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     private void alert(String message) {
-        JOptionPane.showMessageDialog(this, message);
+        if (message != null) {
+            JOptionPane.showMessageDialog(this, message);
+        }
     }
 
     public void log(String message) {
@@ -295,18 +322,25 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         alert("Testing");
     }
 
+    public void setPerformingStatus() {
+        statusTextField.setText("Performing in " + registryURL);
+    }
+
     private String[] getAllIPs() {
         ArrayList<String> result = new ArrayList<>();
         try {
-            InetAddress localhost = InetAddress.getLocalHost();
-            InetAddress[] ips = InetAddress.getAllByName(localhost.getCanonicalHostName());
-            for (InetAddress ip : ips) {
-                String ipString = ip.getHostAddress();
-                if (!ipString.contains(":")) {
-                    result.add(ipString);
+            Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+            for (NetworkInterface netint : Collections.list(nets)) {
+                Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
+                for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+                    String ipString = inetAddress.toString();
+                    //Filter loopback and IPv6 addresses
+                    if (!ipString.contains(":") && !ipString.contains("127.0.0.1")) {
+                        result.add(ipString.replace("/", "").trim());
+                    }
                 }
             }
-        } catch (UnknownHostException e) {
+        } catch (Exception e) {
             System.out.println("Error resolving own IPs");
             e.printStackTrace();
         }
@@ -314,7 +348,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     public void disconnect() throws RemoteException {
-        registryConnection.disconnect(monitorID);
+        try {
+            registryConnection.disconnect(monitorID);
+        } catch (RemoteException e) {
+            //Continue; connection is dead anyway
+        }
         registryConnection = null;
         monitorID = null;
         checkConnection();
@@ -335,6 +373,9 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         monitorPort = Integer.parseInt(monitorPortField.getText());
         monitorServicePort = Integer.parseInt(monitorServicePortField.getText());
 
+        //Set RMI hostname system variable
+        System.setProperty("java.rmi.server.hostname", selectedIPInterface);
+
         //Start monitor daemon
         Thread localMonitorWorker = new Thread(this);
         localMonitorWorker.setDaemon(true);
@@ -342,8 +383,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     void processUpdate(UpdateMessage update) {
-        JPanel newPanel = new JPanel(new GridLayout(0, 3, 32, 48));
-
+        ArrayList<AgentIcon> imageIcons = new ArrayList<>();
+        //Process dummies
         update.updatedDummies.stream().filter((dummy) -> (!dummy.isOffline)).forEach((dummy) -> {
             try {
                 ImageIcon img = null;
@@ -359,20 +400,90 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                         + dummy.port + "<br />ID: "
                         + dummy.agentID
                         + ((dummy.masterMonitorID == null) ? "" : (", owned by M" + dummy.masterMonitorID))
-                        + (dummy.isOffline() ? "<br />OFFLINE" : "")
-                        + "</html>") {
+                        + (dummy.isOffline ? "<br />OFFLINE" : "")
+                        + (!dummy.isReady ? "<br /><em>AGENT LOADING</em>" : "")
+                        + "</html>", dummy.agentID) {
                             @Override
                             void iconClicked() {
                                 openAgentMenu(dummy);
                             }
                         };
                 icon.setOpaque(false);
-                newPanel.add(icon);
+                imageIcons.add(icon);
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
+
+        
+        //Paint edges
+        JPanel newPanel = new JPanel(new GridLayout(0, 3, 32, 48)) {
+            @Override
+            public void paintComponent(Graphics g) {
+                for (AgentDummyLink link : update.updatedLinks) {
+                    AgentIcon iconFrom = null;
+                    AgentIcon iconTo = null;
+                    for (AgentIcon icon : imageIcons) {
+                        if (icon.agentIDNote == link.fromAgentID) {
+                            iconFrom = icon;
+                        }
+                        if (icon.agentIDNote == link.toAgentID) {
+                            iconTo = icon;
+                        }
+                    }
+                    if ((iconFrom == null) || (iconTo == null)) {
+                        continue;
+                    }
+                    Point pointFrom = iconFrom.getLocation();
+                    Point pointTo = iconTo.getLocation();
+                    int x1 = pointFrom.x;
+                    int y1 = pointFrom.y;
+                    int x2 = pointTo.x;
+                    int y2 = pointTo.y;
+                    
+                    int minus_value = 50;
+                    if (x2 < x1) {
+                        x2 += minus_value;
+                    }
+                    if (x2 > x1) {
+                        x2 -= minus_value;
+                    }
+                    if (y2 < y1) {
+                        y2 += minus_value;
+                    }
+                    if (y2 > y1) {
+                        y2 -= minus_value;
+                    }
+                    
+                    x1 += 50;
+                    x2 += 50;
+                    y1 += 30;
+                    y2 += 30;
+
+                    //Following 10 lines taken from Stack Overflow
+                    Graphics2D g1 = (Graphics2D) g.create();
+                    g1.setColor(java.awt.Color.red);
+                    final int ARR_SIZE = 4;
+
+                    double dx = x2 - x1, dy = y2 - y1;
+                    double angle = Math.atan2(dy, dx);
+                    int len = (int) Math.sqrt(dx * dx + dy * dy);
+                    AffineTransform at = AffineTransform.getTranslateInstance(x1, y1);
+                    at.concatenate(AffineTransform.getRotateInstance(angle));
+                    g1.transform(at);
+                    
+                    g1.drawLine(0, 0, len, 0);
+                    g1.fillPolygon(new int[]{len, len - ARR_SIZE, len - ARR_SIZE, len},
+                            new int[]{0, -ARR_SIZE, ARR_SIZE, 0}, 4);
+
+                }
+            }
+        };
+
+        for (AgentIcon icon : imageIcons) {
+            newPanel.add(icon);
+        }
 
         pack();
         revalidate();
@@ -442,6 +553,9 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         jMenu4 = new javax.swing.JMenu();
         addAiPerformerMenuItem = new javax.swing.JMenuItem();
         addHumanPerformerMenuItem = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        performanceMenu = new javax.swing.JMenu();
+        startPerformanceItem = new javax.swing.JMenuItem();
         helpMenu = new javax.swing.JMenu();
         testMenuItem = new javax.swing.JMenuItem();
         aboutMenuItem = new javax.swing.JMenuItem();
@@ -467,7 +581,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         logField.setColumns(20);
         logField.setFont(new java.awt.Font("Verdana", 0, 10)); // NOI18N
         logField.setRows(5);
-        logField.setText("How to get started:\n1) Press 'Start Monitor' button\n2) Registry > Start new local registry\n3) Agents > Add...\n4) Agent icons are clickable.\n\n*Names and ports are randomly generated.\n\n-------------------------------------------------\n\n");
+        logField.setText("How to get started:\n1) Press 'Start Monitor' button\n2) Registry > Start new local registry\n3) Agents > Add...\n4) Performance > Start performance\n\n* Agent icons are clickable\n** Names and ports are randomly generated\n\n-------------------------------------------------\n\n");
         jScrollPane1.setViewportView(logField);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -489,7 +603,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         jLabel5.setText("Service Port");
 
-        startMonitorBtn.setText("Start Monitor");
+        startMonitorBtn.setText("Start Monitor!");
         startMonitorBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startMonitorBtnActionPerformed(evt);
@@ -620,7 +734,28 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         agentsMenu.add(jMenu4);
 
+        jMenuItem3.setText("Import AI Performers from folder");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        agentsMenu.add(jMenuItem3);
+
         jMenuBar1.add(agentsMenu);
+
+        performanceMenu.setText("Performance");
+        performanceMenu.setEnabled(false);
+
+        startPerformanceItem.setText("Start performance");
+        startPerformanceItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startPerformanceItemActionPerformed(evt);
+            }
+        });
+        performanceMenu.add(startPerformanceItem);
+
+        jMenuBar1.add(performanceMenu);
 
         helpMenu.setText("Help");
 
@@ -746,6 +881,69 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         }
     }//GEN-LAST:event_formWindowClosing
 
+    private void startPerformanceItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startPerformanceItemActionPerformed
+        try {
+            alert(registryConnection.startPerformance());
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_startPerformanceItemActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+
+        try {
+            int maxMarkovChainLevel = Integer.parseInt((String) JOptionPane.showInputDialog(
+                    this,
+                    "Specify maximum Markov chain depth\n(press OK if unsure)",
+                    "Importing agents...",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    "3"));
+            //Load midi files
+            File agentFolders;
+            final JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fileChooser.setDialogTitle("Select agent folder");
+            int fcReturnVal = fileChooser.showOpenDialog(this);
+            if (fcReturnVal == JFileChooser.APPROVE_OPTION) {
+                agentFolders = fileChooser.getSelectedFile();
+            } else {
+                return;
+            }
+
+            //Create agents
+            if (agentFolders.isFile()) {
+                return;
+            }
+
+            for (File agentFolder : agentFolders.listFiles()) {
+                if (agentFolder.isDirectory()) {
+                    ArrayList<File> midiFiles = new ArrayList<>();
+                    for (File file : agentFolder.listFiles()) {
+                        if (file.getName().contains(".mid")) {
+                            midiFiles.add(file);
+                        }
+                    }
+                    Agent newAgent = new Computer(Main.getRandomName(), registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, midiFiles.toArray(new File[midiFiles.size()]), maxMarkovChainLevel);
+                    newAgent.start();
+                    //Wait for agent to initialize
+                    Main.wait(NEW_AGENT_INITIALIZE_TIME);
+                    spawnedAgentConnections.put(newAgent.id, (AgentInterface) Naming.lookup(newAgent.agentRmiAddress));
+                }
+            }
+
+        } catch (ExportException e) {
+            if (e.getMessage().contains("already in use")) {
+                alert("Port is already in use!");
+            } else {
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;
     private javax.swing.JMenuItem addAiPerformerMenuItem;
@@ -768,6 +966,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea logField;
@@ -775,9 +974,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     private javax.swing.JTextField monitorNameField;
     private javax.swing.JTextField monitorPortField;
     private javax.swing.JTextField monitorServicePortField;
+    private javax.swing.JMenu performanceMenu;
     private javax.swing.JMenu registryMenu;
     private javax.swing.JButton startMonitorBtn;
     private javax.swing.JMenuItem startNewRegistryBtn;
+    private javax.swing.JMenuItem startPerformanceItem;
     private javax.swing.JTextField statusTextField;
     private javax.swing.JMenuItem testMenuItem;
     // End of variables declaration//GEN-END:variables

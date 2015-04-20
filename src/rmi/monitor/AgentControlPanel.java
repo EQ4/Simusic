@@ -39,9 +39,9 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         }
 
         nameLabel.setText(dummy.name + ", " + dummy.agentType.toString());
-        connectLabel.setText(connectLabel.getText().replace("%agentname", agentDummy.name));
         sendLabel.setText(sendLabel.getText().replace("%agentname", agentDummy.name));
         addressField.setText(dummy.ip + ":" + dummy.port);
+        latencyField.setText(dummy.latency + " ms");
         
         try {
             typeSpecInfoField.setText(agentConnection.getAgentTypeSpecificInfo());
@@ -55,7 +55,8 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
-
+        
+        
     }
 
     @Override
@@ -79,14 +80,12 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         sendButton = new javax.swing.JButton();
         messageField = new javax.swing.JTextField();
         sendLabel = new javax.swing.JLabel();
-        connectLabel = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        connectAgentIdField = new javax.swing.JTextField();
-        jLabel4 = new javax.swing.JLabel();
-        connectButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         typeSpecInfoField = new javax.swing.JTextArea();
+        jLabel2 = new javax.swing.JLabel();
+        latencyField = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setResizable(false);
@@ -110,24 +109,17 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
 
         sendLabel.setText("Send message to %agentname");
 
-        connectLabel.setText("Neighbour %agentname with another agent");
-
         jLabel3.setText("Message");
 
-        jLabel4.setText("Agent ID");
-
-        connectButton.setText("Connect");
-        connectButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                connectButtonActionPerformed(evt);
-            }
-        });
-
-        jLabel1.setText("Type-specific information");
+        jLabel1.setText("Agent type-specific information");
 
         typeSpecInfoField.setColumns(20);
         typeSpecInfoField.setRows(5);
         jScrollPane1.setViewportView(typeSpecInfoField);
+
+        jLabel2.setText("Latency (registry->agent)");
+
+        latencyField.setEditable(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -158,21 +150,19 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(messageField, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(connectButton)
-                                    .addComponent(sendButton)))
+                                .addComponent(sendButton)
+                                .addGap(16, 16, 16))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(connectLabel)
-                                    .addComponent(jLabel1))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel1)
+                                    .addComponent(jLabel2))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 105, Short.MAX_VALUE)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(jScrollPane1)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel4)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(connectAgentIdField, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(91, 91, 91))
-                                    .addComponent(jScrollPane1))))))
+                                        .addGap(53, 53, 53)
+                                        .addComponent(latencyField, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(176, 176, 176)))))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -192,17 +182,15 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                     .addComponent(sendButton)
                     .addComponent(sendLabel)
                     .addComponent(jLabel3))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(connectLabel)
-                    .addComponent(connectAgentIdField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4)
-                    .addComponent(connectButton))
-                .addGap(18, 18, 18)
+                    .addComponent(jLabel2)
+                    .addComponent(latencyField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 195, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(173, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
@@ -216,30 +204,15 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         }
     }//GEN-LAST:event_sendButtonActionPerformed
 
-    private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
-        try {
-            int neighbourID = Integer.parseInt(connectAgentIdField.getText());
-            AgentDummy neighbourDummy = registryConnection.getAgentDummyByID(neighbourID);
-            String neighbourRMIAddress = neighbourDummy.getRMIAddress();
-            System.out.println("Test: " + neighbourRMIAddress);
-            AgentInterface neighbourConnection = (AgentInterface) Naming.lookup(neighbourRMIAddress);
-            neighbourConnection.connectNeighbour(agentDummy.agentID);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }//GEN-LAST:event_connectButtonActionPerformed
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel addressField;
-    private javax.swing.JTextField connectAgentIdField;
-    private javax.swing.JButton connectButton;
-    private javax.swing.JLabel connectLabel;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JTextField latencyField;
     private javax.swing.JLabel masterMonitorField;
     private javax.swing.JTextField messageField;
     private javax.swing.JLabel nameLabel;

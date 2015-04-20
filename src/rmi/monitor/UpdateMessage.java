@@ -6,7 +6,6 @@
 package rmi.monitor;
 
 import java.io.Serializable;
-import rmi.monitor.AgentDummyLink;
 import java.util.ArrayList;
 
 /**
