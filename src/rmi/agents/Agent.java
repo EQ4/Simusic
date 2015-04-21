@@ -163,7 +163,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
             neighbourDummies.put(neighbourID, newNeighbourDummy);
             neighbourConnections.put(neighbourID, newNeighbourConnection);
             registryConnection.reportNeighbourConnection(neighbourID, agentID);
-            logInRegistry(newNeighbourDummy.name + " connected to me! I am his role model.");
+            log(newNeighbourDummy.name + " connected to me! I am his role model.");
             return true;
         }
         return false;

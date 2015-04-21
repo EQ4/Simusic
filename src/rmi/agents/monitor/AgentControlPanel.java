@@ -42,6 +42,7 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         sendLabel.setText(sendLabel.getText().replace("%agentname", agentDummy.name));
         addressField.setText(dummy.ip + ":" + dummy.port);
         latencyField.setText(dummy.latency + " ms");
+        agentIdField.setText("Agent ID: " + dummy.agentID);
 
         try {
             typeSpecInfoField.setText(agentConnection.getAgentTypeSpecificInfo());
@@ -49,7 +50,8 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
             e.printStackTrace();
         }
 
-        agentIdField.setText("Agent ID: " + dummy.agentID);
+        
+        getRootPane().setDefaultButton(closeButton);
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
@@ -83,6 +85,7 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         typeSpecInfoField = new javax.swing.JTextArea();
         jLabel2 = new javax.swing.JLabel();
         latencyField = new javax.swing.JTextField();
+        closeButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(550, 495));
@@ -116,6 +119,13 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
 
         latencyField.setEditable(false);
 
+        closeButton.setText("Close");
+        closeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -131,9 +141,10 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(agentIdField)
                         .addGap(119, 119, 119))))
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jSeparator1)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(10, 10, 10)
@@ -155,7 +166,9 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel1)
                                 .addGap(0, 0, Short.MAX_VALUE))))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(closeButton)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -182,7 +195,9 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                 .addGap(10, 10, 10)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(closeButton)
                 .addContainerGap())
         );
 
@@ -197,10 +212,15 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         }
     }//GEN-LAST:event_sendButtonActionPerformed
 
+    private void closeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeButtonActionPerformed
+        dispose();
+    }//GEN-LAST:event_closeButtonActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel addressField;
     private javax.swing.JLabel agentIdField;
+    private javax.swing.JButton closeButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

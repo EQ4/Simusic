@@ -97,19 +97,14 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
         return null;
     }
 
-    private void cantPlay() {
-        frame.log("I (a monitor) can't play any instrument!");
-        //Monitors cannot play musical instruments. Fact
-    }
-
     @Override
     public void beat(Chord chord) throws RemoteException {
-        cantPlay();
+        frame.log("Current chord: " + chord.toString());
     }
 
     @Override
     public void playSolo() throws RemoteException {
-        cantPlay();
+        //Not Applicable
     }
 
     @Override

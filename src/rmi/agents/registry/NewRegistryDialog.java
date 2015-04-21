@@ -25,6 +25,8 @@ public class NewRegistryDialog extends javax.swing.JDialog {
         regPortText.setText(Main.getRandomPort() + "");
         regSportText.setText(Main.getRandomPort() + "");
         
+        getRootPane().setDefaultButton(okButton);
+        
         this.setLocationRelativeTo(null);
         this.setVisible(true);
     }

@@ -23,14 +23,16 @@ public class AgentDummy implements Serializable {
     public int latency;
     public boolean isReady;
     public boolean isOffline;
-    
+
     public boolean isChordWinner;
     public boolean isSoloing;
-    
+
+    public boolean isConductor;
+    public boolean isLeafAgent;
+
     //Feature/role model vars
     public Double[] features;
     public String roleModelMessage;
-
 
     public AgentDummy(AgentType agentType, String name, int ID, String ip, int port, Integer masterMonitorID) {
         this.agentType = agentType;
@@ -41,10 +43,19 @@ public class AgentDummy implements Serializable {
         this.isOffline = false;
         this.masterMonitorID = masterMonitorID;
         this.isReady = true;
+
+        this.roleModelMessage = "";
+
+        this.isChordWinner = false;
+        this.isSoloing = false;
+
+        this.isConductor = false;
+        this.isLeafAgent = false;
+
         if (agentType == AgentType.AIPerformer) {
             this.isReady = false;
+            this.isLeafAgent = true;
         }
-        this.roleModelMessage = "";
     }
 
     public String getIconFilename() {

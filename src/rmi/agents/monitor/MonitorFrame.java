@@ -192,7 +192,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         try {
             registryConnection = (RegistryInterface) Naming.lookup(registryURL);
         } catch (Exception e) {
-            System.out.println("Monitor to registry connection exception: " + e.getMessage());
+            log("Could not connect to registry. Look at console for exception stack trace");
+            alert("Could not connect to registry. Look at console for exception stack trace");
             e.printStackTrace();
         }
 
@@ -401,47 +402,75 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     void processUpdate(UpdateMessage update) {
-        ArrayList<AgentIcon> imageIcons = new ArrayList<>();
+        ArrayList<AgentIcon> agentIcons = new ArrayList<>();
         //Process dummies
-        update.updatedDummies.stream().filter((dummy) -> (!dummy.isOffline)).forEach((dummy) -> {
-            try {
-                ImageIcon img = null;
+
+        for (AgentDummy dummy : update.updatedDummies) {
+            if (!dummy.isOffline) {
                 try {
-                    img = new ImageIcon(ImageIO.read(new File("resources/" + dummy.getIconFilename() + ".png")));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+                    ImageIcon img = null;
+                    try {
+                        img = new ImageIcon(ImageIO.read(new File("resources/" + dummy.getIconFilename() + ".png")));
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+
+                    AgentIcon icon = new AgentIcon(img, "<html><b>"
+                            + dummy.name + "</b><br />"
+                            + dummy.ip + ":"
+                            + dummy.port + "<br />ID: "
+                            + dummy.agentID
+                            + ((dummy.masterMonitorID == null) ? "" : (", owned by M" + dummy.masterMonitorID))
+                            + (dummy.isOffline ? "<br />OFFLINE" : "")
+                            + (!dummy.isReady ? "<br /><em>AGENT LOADING</em>" : "")
+                            + "</html>", dummy.agentID) {
+                                @Override
+                                void iconClicked() {
+                                    openAgentMenu(dummy);
+                                }
+                            };
+                    icon.setOpaque(false);
+                    agentIcons.add(icon);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
-                AgentIcon icon = new AgentIcon(img, "<html><b>"
-                        + dummy.name + "</b><br />"
-                        + dummy.ip + ":"
-                        + dummy.port + "<br />ID: "
-                        + dummy.agentID
-                        + ((dummy.masterMonitorID == null) ? "" : (", owned by M" + dummy.masterMonitorID))
-                        + (dummy.isOffline ? "<br />OFFLINE" : "")
-                        + (!dummy.isReady ? "<br /><em>AGENT LOADING</em>" : "")
-                        + "</html>", dummy.agentID) {
-                            @Override
-                            void iconClicked() {
-                                openAgentMenu(dummy);
-                            }
-                        };
-                icon.setOpaque(false);
-                imageIcons.add(icon);
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        });
+        }
 
         //Paint edges
-        JPanel newPanel = new JPanel(new GridLayout(0, 3, 32, 48)) {
+        GridLayout newLayout = new GridLayout(0, 3, 32, 48);
+        JPanel newPanel = new JPanel(newLayout) {
             @Override
             public void paintComponent(Graphics g) {
+                //TODO: Paint leaf and conductor agents
+
+                Graphics2D newGraphics2D = (Graphics2D) g.create();
+                newGraphics2D.setColor(java.awt.Color.BLACK);
+
+                //Draw arrow base
+                int rectangleBaseWidth = 200;
+                int rectangleBaseHeight = 70;
+                int rectXOffset = 110;
+                int rectYOffset = 34;
+
+                for (AgentIcon icon : agentIcons) {
+                    AgentDummy updatedDummyOfIcon = update.updatedDummies.get(icon.agentIDNote);
+                    if (updatedDummyOfIcon.isConductor) {
+                        newGraphics2D.setColor(java.awt.Color.red);
+                    } else if (updatedDummyOfIcon.isLeafAgent) {
+                        newGraphics2D.setColor(java.awt.Color.green);
+                    } else {
+                        continue;
+                    }
+                    newGraphics2D.fill3DRect(icon.getX() + rectXOffset - (rectangleBaseWidth / 2), icon.getY() + rectYOffset - (rectangleBaseHeight / 2), rectangleBaseWidth, rectangleBaseHeight, false);
+                }
+
                 for (AgentDummyLink link : update.updatedLinks) {
                     AgentIcon iconFrom = null;
                     AgentIcon iconTo = null;
-                    for (AgentIcon icon : imageIcons) {
+                    for (AgentIcon icon : agentIcons) {
                         if (icon.agentIDNote == link.fromAgentID) {
                             iconFrom = icon;
                         }
@@ -459,7 +488,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     int x2 = pointTo.x;
                     int y2 = pointTo.y;
 
-                    int minus_value = 40;
+                    int minus_value = 50;
                     if (x2 < x1) {
                         x2 += minus_value;
                         x1 -= minus_value;
@@ -485,8 +514,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     y2 += 40 + Main.rand.nextInt(max_jitter);
 
                     //Following 10 lines taken from Stack Overflow
-                    Graphics2D g1 = (Graphics2D) g.create();
-                    g1.setColor(java.awt.Color.BLUE);
+
+                    //Draw arrow head and line
+                    newGraphics2D = (Graphics2D) g.create();
+                    newGraphics2D.setColor(java.awt.Color.white);
                     final int ARR_SIZE = 14;
 
                     double dx = x2 - x1, dy = y2 - y1;
@@ -494,17 +525,27 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     int len = (int) Math.sqrt(dx * dx + dy * dy);
                     AffineTransform at = AffineTransform.getTranslateInstance(x1, y1);
                     at.concatenate(AffineTransform.getRotateInstance(angle));
-                    g1.transform(at);
+                    newGraphics2D.transform(at);
 
-                    g1.drawLine(0, 0, len, 0);
-                    g1.fillPolygon(new int[]{len, len - ARR_SIZE, len - ARR_SIZE, len},
+                    newGraphics2D.drawLine(0, 0, len, 0);
+                    newGraphics2D.fillPolygon(new int[]{len, len - ARR_SIZE, len - ARR_SIZE, len},
                             new int[]{0, -ARR_SIZE, ARR_SIZE, 0}, 4);
+
+                    //If agent is leaf, do not draw base.
+                    if (update.updatedDummies.get(iconFrom.agentIDNote).isLeafAgent) {
+                        continue;
+                    }
+                    
+                    //Draw arrow base
+                    newGraphics2D = (Graphics2D) g.create();
+                    newGraphics2D.setColor(java.awt.Color.ORANGE);
+                    newGraphics2D.fill3DRect(pointFrom.x + rectXOffset - (rectangleBaseWidth / 2), pointFrom.y + rectYOffset - (rectangleBaseHeight / 2), rectangleBaseWidth, rectangleBaseHeight, false);
 
                 }
             }
         };
 
-        for (AgentIcon icon : imageIcons) {
+        for (AgentIcon icon : agentIcons) {
             newPanel.add(icon);
         }
 
@@ -962,7 +1003,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                             midiFiles.add(file);
                         }
                     }
-                    Agent newAgent = new Computer(agentFolder.getName(), registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, midiFiles.toArray(new File[midiFiles.size()]), Integer.parseInt(maxMarkovChainLevel));
+                    Agent newAgent = new Computer(agentFolder.getName().replace(" ", ""), registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, midiFiles.toArray(new File[midiFiles.size()]), Integer.parseInt(maxMarkovChainLevel));
                     newAgent.start();
                     //Wait for agent to initialize
                     Main.wait(NEW_AGENT_INITIALIZE_TIME);

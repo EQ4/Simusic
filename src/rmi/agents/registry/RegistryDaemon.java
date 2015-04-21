@@ -213,10 +213,13 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Store role model message
         if (roleModel != null) {
             roleModel.roleModelMessage = roleModelMessage;
+            frame.log(frame.agentDummies.get(agentID).name + "'s assigned role model is " + roleModel.name);
+            frame.agentDummies.get(roleModel.agentID).isLeafAgent = false;
         } else {
             //Store conductor agent
             conductorAgentID = agentID;
             frame.log("Conductor agent is " + frame.agentDummies.get(conductorAgentID).name + " (#" + conductorAgentID + ")");
+            frame.agentDummies.get(agentID).isConductor = true;
         }
 
         //Store this agent
@@ -235,6 +238,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                 break;
             }
             if (i == frame.agentDummies.size() - 1) {
+                frame.log("Someone requested performance start, but there are no AI performers");
                 return "There are no AI Performers!";
             }
         }
@@ -242,6 +246,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Ensure that no agent is loading.
         for (AgentDummy agentDummy : frame.agentDummies) {
             if (!agentDummy.isReady) {
+                frame.log("Someone requested performance start, but one or more agents are still loading");
                 return "One or more agents are still loading!";
             }
         }
