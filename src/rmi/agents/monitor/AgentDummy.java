@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.monitor;
+package rmi.agents.monitor;
 
 import java.io.Serializable;
-import rmi.misc.AgentType;
+import enums.AgentType;
 
 /**
  *
@@ -23,6 +23,9 @@ public class AgentDummy implements Serializable {
     public int latency;
     public boolean isReady;
     public boolean isOffline;
+    
+    public boolean isChordWinner;
+    public boolean isSoloing;
     
     //Feature/role model vars
     public Double[] features;
@@ -41,6 +44,7 @@ public class AgentDummy implements Serializable {
         if (agentType == AgentType.AIPerformer) {
             this.isReady = false;
         }
+        this.roleModelMessage = "";
     }
 
     public String getIconFilename() {

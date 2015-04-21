@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.registry;
+package rmi.agents.registry;
 
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -16,9 +16,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
-import rmi.monitor.AgentDummy;
+import rmi.agents.monitor.AgentDummy;
 import rmi.interfaces.AgentInterface;
-import rmi.monitor.AgentDummyLink;
+import rmi.agents.monitor.AgentDummyLink;
 import run.Main;
 
 /**
@@ -26,14 +26,15 @@ import run.Main;
  * @author Martin
  */
 public class RegistryFrame extends javax.swing.JFrame implements Runnable {
+
     static final int DISCONNECT_REQUEST_WAIT_TIME = 500;
     static final int DISCONNECT_REQUEST_ATTEMPTS = 5;
-
+    
     public boolean lock;
     public ArrayList<AgentInterface> agentConnections;
     public ArrayList<AgentDummy> agentDummies;
     public ArrayList<AgentDummyLink> agentDummyLinks;
-
+    
     public String registryIPAddress;
     public String registryName;
     public String registryFullAddress;
@@ -41,7 +42,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     public int registryServicePort;
     public RegistryDaemon registryDaemon;
     public java.rmi.registry.Registry rmiRegistryLocation;
-
+    
     public RegistryFrame(String registryIPAddress, String registryName, int registryPort, int registryServicePort) throws RemoteException {
         initComponents();
         Main.windowsOpened++;
@@ -50,27 +51,29 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         this.agentConnections = new ArrayList<>();
         this.agentDummies = new ArrayList<>();
         this.agentDummyLinks = new ArrayList<>();
-
+        
         this.registryIPAddress = registryIPAddress;
         this.registryName = registryName;
         this.registryPort = registryPort;
         this.registryServicePort = registryServicePort;
         this.registryFullAddress = "rmi://" + registryIPAddress + ":" + registryPort + "/" + registryName;
-
-        this.setVisible(true);
         
+        this.registryLabel.setText(registryLabel.getText() + " '" + registryName + "'");
+        
+        this.setVisible(true);
+
         //Log field auto scroll
         DefaultCaret logCaret = (DefaultCaret) registryLog.getCaret();
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
-
+        
     }
-
+    
     public void startDaemon() {
-        Thread registryDaemon = new Thread(this);
-        registryDaemon.setDaemon(true);
-        registryDaemon.start();
+        Thread daemonThread = new Thread(this);
+        daemonThread.setDaemon(true);
+        daemonThread.start();
     }
-
+    
     @Override
     public void run() {
         try {
@@ -80,10 +83,10 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
             //Done
             registryLog.append("--- SiMusic Registry Log ---\nRegistry information: "
+                    + "\n    - name: " + registryName
                     + "\n    - ip: " + registryIPAddress
                     + "\n    - port " + registryPort
-                    + "\n    - serv. port " + registryServicePort
-                    + "\n    - serv. name: " + registryName
+                    + "\n    - s. port " + registryServicePort
                     + "\n    - address: " + registryFullAddress
                     + "\n");
             statusTextField.setText("Daemon running");
@@ -99,7 +102,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
             e.printStackTrace();
         }
     }
-
+    
     private void shutdown() {
         stopButton.setEnabled(false);
         statusTextField.setText("Stopping daemon...");
@@ -125,12 +128,12 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         } catch (Exception e) {
             System.out.println("Registry RMI naming already unbound.");
         }
-        
+
         //Log shutdown
         changeStatus("Daemon stopped");
         log("Daemon has been stopped.");
     }
-
+    
     void changeStatus(String newStatus) {
         statusTextField.setText(newStatus);
     }
@@ -140,15 +143,15 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
      */
     public RegistryFrame() {
         initComponents();
-
+        
         DefaultCaret logCaret = (DefaultCaret) this.registryLog.getCaret();
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
     }
-
+    
     public void log(String message) {
         registryLog.append(Main.getCurrentTimestamp() + message + "\n");
     }
-
+    
     private void alert(String message) {
         JOptionPane.showMessageDialog(this, message);
     }
@@ -162,7 +165,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
+        registryLabel = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         registryLog = new javax.swing.JTextArea();
         jLabel2 = new javax.swing.JLabel();
@@ -172,14 +175,16 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("SiMusic Registry Daemon");
+        setMinimumSize(new java.awt.Dimension(550, 650));
+        setPreferredSize(new java.awt.Dimension(550, 650));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        jLabel1.setText("SiMusic Registry Daemon");
+        registryLabel.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        registryLabel.setText("SiMusic Registry Daemon");
 
         registryLog.setEditable(false);
         registryLog.setColumns(20);
@@ -212,9 +217,9 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
                         .addContainerGap())
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
+                            .addComponent(registryLabel)
                             .addComponent(jLabel2))
-                        .addContainerGap(334, Short.MAX_VALUE))
+                        .addContainerGap(220, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
@@ -230,14 +235,14 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
-                .addGap(25, 25, 25)
+                .addComponent(registryLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(statusTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(stopButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 411, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -262,10 +267,10 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel registryLabel;
     private javax.swing.JTextArea registryLog;
     private javax.swing.JTextField statusTextField;
     private javax.swing.JButton stopButton;

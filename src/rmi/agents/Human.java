@@ -6,7 +6,11 @@
 package rmi.agents;
 
 import java.rmi.RemoteException;
-import rmi.misc.AgentType;
+import enums.AgentType;
+import enums.AuctionType;
+import music.elements.Chord;
+import music.elements.Playable;
+import rmi.messages.AuctionMessage;
 import run.Main;
 
 /**
@@ -21,19 +25,22 @@ public class Human extends Agent {
 
     @Override
     public void loadAgent() {
-        //Select MIDI USB port, etc.
-        
-        //Finished loading
+        //TODO: Select MIDI USB port, etc.
         try {
-            registryConnection.agentLoaded(id);
+            registryConnection.agentLoaded(agentID);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void startPerformance() {
-        System.out.println("Human is performing");
+    public void performanceStarted(int initialTempo) {
+        log("Performance started at tempo " + initialTempo);
+    }
+
+    @Override
+    public void performanceStopped() {
+        log("Performance stopped");
     }
 
     @Override
@@ -44,5 +51,29 @@ public class Human extends Agent {
     @Override
     public String getAgentTypeSpecificInfo() throws RemoteException {
         return "I am human!";
+    }
+
+    @Override
+    public void playSolo() {
+        // Human plays all the time or...?
+        // Idea: Human could steal the limelight
+        // ...while agents listen to the human performance and learn (patterns, tempo, dynamics, etc).
+    }
+
+    @Override
+    public void beat(Chord chord) throws RemoteException {
+        // Humans can play chords on a guitar without having to call their void methods Now.
+    }
+
+    @Override
+    public Double getAverageFeature(String featureName) throws RemoteException {
+        //Not Applicable
+        return (double) -1;
+    }
+
+    @Override
+    public AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException {
+        //Not Applicable
+        return null;
     }
 }

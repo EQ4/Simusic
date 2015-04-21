@@ -12,8 +12,12 @@
     <import file="nbproject/build-impl.xml"/>
     <target name="-post-jar">
         <mkdir dir="${dist.dir}/resources"/>
-        <copy todir="${dist.dir}/resources">
+        <copy todir="${dist.dir}/resources" overwrite="true">
             <fileset dir="${basedir}/resources" />
+        </copy>
+		<mkdir dir="${dist.dir}/runtime"/>
+        <copy todir="${dist.dir}/runtime" overwrite="true">
+            <fileset dir="${basedir}/runtime" includes="**" />
         </copy>
     </target>
     <!--

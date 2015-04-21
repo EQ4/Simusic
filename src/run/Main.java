@@ -7,6 +7,7 @@ package run;
 
 import java.awt.Point;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -20,10 +21,11 @@ import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import music.player.Player;
 import rmi.interfaces.RegistryInterface;
-import rmi.registry.RegistryDaemon;
-import rmi.registry.RegistryFrame;
-import rmi.monitor.MonitorFrame;
+import rmi.agents.registry.RegistryDaemon;
+import rmi.agents.registry.RegistryFrame;
+import rmi.agents.monitor.MonitorFrame;
 
 /**
  *
@@ -31,11 +33,17 @@ import rmi.monitor.MonitorFrame;
  */
 public class Main {
 
+    public static final int DEFAULT_MARKOV_DEPTH = 3;
+    public static final int MIN_PORT = 51000;
+    public static final int MAX_PORT = 59000;
+    public static final int ROUNDING_DIGITS = 1000;
+
     public static String[] names;
     public static Random rand;
     public static int windowsOpened;
+    public static Player player;
 
-    private static MonitorFrame mainMonitorWindow;
+    private static MonitorFrame mainMonitorFrame;
 
     /**
      * @param args the command line arguments
@@ -44,7 +52,9 @@ public class Main {
         //Initialise static variables
         rand = new Random();
         windowsOpened = 0;
-        
+
+        player = new Player();
+
         //Set RMI policy variables
         System.setProperty("java.security.policy", "resources/simusic.policy");
         System.setSecurityManager(new SecurityManager());
@@ -87,7 +97,7 @@ public class Main {
             @Override
             public void run() {
                 //Start main monitor frame
-                mainMonitorWindow = new MonitorFrame();
+                mainMonitorFrame = new MonitorFrame();
             }
         });
     }
@@ -107,7 +117,7 @@ public class Main {
     }
 
     public static int getRandomPort() {
-        return 51000 + rand.nextInt(8000);
+        return MIN_PORT + rand.nextInt(MAX_PORT - MIN_PORT);
     }
 
     public static String[] readLines(String filename) throws IOException {
@@ -126,6 +136,11 @@ public class Main {
         return names[rand.nextInt(names.length)];
     }
 
+    /**
+     * Wait method (STATIC) Sleeps the thread that called it
+     *
+     * @param ms Duration of sleep period
+     */
     public static void wait(int ms) {
         try {
             Thread.sleep(ms);
@@ -138,6 +153,19 @@ public class Main {
         Date currentDate = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
         return dateFormat.format(currentDate) + " ";
+    }
+
+    public static double getRoundedValue(double value) {
+        return (double) Math.round(value * ROUNDING_DIGITS) / ROUNDING_DIGITS;
+    }
+
+    public static File getRuntimeDir() {
+        return new File("runtime");
+    }
+
+    public static int getBeatPeriod(int tempo) {
+        double beatPeriod = (double) 1000 * ((double) 60 / (double) tempo);
+        return (int) beatPeriod;
     }
 
 }

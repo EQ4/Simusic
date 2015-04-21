@@ -3,10 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.monitor;
+package rmi.messages;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import rmi.agents.monitor.AgentDummy;
+import rmi.agents.monitor.AgentDummyLink;
 
 /**
  *

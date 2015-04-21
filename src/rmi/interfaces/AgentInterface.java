@@ -5,11 +5,15 @@
  */
 package rmi.interfaces;
 
+import enums.AuctionType;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import rmi.monitor.UpdateMessage;
-import rmi.registry.RegistryDaemon;
+import music.elements.Chord;
+import music.elements.Playable;
+import rmi.messages.AuctionMessage;
+import rmi.messages.UpdateMessage;
+import rmi.agents.registry.RegistryDaemon;
 
 /**
  *
@@ -23,10 +27,16 @@ public interface AgentInterface extends Remote  {
     public void unicast(String message, int senderID) throws RemoteException;
     public boolean disconnectNeighbour(int agentID) throws RemoteException;
     public boolean shutdown() throws RemoteException;
-    
+    public AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException;
+    public Double getAverageFeature(String featureName) throws RemoteException;
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
     
-    public abstract void startPerformance() throws RemoteException;
+    public void performanceStarted(int initialTempo) throws RemoteException;
+    public void performanceStopped() throws RemoteException;
+    
+    public void beat(Chord chord) throws RemoteException;
+    public void playSolo() throws RemoteException;
+    
     
     //Test
     public String sayHello() throws RemoteException;

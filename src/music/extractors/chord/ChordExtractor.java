@@ -11,6 +11,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import rmi.agents.Agent;
 import sun.security.krb5.internal.SeqNumber;
 
 /**
@@ -19,19 +20,23 @@ import sun.security.krb5.internal.SeqNumber;
  */
 public class ChordExtractor {
 
-    public static ArrayList<Sequence> extractChordsFromMidiFiles(File[] files, String agentName) {
+    public static ArrayList<Sequence> extractChordsFromMidiFiles(File[] files, Agent callingAgent) {
 
-        boolean log = (agentName != null);
+        boolean agentIsLogging = true;
+        if (callingAgent != null) {
+            agentIsLogging = false;
+        }
 
         ArrayList<Sequence> fullSequence = new ArrayList<>();
 
-        if (log) {
-            System.out.println("<" + agentName + "> " + "Extracting chords from " + files.length + " files...");
+        if (agentIsLogging) {
+            callingAgent.log("Extracting chords from " + files.length + " files...");
         }
+
         for (int i = 0; i < files.length; i++) {
 
-            if (log) {
-                System.out.println("<" + agentName + "> " + "\t" + (i + 1) + "/" + files.length);
+            if (agentIsLogging) {
+                callingAgent.log("\t" + (i + 1) + "/" + files.length);
             }
 
             Sequence normalizedSequence = new Sequence();
@@ -63,14 +68,16 @@ public class ChordExtractor {
 
                 }
             } catch (Exception e) {
-                System.out.println("<" + agentName + "> " + "Chord Extractor exception.");
+                if (agentIsLogging) {
+                    callingAgent.log("Chord Extractor exception.");
+                }
                 e.printStackTrace();
             }
             fullSequence.add(normalizedSequence);
         }
 
-        if (log) {
-            System.out.println("<" + agentName + "> " + "Chords have been extracted!");
+        if (agentIsLogging) {
+            callingAgent.log("Chords have been extracted!");
         }
 
         return fullSequence;

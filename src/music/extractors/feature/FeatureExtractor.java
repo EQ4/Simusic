@@ -10,6 +10,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import jsymbolic.*;
 import org.w3c.dom.*;
+import rmi.agents.Agent;
 
 /**
  *
@@ -22,11 +23,13 @@ public class FeatureExtractor {
     HashMap<String, ArrayList<Double>> mapOfSongListsOfFeatures;
     HashMap<String, Double> mapOfAverageFeatures;
     ArrayList<String> listOfSongNames;
-    String agentName;
     int numberOfSongs;
 
-    public FeatureExtractor(File[] midiFiles, File featureFolder, boolean overwrite, String agentName) {
-        boolean log = (agentName != null);
+    public FeatureExtractor(File[] midiFiles, File featureFolder, boolean overwrite, Agent callingAgent) {
+        boolean agentIsLogging = true;
+        if (callingAgent != null) {
+            agentIsLogging = false;
+        }
 
         this.midiFiles = midiFiles;
         try {
@@ -39,9 +42,10 @@ public class FeatureExtractor {
         this.listOfSongNames = new ArrayList<>();
         this.numberOfSongs = 0;
 
-        if (log) {
-            System.out.println("<" + agentName + "> " + "Extracting features from " + midiFiles.length + " files...");
+        if (agentIsLogging) {
+            callingAgent.log("Extracting features from " + midiFiles.length + " files...");
         }
+
         int counter = 0;
 
         //Write loop
@@ -52,13 +56,13 @@ public class FeatureExtractor {
                 if (!overwrite) {
                     File f = new File(featurePath + file.getName() + ".xml");
                     if (f.exists() && !f.isDirectory()) {
-                        System.out.println("<" + agentName + "> " + "\t" + ++counter + "/" + midiFiles.length + " - XML already exsists");
+                        System.out.println("\t" + ++counter + "/" + midiFiles.length + " - XML already exsists");
                         continue;
                     }
                 }
 
-                if (log) {
-                    System.out.println("<" + agentName + "> " + "\t" + ++counter + "/" + midiFiles.length);
+                if (agentIsLogging) {
+                    callingAgent.log("\t" + ++counter + "/" + midiFiles.length);
                 }
 
                 //Extract features to XML
@@ -124,8 +128,8 @@ public class FeatureExtractor {
             }
         }
 
-        if (log) {
-            System.out.println("<" + agentName + "> " + "Features extracted!");
+        if (agentIsLogging) {
+            callingAgent.log("Features extracted!");
         }
     }
 
@@ -162,14 +166,19 @@ public class FeatureExtractor {
         return sum;
     }
 
-    public void printAverageFeatures() {
-        System.out.println("Printing average features:");
+    public String getAverageFeatures() {
+        String result = "\n\n--Listing Average Features:\n";
         for (Map.Entry<String, Double> entry : mapOfAverageFeatures.entrySet()) {
-            System.out.println("\t" + entry.getKey() + " - " + entry.getValue());
+            result += ("\t" + entry.getKey() + " - " + entry.getValue() + "\n");
         }
+        return result + "\n";
     }
-    
+
     public Double[] getAverageFeatureValues() {
         return mapOfAverageFeatures.values().toArray(new Double[mapOfAverageFeatures.size()]);
+    }
+
+    public boolean hasFeature(String featureName) {
+        return mapOfAverageFeatures.containsKey(featureName);
     }
 }

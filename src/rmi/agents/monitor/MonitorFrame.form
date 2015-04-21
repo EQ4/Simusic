@@ -95,12 +95,12 @@
                 </MenuItem>
               </SubComponents>
             </Menu>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem3">
+            <MenuItem class="javax.swing.JMenuItem" name="importAgentsFromFolderMenuItem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Import AI Performers from folder"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem3ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="importAgentsFromFolderMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -113,10 +113,19 @@
           <SubComponents>
             <MenuItem class="javax.swing.JMenuItem" name="startPerformanceItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Start performance"/>
+                <Property name="text" type="java.lang.String" value="Start"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startPerformanceItemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="stopPerformanceItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Stop"/>
+                <Property name="enabled" type="boolean" value="false"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="stopPerformanceItemActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>

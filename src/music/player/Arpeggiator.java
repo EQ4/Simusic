@@ -46,7 +46,7 @@ public class Arpeggiator {
         return chordNum;
     }
 
-    public void addArpeggio(Chord chord) {
+    public void playArpeggio(Chord chord, int timeFrame) {
         String base = chord.getBaseLetter();
         int[] numbers = getNumbers(chord);
 

@@ -8,10 +8,10 @@ package rmi.interfaces;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import rmi.monitor.UpdateMessage;
-import rmi.registry.RegistryDaemon;
-import rmi.misc.AgentType;
-import rmi.monitor.AgentDummy;
+import rmi.messages.UpdateMessage;
+import rmi.agents.registry.RegistryDaemon;
+import enums.AgentType;
+import rmi.agents.monitor.AgentDummy;
 
 /**
  *
@@ -26,6 +26,7 @@ public interface RegistryInterface extends Remote {
     public void agentLoaded(int agentID) throws RemoteException;
     public void reportNeighbourConnection(int fromAgentID, int toAgentID) throws RemoteException;
     public String startPerformance() throws RemoteException;
+    public String stopPerformance() throws RemoteException;
     public boolean isPerforming() throws RemoteException;
     public void log(String message, int loggerID) throws RemoteException;
     public boolean disconnect(int id) throws RemoteException;

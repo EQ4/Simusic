@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.registry;
+package rmi.agents.registry;
 
 import static java.lang.Math.abs;
-import rmi.monitor.UpdateMessage;
+import rmi.messages.UpdateMessage;
 import rmi.interfaces.RegistryInterface;
 import java.rmi.Naming;
 import java.net.Inet4Address;
@@ -18,40 +18,56 @@ import java.rmi.RemoteException;
 import java.rmi.registry.*;
 import java.util.ArrayList;
 import javax.swing.JTextArea;
-import rmi.monitor.AgentDummy;
+import music.elements.Playable;
+import rmi.agents.monitor.AgentDummy;
 import rmi.interfaces.AgentInterface;
 import run.Main;
-import rmi.misc.AgentType;
-import rmi.monitor.AgentDummyLink;
-import rmi.monitor.AgentDummyLink.AgentLinkType;
+import enums.AgentType;
+import enums.AuctionType;
+import enums.RegistryServiceType;
+import java.util.HashMap;
+import rmi.messages.AuctionMessage;
+import rmi.agents.monitor.AgentDummyLink;
+import rmi.agents.monitor.AgentDummyLink.AgentLinkType;
 
 /**
  *
  * @author Martin
  */
 public class RegistryDaemon extends UnicastRemoteObject implements RegistryInterface {
+
     static final int LATENCY_PINGS_PER_AGENT = 10;
     static final int DELAY_BETWEEN_LATENCY_PINGS = 100;
-    
-    ArrayList<AgentDummy> agentFeatureStorage;
 
+    ArrayList<AgentDummy> featureDummies;
     RegistryFrame frame;
-    boolean sessionLocked;
+
+    int conductorAgentID = -1;
+    int currentTempo;
+    AuctionMessage currentChordMessage;
+    Integer currentSoloistID;
+
+    boolean isPerforming;
+
+    RegistryServiceType newServiceFlag;
+
+    HashMap<String, Double> sessionFeatures;
 
     public RegistryDaemon(RegistryFrame frame) throws RemoteException {
         super(frame.registryServicePort);
         this.frame = frame;
-        sessionLocked = false;
-        this.agentFeatureStorage = new ArrayList<>();
+        isPerforming = false;
+        this.featureDummies = new ArrayList<>();
+        populateSessionFeatures();
     }
 
     @Override
     public synchronized UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException {
         //If performance has started, no more agents can connect
-        if (sessionLocked) {
+        if (isPerforming) {
             return null;
         }
-        
+
         int id = frame.agentDummies.size();
         AgentDummy newAgentDummy = new AgentDummy(agentType, agentName, id, agentIP, agentPort, masterMonitorID);
         AgentInterface agentConnection;
@@ -62,11 +78,11 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
             e.printStackTrace();
             return null;
         }
-        
+
         //Measure latency
         newAgentDummy.latency = measureAgentLatency(agentConnection);
         frame.agentDummies.add(newAgentDummy);
-        
+
         frame.log("A new agent has connected!\n"
                 + "    - name: " + agentName + "\n"
                 + "    - type: " + agentType.toString() + "\n"
@@ -79,7 +95,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
         //Say hello
         agentConnection.sayHello();
-        
+
         //Store connection
         frame.agentConnections.add(agentConnection);
 
@@ -107,7 +123,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         result.welcomePack = newAgentDummy;
         return result;
     }
-    
+
     private int measureAgentLatency(AgentInterface agentConnection) throws RemoteException {
         int latencySum = 0;
         long timeOnPingSend;
@@ -127,15 +143,20 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     @Override
+    public boolean isPerforming() throws RemoteException {
+        return isPerforming;
+    }
+
+    @Override
     public synchronized boolean disconnect(int id) throws RemoteException {
         AgentDummy agent = frame.agentDummies.get(id);
         frame.agentConnections.set(id, null);
         frame.log(agent.name + " (#" + id + ") has disconnected.");
         agent.isOffline = true;
-        
+
         //Update agents
         triggerGlobalUpdate();
-        
+
         frame.log(agent.agentType + " " + agent.name + " has disconnected.");
         return true;
     }
@@ -150,33 +171,34 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     public void log(String message, int loggerID) throws RemoteException {
         frame.log("<" + frame.agentDummies.get(loggerID).name + "> " + message);
     }
-    
+
     @Override
     public AgentDummy getAgentDummyByID(int agentID) {
         return frame.agentDummies.get(agentID);
     }
-    
+
     @Override
     public void reportNeighbourConnection(int fromAgentID, int toAgentID) throws RemoteException {
         int newLinkID = frame.agentDummyLinks.size();
         AgentDummyLink newAgentLink = new AgentDummyLink(AgentLinkType.AINeighbourLink, newLinkID, fromAgentID, toAgentID);
         frame.agentDummyLinks.add(newAgentLink);
-        
+
         //Update agents
         triggerGlobalUpdate();
     }
-    
+
     @Override
     public void agentLoaded(int agentID) throws RemoteException {
         frame.agentDummies.get(agentID).isReady = true;
         triggerGlobalUpdate();
     }
-    
+
     @Override
     public AgentDummy getRoleModel(int agentID, Double[] featureValues) throws RemoteException {
         AgentDummy roleModel = null;
+        String roleModelMessage = "Agent #" + agentID + "'s role model info:\n";
         double minDistance = Double.MAX_VALUE;
-        for (AgentDummy agent : agentFeatureStorage) {
+        for (AgentDummy agent : featureDummies) {
             double distanceToAgent = 0;
             for (int i = 0; i < featureValues.length; i++) {
                 distanceToAgent += abs(featureValues[i] - agent.features[i]);
@@ -184,16 +206,26 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
             if (distanceToAgent < minDistance) {
                 minDistance = distanceToAgent;
                 roleModel = agent;
-                agent.roleModelMessage = minDistance + "";
             }
+            roleModelMessage += "\tDistance to " + agent.name + ": " + distanceToAgent + "\n";
         }
+
+        //Store role model message
+        if (roleModel != null) {
+            roleModel.roleModelMessage = roleModelMessage;
+        } else {
+            //Store conductor agent
+            conductorAgentID = agentID;
+            frame.log("Conductor agent is " + frame.agentDummies.get(conductorAgentID).name + " (#" + conductorAgentID + ")");
+        }
+
         //Store this agent
         AgentDummy newRoleModel = frame.agentDummies.get(agentID);
         newRoleModel.features = featureValues;
-        agentFeatureStorage.add(newRoleModel);
+        featureDummies.add(newRoleModel);
         return roleModel;
     }
-    
+
     @Override
     public String startPerformance() throws RemoteException {
         //Check if there is at least one AI agent
@@ -206,32 +238,131 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                 return "There are no AI Performers!";
             }
         }
-        
+
         //Ensure that no agent is loading.
         for (AgentDummy agentDummy : frame.agentDummies) {
             if (!agentDummy.isReady) {
                 return "One or more agents are still loading!";
             }
         }
-        
-        //No more agents can connect
-        sessionLocked = true;
-        
-        //TODO: Take ping into consideration?
-        
-        //Start performance:
+
+        //TODO: Measure average latencies (just in case)
+        //Idea: Also check that recursive ping duration doesn't exceed beat period
+        currentTempo = getFeatureWithAuction("Initial Tempo").intValue();
+        // Idea: Tempo could vary during runtime using service threads (concurrency issues ahead)
+
+        //Ready to start performance services
+        isPerforming = true;
+        frame.log("Performance started at tempo " + currentTempo + "bpm, beat period: " + Main.getBeatPeriod(currentTempo));
+
         for (AgentInterface agentConnection : frame.agentConnections) {
-            agentConnection.startPerformance();
+            agentConnection.performanceStarted(currentTempo);
         }
-        
-        frame.log("Performance started!");
-        
+
+        //Start beat service
+        newServiceFlag = RegistryServiceType.BeatAndHarmonyService;
+        new Thread() {
+            @Override
+            public void run() {
+                // Start beat cycle
+                while (isPerforming) {
+                    long beatInvokedTime = System.currentTimeMillis();
+                    int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
+
+                    try {
+                        // Get next chord (TODO: don't change on every beat!)
+                        currentChordMessage = frame.agentConnections.get(conductorAgentID).executeLocalAuction(AuctionType.ChordAuction, null);
+
+                        // Broadcast next beat
+                        for (AgentInterface agentConnection : frame.agentConnections) {
+                            agentConnection.beat(currentChordMessage.chord);
+                        }
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+
+                    // Calculate time lost since beginning of loop cycle
+                    int timeLost = (int) (System.currentTimeMillis() - beatInvokedTime);
+
+                    // Log beat
+                    frame.log("@ BEAT: All beat signals sent!\n"
+                            + "\tChord: " + currentChordMessage.chord.toString() + "\n"
+                            + "\tBeat period time lost: " + timeLost + "/" + currentBeatPeriod);
+
+                    // Sleep remaining time from beat
+                    int remainingSleepTime = (currentBeatPeriod - timeLost);
+                    if (remainingSleepTime < 0) {
+                        frame.log("Performance forcibly interruupted due to current overall latency (" + timeLost + ") higher than beat period (" + currentBeatPeriod + ")");
+                    }
+                    Main.wait((int) remainingSleepTime);
+
+                }
+            }
+        }.start();
+
+        //Start melody service
+        newServiceFlag = RegistryServiceType.MelodyService;
+        new Thread() {
+            @Override
+            public void run() {
+                // Start melody tokenizer
+                while (isPerforming) {
+                    try {
+                        if (currentChordMessage == null) {
+                            Main.wait(100);
+                            continue;
+                        }
+                        //Flag current soloist
+                        currentSoloistID = currentChordMessage.chordOriginID;
+                        //Idea: gradually adjust global performance features to suit the solo
+                        //IN A NEW THREAD!
+                        adaptCommonFeaturesTo(currentChordMessage.chordOriginID);
+
+                        //Log solo
+                        frame.log("@ " + frame.agentDummies.get(currentSoloistID).name + " is soloing!");
+                        //Play agent solo
+                        frame.agentConnections.get(currentChordMessage.chordOriginID).playSolo();
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
+        //TODO: Start feature and dynamics services
+        //Null means success
         return null;
     }
-    
+
     @Override
-    public boolean isPerforming() throws RemoteException {
-        return sessionLocked;
+    public String stopPerformance() throws RemoteException {
+        //Perform "can stop" check
+
+        //This breaks the BeatHarmony service
+        isPerforming = false;
+        frame.log("Performance stopped!");
+        for (AgentInterface agentConnection : frame.agentConnections) {
+            agentConnection.performanceStopped();
+        }
+
+        //Null means success
+        return null;
     }
-    
+
+    private Double getFeatureWithAuction(String featureName) throws RemoteException {
+        AuctionMessage auctionResultMessage = frame.agentConnections.get(conductorAgentID).executeLocalAuction(AuctionType.FeatureAuction, new String[]{featureName});
+        return auctionResultMessage.feature;
+    }
+
+    // TODO: IMPLEMENT SESSION FEATURE ENVIRONMENT
+    private void populateSessionFeatures() {
+        // TODO: must be customizable: using script?
+        sessionFeatures = new HashMap<>();
+        sessionFeatures.put("Maximum Note Duration", (double) 4);
+    }
+
+    private void adaptCommonFeaturesTo(int agentID) throws RemoteException {
+        //TODO: Implement
+    }
+
 }

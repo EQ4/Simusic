@@ -14,7 +14,7 @@ import java.util.*;
  * @author Martin
  */
 public class MarkovModel {
-    
+
     private Playable modelType;
     private int depth;
     private int length;
@@ -23,10 +23,10 @@ public class MarkovModel {
     int[][] markovTable; // oh well
     Queue<Playable> trainStream;
     Queue<Playable> liveStream;
-    
+
     private int emptyInputSequences;
     private int allPlayablesRecorded;
-    
+
     public MarkovModel(int depth, Playable modelType) {
         this.modelType = modelType;
         this.depth = depth;
@@ -85,7 +85,7 @@ public class MarkovModel {
 
                     //Record chord onto stream
                     recordPlayable(trainStream, playable);
-                    
+
                     //Just for the record
                     allPlayablesRecorded++;
                 }
@@ -136,7 +136,16 @@ public class MarkovModel {
         return row;
     }
 
-    public ArrayList<Playable> getSortedPlayables(int queryDepth) {
+    public ArrayList<Playable> getSortedProbabilities(int queryDepth) {
+        ArrayList<Playable> result = getProbabilities(queryDepth);
+        if (result == null) {
+            return null;
+        }
+        Collections.sort(result);
+        return result;
+    }
+
+    public ArrayList<Playable> getProbabilities(int queryDepth) {
         if (queryDepth > depth) { // -1 ?
             //Error. Query depth cannot be larger than model depth
             return null;
@@ -152,17 +161,16 @@ public class MarkovModel {
             newElement.setTotal(markovTable[row][length]);
             result.add(newElement);
         }
-        Collections.sort(result);
         return result;
-
     }
 
-    public void printSortedPlayables(int queryDepth) {
-        System.out.println("Sorted probabilities for live sequence with depth " + queryDepth);
-        Collection<Playable> markovOutput = getSortedPlayables(queryDepth);
+    public String printSortedPlayables(int queryDepth) {
+        String result = ("Sorted probabilities for live sequence with depth " + queryDepth + "\n");
+        Collection<Playable> markovOutput = getSortedProbabilities(queryDepth);
         for (Playable playable : markovOutput) {
-            System.out.println(((Chord) playable).getNameAndProbability() + " (" + playable.getCount() + " out of " + playable.getTotal() + ")");
+            result += (((Chord) playable).getNameAndProbability() + " (" + playable.getCount() + " out of " + playable.getTotal() + ")\n");
         }
+        return result + "\n";
     }
 
     @Override
@@ -187,14 +195,12 @@ public class MarkovModel {
                 continue;
             }
 
-
             int row = i - 1;
             if (row < length) {
                 result.append(modelType.getNewPlayableFromMarkovNumeric(row));
             } else {
                 result.append(row);
             }
-
 
             result.append("\t\t");
             for (int j = 0; j <= length; j++) {
@@ -218,10 +224,10 @@ public class MarkovModel {
         }
         System.out.println(result);
     }
-    
+
     public ArrayList<Playable> getAllInputSequences() {
         ArrayList<Playable> result = new ArrayList<>();
-        for (Sequence sequence: inputSequences) {
+        for (Sequence sequence : inputSequences) {
             result.addAll(sequence.getSequence());
         }
         return result;
@@ -234,7 +240,7 @@ public class MarkovModel {
     public int getTableSize() {
         return markovTable.length;
     }
-    
+
     public int getAllPlayablesRecorded() {
         return allPlayablesRecorded;
     }
@@ -246,4 +252,84 @@ public class MarkovModel {
         }
         //System.out.println("Last 5000 elements total:" + testSum);
     }
+
+    //Added in April
+    public ArrayList<Playable> getProcessedProbabilities(int queryDepth) {
+        ArrayList<Playable> result = getProbabilities(queryDepth);
+
+        for (int i = 0; i < length; i++) {
+            Playable element = result.get(i);
+            for (Playable livePlayable : liveStream) {
+                if (element.toString().equals(livePlayable.toString())) {
+                    //Process logic - set probability to 0
+                    element.setProbability(0);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<Playable> getCondensedProcessedProbabilities() {
+
+        ArrayList<Playable> utilities = new ArrayList<>();
+        for (int i = 0; i < length; i++) {
+            Playable newElement = modelType.getNewPlayableFromMarkovNumeric(i);
+            if (liveStream.isEmpty()) {
+                newElement.setProbability(markovTable[0][i]);
+            } else {
+                newElement.setProbability(0);
+            }
+            utilities.add(newElement);
+        }
+
+        for (int i = 1; i <= depth; i++) {
+            if (i > liveStream.size()) {
+                break;
+            }
+            ArrayList<Playable> probabilities = getProcessedProbabilities(i);
+            for (int j = 0; j < length; j++) {
+                utilities.get(j).increaseProbability(probabilities.get(j).getProbability() * i);
+            }
+
+        }
+        return utilities;
+    }
+
+    public ArrayList<Playable> getCondensedProcessedSortedProbabilities() {
+        ArrayList<Playable> result = getCondensedProcessedProbabilities();
+        Collections.sort(result);
+        return result;
+    }
+
+    public String getCondensedProcessedSortedProbabilityString() {
+        String result = "\n\n--Initial playable probabilities:\n" + printSortedPlayables(0) + "\n";
+        result += "Next playable condensed probabilities:\n";
+        ArrayList<Playable> probabilities = getCondensedProcessedSortedProbabilities();
+        for (int i = 0; i < probabilities.size(); i++) {
+            Playable playable = probabilities.get(i);
+            result += "\t" + playable.toString() + " - " + playable.getRoundedProbability() + "\n";
+        }
+        return result;
+    }
+
+    public Playable getTopCondensedProcessedPlayable() {
+        return getCondensedProcessedSortedProbabilities().get(0);
+    }
+
+    public Playable getTopCondensedProcessedPlayableWhichEquals(Playable otherPlayable) {
+        ArrayList<Playable> playables = getCondensedProcessedProbabilities();
+        for (Playable playable : playables) {
+            if (playable.toString().equals(otherPlayable.toString())) {
+                return playable;
+            }
+        }
+        return null;
+    }
+
+    public Playable getNextPlayable() {
+        Playable nextPlayable = getTopCondensedProcessedPlayable();
+        return nextPlayable;
+    }
+
 }

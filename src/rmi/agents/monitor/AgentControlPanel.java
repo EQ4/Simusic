@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rmi.monitor;
+package rmi.agents.monitor;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -42,21 +42,18 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         sendLabel.setText(sendLabel.getText().replace("%agentname", agentDummy.name));
         addressField.setText(dummy.ip + ":" + dummy.port);
         latencyField.setText(dummy.latency + " ms");
-        
+
         try {
             typeSpecInfoField.setText(agentConnection.getAgentTypeSpecificInfo());
         } catch (RemoteException e) {
             e.printStackTrace();
         }
-        
-        if (dummy.masterMonitorID != null) {
-            masterMonitorField.setText(dummy.masterMonitorID.toString());
-        }
+
+        agentIdField.setText("Agent ID: " + dummy.agentID);
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
-        
-        
+
     }
 
     @Override
@@ -75,7 +72,7 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
 
         nameLabel = new javax.swing.JLabel();
         addressField = new javax.swing.JLabel();
-        masterMonitorField = new javax.swing.JLabel();
+        agentIdField = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
         sendButton = new javax.swing.JButton();
         messageField = new javax.swing.JTextField();
@@ -88,15 +85,13 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
         latencyField = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setResizable(false);
+        setMinimumSize(new java.awt.Dimension(550, 495));
 
         nameLabel.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
         nameLabel.setText("Agent Name");
 
         addressField.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         addressField.setText("Agent address");
-
-        masterMonitorField.setText("No master monitor");
 
         sendButton.setText("Send");
         sendButton.addActionListener(new java.awt.event.ActionListener() {
@@ -130,11 +125,11 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(nameLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(281, Short.MAX_VALUE))
+                        .addContainerGap(231, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(addressField)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(masterMonitorField)
+                        .addComponent(agentIdField)
                         .addGap(119, 119, 119))))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
@@ -142,8 +137,8 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                     .addComponent(jSeparator1)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(10, 10, 10)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(sendLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jLabel3)
@@ -152,17 +147,15 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                                 .addGap(18, 18, 18)
                                 .addComponent(sendButton)
                                 .addGap(16, 16, 16))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 132, Short.MAX_VALUE)
+                                .addComponent(latencyField, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(176, 176, 176))
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel1)
-                                    .addComponent(jLabel2))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 105, Short.MAX_VALUE)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jScrollPane1)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(53, 53, 53)
-                                        .addComponent(latencyField, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(176, 176, 176)))))))
+                                .addComponent(jLabel1)
+                                .addGap(0, 0, Short.MAX_VALUE))))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -173,7 +166,7 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(addressField)
-                    .addComponent(masterMonitorField))
+                    .addComponent(agentIdField))
                 .addGap(28, 28, 28)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -186,10 +179,10 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(latencyField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 195, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(10, 10, 10)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -207,13 +200,13 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel addressField;
+    private javax.swing.JLabel agentIdField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTextField latencyField;
-    private javax.swing.JLabel masterMonitorField;
     private javax.swing.JTextField messageField;
     private javax.swing.JLabel nameLabel;
     private javax.swing.JButton sendButton;
