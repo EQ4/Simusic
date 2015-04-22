@@ -19,7 +19,7 @@ import javax.sound.midi.Track;
  * @author Martin
  */
 public class InstrumentExtractor {
-    
+
     public static void main(String[] args) {
         test();
     }
@@ -52,20 +52,20 @@ public class InstrumentExtractor {
         }
         return -1;
     }
-    
-    public static int getMostFrequentInstrument(File[] file) {
-        int[] instruments = getMostFrequentInstruments(file);
-        
+
+    public static int getMostFrequentInstrument(File[] files) {
+        int[] instruments = getMostFrequentInstruments(files);
+
         int instrument = 0;
         int max = 0;
-        
+
         for (int i = 0; i < 128; i++) {
             if (instruments[i] > max) {
                 max = instruments[i];
                 instrument = i;
             }
         }
-        
+
         return instrument;
     }
 
@@ -74,7 +74,7 @@ public class InstrumentExtractor {
         for (int i = 0; i < 128; i++) {
             instruments[i] = 0;
         }
-        
+
         for (File file : files) {
             if (file.isDirectory()) {
                 continue;
@@ -87,6 +87,9 @@ public class InstrumentExtractor {
                             ShortMessage message = (ShortMessage) track.get(i).getMessage();
                             int status = message.getStatus();
                             int data = message.getData1();
+                            if ((data > 127) || (data == 0)) {
+                                continue;
+                            }
                             if ((status >> 4) == 12) {
                                 instruments[data]++;
                             }

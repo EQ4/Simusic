@@ -1,10 +1,8 @@
 package run;
 
 import java.io.File;
-import music.player.Arpeggiator;
 import music.elements.Chord;
 import java.util.*;
-import org.jfugue.player.Player;
 import music.markov.MarkovModel;
 import music.extractors.chord.ChordExtractor;
 import music.elements.Playable;
@@ -12,6 +10,8 @@ import music.elements.Sequence;
 import music.extractors.feature.FeatureExtractor;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import music.player.Player;
+import static run.Main.player;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 
@@ -27,10 +27,7 @@ public class Test {
     static MarkovModel markovModel;
 
     public static void main(String[] args) {
-        //Deprecated:
-        testMarkov();
-        //testFeatures();
-        //testPlayer();
+        
     }
 
     static void testMarkov() {
@@ -72,13 +69,6 @@ public class Test {
         //Train markov
         trainMarkov();
 
-        //Arpeggiate all markov inputs
-        Player player = new Player();
-        Arpeggiator arp = new Arpeggiator(player);
-        for (Playable playable : markovModel.getAllInputSequences()) {
-            //arp.addArpeggio((Chord) playable);
-        }
-        arp.play();
     }
 
     static void trainMarkov() {

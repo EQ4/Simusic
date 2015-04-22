@@ -265,17 +265,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             }
             Agent newAgent;
             if (agentType == AgentType.AIPerformer) {
-                String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(
-                        this,
-                        "Specify maximum Markov chain depth\n(press OK if unsure)",
-                        "Creating new agent...",
-                        JOptionPane.PLAIN_MESSAGE,
-                        null,
-                        null,
-                        Main.DEFAULT_MARKOV_DEPTH);
-                if (maxMarkovChainLevel == null) {
-                    return;
-                }
                 //Load midi files
                 File[] agentFiles;
                 final JFileChooser fileChooser = new JFileChooser();
@@ -290,7 +279,20 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 } else {
                     return;
                 }
-
+                
+                //Get Markov level
+                String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(
+                        this,
+                        "Specify maximum Markov chain depth\n(press OK if unsure)",
+                        "Creating new agent...",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        null,
+                        Main.DEFAULT_MARKOV_DEPTH);
+                if (maxMarkovChainLevel == null) {
+                    return;
+                }
+                
                 //Create agent
                 newAgent = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, agentFiles, Integer.parseInt(maxMarkovChainLevel));
             } else {
@@ -550,7 +552,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         }
 
         pack();
-        revalidate();
         canvas.setViewportView(newPanel);
     }
 
@@ -714,7 +715,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                         .addGap(18, 18, 18)
                         .addComponent(monitorIdTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(startMonitorBtn))
-                .addContainerGap(38, Short.MAX_VALUE))
+                .addContainerGap(63, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -859,11 +860,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(canvas))
+                    .addComponent(canvas)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -873,7 +874,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(canvas, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
+                        .addComponent(canvas, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
@@ -966,17 +967,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     private void importAgentsFromFolderMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importAgentsFromFolderMenuItemActionPerformed
 
         try {
-            String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(
-                    this,
-                    "Specify maximum Markov chain depth\n(press OK if unsure)",
-                    "Importing agents...",
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    null,
-                    Main.DEFAULT_MARKOV_DEPTH);
-            if (maxMarkovChainLevel == null) {
-                return;
-            }
             //Load midi files
             File agentFolders;
             final JFileChooser fileChooser = new JFileChooser();
@@ -987,6 +977,19 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             if (fcReturnVal == JFileChooser.APPROVE_OPTION) {
                 agentFolders = fileChooser.getSelectedFile();
             } else {
+                return;
+            }
+            
+            //Get markov level
+            String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Specify maximum Markov chain depth\n(press OK if unsure)",
+                    "Importing agents...",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    Main.DEFAULT_MARKOV_DEPTH);
+            if (maxMarkovChainLevel == null) {
                 return;
             }
 

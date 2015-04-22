@@ -129,7 +129,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         }
     }
 
-    public void triggerGlobalUpdate() throws RemoteException {
+    public synchronized void triggerGlobalUpdate() throws RemoteException {
         for (AgentInterface agent : frame.agentConnections) {
             if (agent != null) {
                 agent.update(getRegularUpdate());

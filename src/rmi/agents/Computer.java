@@ -22,8 +22,6 @@ import enums.AgentType;
 import enums.AuctionType;
 import music.elements.Playable;
 import music.extractors.instrument.InstrumentExtractor;
-import music.player.Arpeggiator;
-import org.jfugue.player.Player;
 import rmi.messages.AuctionMessage;
 import rmi.agents.monitor.AgentDummy;
 import run.Main;
@@ -77,8 +75,9 @@ public class Computer extends Agent {
         //Extract features
         log("Extracting features from MIDI files...", false);
         fextract = new FeatureExtractor(midiFiles, featuresFolder, false, this);
-        
+
         //Extract instrument
+        log("Extracting instrument...", false);
         agentInstrument = InstrumentExtractor.getMostFrequentInstrument(midiFiles);
 
         //Train Markov chord model
@@ -161,8 +160,7 @@ public class Computer extends Agent {
             double myProbabilityOfWinningChord = probabilities.get(winningChordMarkovInteger).getProbability();
             //Get the mean of winning and own probability
             double newProbability = ((resultMessage.chordProbability + myProbabilityOfWinningChord) / 2);
-            
-            
+
             if (Double.isNaN(newProbability)) {
                 resultMessage.chordProbability = newProbability;
             }
@@ -233,7 +231,7 @@ public class Computer extends Agent {
                 int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
 
                 markovChordModel.livePush(chord);
-                Main.player.playArpeggio(chord, agentInstrument, currentBeatPeriod);
+                Main.player.playArpeggio(chord, agentInstrument, currentBeatPeriod * 4, 4, 70);
 
                 //Uncomment to test latency
                 //logPrecise("I played " + chord.toString());
