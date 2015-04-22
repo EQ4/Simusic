@@ -149,9 +149,9 @@ public class Main {
         }
     }
 
-    public static String getCurrentTimestamp() {
+    public static String getCurrentTimestamp(boolean precise) {
         Date currentDate = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat(precise ? "HH:mm:ss.SSS" : "HH:mm:ss");
         return dateFormat.format(currentDate) + " ";
     }
 

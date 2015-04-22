@@ -4,25 +4,29 @@
  */
 package music.elements;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author Martin
  */
-public class Chord extends Playable {
+public class Chord extends Playable implements Serializable {
 
     public static final int maxMarkovInteger = 24;
-    ArrayList<Integer> members;
+    //ArrayList<Integer> members;
     Note base;
     String mode;
     
+    //Test
+    public int agentID;
+    public boolean isMutated = false;
+    
     public Chord(){
-        //Empty constructor
     };
 
     public Chord(String letter, String mode) {
-        members = new ArrayList<>();
+        //members = new ArrayList<>();
         this.base = new Note(letter);
         this.mode = mode;
     }
@@ -30,6 +34,10 @@ public class Chord extends Playable {
     @Override
     public String toString() {
         return base.toString() + "-" + mode;
+    }
+    
+    public String getMode() {
+        return mode;
     }
 
     public String getNameAndProbability() {

@@ -35,12 +35,12 @@ public class Human extends Agent {
 
     @Override
     public void performanceStarted(int initialTempo) {
-        log("Performance started at tempo " + initialTempo);
+        log("Performance started at tempo " + initialTempo, false);
     }
 
     @Override
     public void performanceStopped() {
-        log("Performance stopped");
+        log("Performance stopped", false);
     }
 
     @Override
@@ -75,5 +75,11 @@ public class Human extends Agent {
     public AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException {
         //Not Applicable
         return null;
+    }
+    
+    @Override
+    public boolean connectNeighbour(int neighbourID) throws RemoteException {
+        //Not applicable
+        return false;
     }
 }

@@ -13,5 +13,6 @@ import java.io.Serializable;
  * @author Martin
  */
 public enum PlayableType implements Serializable {
-    //TODO !!!
+    //TODO: Implement
+        CHORD, NOTE
 }

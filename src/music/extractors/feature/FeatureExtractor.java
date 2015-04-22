@@ -26,10 +26,7 @@ public class FeatureExtractor {
     int numberOfSongs;
 
     public FeatureExtractor(File[] midiFiles, File featureFolder, boolean overwrite, Agent callingAgent) {
-        boolean agentIsLogging = true;
-        if (callingAgent != null) {
-            agentIsLogging = false;
-        }
+        boolean agentIsLogging = (callingAgent != null);
 
         this.midiFiles = midiFiles;
         try {
@@ -43,7 +40,7 @@ public class FeatureExtractor {
         this.numberOfSongs = 0;
 
         if (agentIsLogging) {
-            callingAgent.log("Extracting features from " + midiFiles.length + " files...");
+            callingAgent.log("Extracting features from " + midiFiles.length + " files...", false);
         }
 
         int counter = 0;
@@ -56,13 +53,15 @@ public class FeatureExtractor {
                 if (!overwrite) {
                     File f = new File(featurePath + file.getName() + ".xml");
                     if (f.exists() && !f.isDirectory()) {
-                        System.out.println("\t" + ++counter + "/" + midiFiles.length + " - XML already exsists");
+                        if (agentIsLogging) {
+                            System.out.println("Extracting features - file " + ++counter + "/" + midiFiles.length + " - XML already exsists");
+                        }
                         continue;
                     }
                 }
 
                 if (agentIsLogging) {
-                    callingAgent.log("\t" + ++counter + "/" + midiFiles.length);
+                    callingAgent.log("Extracting features - file " + ++counter + "/" + midiFiles.length, false);
                 }
 
                 //Extract features to XML
@@ -85,7 +84,14 @@ public class FeatureExtractor {
                 File xmlFile = new File(featurePath + file.getName() + ".xml");
                 DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.parse(xmlFile);
+
+                Document doc;
+
+                try {
+                    doc = dBuilder.parse(xmlFile);
+                } catch (Exception e) {
+                    continue;
+                }
 
                 //Extract features for single song:
                 doc.getDocumentElement().normalize();
@@ -129,7 +135,7 @@ public class FeatureExtractor {
         }
 
         if (agentIsLogging) {
-            callingAgent.log("Features extracted!");
+            callingAgent.log("Features extracted!", false);
         }
     }
 

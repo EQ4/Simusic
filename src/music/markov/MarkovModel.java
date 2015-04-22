@@ -317,16 +317,6 @@ public class MarkovModel {
         return getCondensedProcessedSortedProbabilities().get(0);
     }
 
-    public Playable getTopCondensedProcessedPlayableWhichEquals(Playable otherPlayable) {
-        ArrayList<Playable> playables = getCondensedProcessedProbabilities();
-        for (Playable playable : playables) {
-            if (playable.toString().equals(otherPlayable.toString())) {
-                return playable;
-            }
-        }
-        return null;
-    }
-
     public Playable getNextPlayable() {
         Playable nextPlayable = getTopCondensedProcessedPlayable();
         return nextPlayable;

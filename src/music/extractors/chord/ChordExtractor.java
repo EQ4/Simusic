@@ -21,22 +21,18 @@ import sun.security.krb5.internal.SeqNumber;
 public class ChordExtractor {
 
     public static ArrayList<Sequence> extractChordsFromMidiFiles(File[] files, Agent callingAgent) {
-
-        boolean agentIsLogging = true;
-        if (callingAgent != null) {
-            agentIsLogging = false;
-        }
+        boolean agentIsLogging = (callingAgent != null);
 
         ArrayList<Sequence> fullSequence = new ArrayList<>();
 
         if (agentIsLogging) {
-            callingAgent.log("Extracting chords from " + files.length + " files...");
+            callingAgent.log("Extracting chords from " + files.length + " files...", false);
         }
 
         for (int i = 0; i < files.length; i++) {
 
             if (agentIsLogging) {
-                callingAgent.log("\t" + (i + 1) + "/" + files.length);
+                callingAgent.log("Extracting chords - file " + (i + 1) + "/" + files.length, false);
             }
 
             Sequence normalizedSequence = new Sequence();
@@ -69,7 +65,7 @@ public class ChordExtractor {
                 }
             } catch (Exception e) {
                 if (agentIsLogging) {
-                    callingAgent.log("Chord Extractor exception.");
+                    callingAgent.log("Chord Extractor exception.", false);
                 }
                 e.printStackTrace();
             }
@@ -77,7 +73,7 @@ public class ChordExtractor {
         }
 
         if (agentIsLogging) {
-            callingAgent.log("Chords have been extracted!");
+            callingAgent.log("Chords have been extracted!", false);
         }
 
         return fullSequence;

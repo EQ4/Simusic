@@ -18,8 +18,11 @@ public class AuctionMessage implements Serializable {
     public AuctionType auctionType;
 
     //Chord type
-    public Chord chord;
+    public String chordBase;
+    public String chordMode;
+    public double chordProbability;
     public int chordOriginID;
+    public boolean isMutatedChord = false;
 
     //Feature type
     public String featureName;

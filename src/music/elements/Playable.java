@@ -13,11 +13,6 @@ import run.Main;
  */
 public abstract class Playable implements Comparable, Serializable {
 
-    public static enum Type {
-
-        CHORD, NOTE
-    }
-
     static final int PROBABILITY_COMPARE_MULTIPLY_FACTOR = 10000;
 
     private double probability = -1;

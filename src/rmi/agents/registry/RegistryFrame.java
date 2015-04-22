@@ -131,7 +131,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
         //Log shutdown
         changeStatus("Daemon stopped");
-        log("Daemon has been stopped.");
+        log("Daemon has been stopped.", false);
     }
     
     void changeStatus(String newStatus) {
@@ -148,8 +148,8 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
     }
     
-    public void log(String message) {
-        registryLog.append(Main.getCurrentTimestamp() + message + "\n");
+    public void log(String message, boolean precise) {
+        registryLog.append(Main.getCurrentTimestamp(precise) + message + "\n");
     }
     
     private void alert(String message) {

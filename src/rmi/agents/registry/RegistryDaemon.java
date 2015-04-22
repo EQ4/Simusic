@@ -26,6 +26,9 @@ import enums.AgentType;
 import enums.AuctionType;
 import enums.RegistryServiceType;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+import music.elements.Chord;
 import rmi.messages.AuctionMessage;
 import rmi.agents.monitor.AgentDummyLink;
 import rmi.agents.monitor.AgentDummyLink.AgentLinkType;
@@ -38,6 +41,8 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     static final int LATENCY_PINGS_PER_AGENT = 10;
     static final int DELAY_BETWEEN_LATENCY_PINGS = 100;
+
+    private final Object loadAgentLock = new Object();
 
     ArrayList<AgentDummy> featureDummies;
     RegistryFrame frame;
@@ -90,7 +95,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                 + "    - port: " + agentName + "\n"
                 + "    - latency: " + newAgentDummy.latency + "\n"
                 + "    - ID: " + id + "\n"
-                + "    - owned by: " + masterMonitorID
+                + "    - owned by: " + masterMonitorID, false
         );
 
         //Say hello
@@ -102,7 +107,26 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Update agents
         triggerGlobalUpdate();
 
+        //Start loader thread (explain synchro)
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    loadAgentSync(id);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+
         return getFirstUpdate(newAgentDummy);
+    }
+
+    //TODO: EXPLAIN SYNCHRONIZED!
+    private void loadAgentSync(int agentID) throws RemoteException {
+        synchronized (loadAgentLock) {
+            frame.agentConnections.get(agentID).loadAgent();
+        }
     }
 
     public void triggerGlobalUpdate() throws RemoteException {
@@ -138,7 +162,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     @Override
     public boolean ping(int id) throws RemoteException {
-        frame.log("Agent " + id + " pinged and got ponged!");
+        frame.log("Agent " + id + " pinged and got ponged!", false);
         return true;
     }
 
@@ -151,25 +175,25 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     public synchronized boolean disconnect(int id) throws RemoteException {
         AgentDummy agent = frame.agentDummies.get(id);
         frame.agentConnections.set(id, null);
-        frame.log(agent.name + " (#" + id + ") has disconnected.");
+        frame.log(agent.name + " (#" + id + ") has disconnected.", false);
         agent.isOffline = true;
 
         //Update agents
         triggerGlobalUpdate();
 
-        frame.log(agent.agentType + " " + agent.name + " has disconnected.");
+        frame.log(agent.agentType + " " + agent.name + " has disconnected.", false);
         return true;
     }
 
     @Override
     public String sayHello(String sender) throws RemoteException {
-        frame.log(sender + " says hi!");
+        frame.log(sender + " says hi!", false);
         return "Hello from registry!";
     }
 
     @Override
     public void log(String message, int loggerID) throws RemoteException {
-        frame.log("<" + frame.agentDummies.get(loggerID).name + "> " + message);
+        frame.log("<" + frame.agentDummies.get(loggerID).name + "> " + message, false);
     }
 
     @Override
@@ -213,12 +237,12 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Store role model message
         if (roleModel != null) {
             roleModel.roleModelMessage = roleModelMessage;
-            frame.log(frame.agentDummies.get(agentID).name + "'s assigned role model is " + roleModel.name);
+            frame.log(frame.agentDummies.get(agentID).name + "'s assigned role model is " + roleModel.name, false);
             frame.agentDummies.get(roleModel.agentID).isLeafAgent = false;
         } else {
             //Store conductor agent
             conductorAgentID = agentID;
-            frame.log("Conductor agent is " + frame.agentDummies.get(conductorAgentID).name + " (#" + conductorAgentID + ")");
+            frame.log("Conductor agent is " + frame.agentDummies.get(conductorAgentID).name + " (#" + conductorAgentID + ")", false);
             frame.agentDummies.get(agentID).isConductor = true;
         }
 
@@ -238,7 +262,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                 break;
             }
             if (i == frame.agentDummies.size() - 1) {
-                frame.log("Someone requested performance start, but there are no AI performers");
+                frame.log("Someone requested performance start, but there are no AI performers", false);
                 return "There are no AI Performers!";
             }
         }
@@ -246,7 +270,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Ensure that no agent is loading.
         for (AgentDummy agentDummy : frame.agentDummies) {
             if (!agentDummy.isReady) {
-                frame.log("Someone requested performance start, but one or more agents are still loading");
+                frame.log("Someone requested performance start, but one or more agents are still loading", false);
                 return "One or more agents are still loading!";
             }
         }
@@ -258,7 +282,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
         //Ready to start performance services
         isPerforming = true;
-        frame.log("Performance started at tempo " + currentTempo + "bpm, beat period: " + Main.getBeatPeriod(currentTempo));
+        frame.log("Starting performance at tempo " + currentTempo + "bpm, beat period: " + Main.getBeatPeriod(currentTempo) + "[before beat loop]", true);
 
         for (AgentInterface agentConnection : frame.agentConnections) {
             agentConnection.performanceStarted(currentTempo);
@@ -274,30 +298,47 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                     long beatInvokedTime = System.currentTimeMillis();
                     int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
 
+                    // Get next chord (TODO: don't change on every beat!)
                     try {
-                        // Get next chord (TODO: don't change on every beat!)
                         currentChordMessage = frame.agentConnections.get(conductorAgentID).executeLocalAuction(AuctionType.ChordAuction, null);
-
-                        // Broadcast next beat
-                        for (AgentInterface agentConnection : frame.agentConnections) {
-                            agentConnection.beat(currentChordMessage.chord);
-                        }
                     } catch (RemoteException e) {
                         e.printStackTrace();
+                        break;
+                    }
+
+
+                    // Broadcast next beat
+                    for (AgentInterface agentConnection : frame.agentConnections) {
+                        try {
+                            Chord nextChord = new Chord(currentChordMessage.chordBase, currentChordMessage.chordMode);
+                            nextChord.isMutated = currentChordMessage.isMutatedChord;
+                            nextChord.agentID = currentChordMessage.chordOriginID;
+                            nextChord.setProbability(currentChordMessage.chordProbability);
+                            agentConnection.beat(nextChord);
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
                     }
 
                     // Calculate time lost since beginning of loop cycle
                     int timeLost = (int) (System.currentTimeMillis() - beatInvokedTime);
 
                     // Log beat
-                    frame.log("@ BEAT: All beat signals sent!\n"
-                            + "\tChord: " + currentChordMessage.chord.toString() + "\n"
-                            + "\tBeat period time lost: " + timeLost + "/" + currentBeatPeriod);
-
+                    /*
+                     frame.log("@ BEAT: All beat signals sent!\n"
+                     + "\tChord: " + currentChordMessage.chord.toString() + "\n"
+                     + "\tBeat period time lost: " + timeLost + "/" + currentBeatPeriod,
+                     true);
+                     */
                     // Sleep remaining time from beat
                     int remainingSleepTime = (currentBeatPeriod - timeLost);
                     if (remainingSleepTime < 0) {
-                        frame.log("Performance forcibly interruupted due to current overall latency (" + timeLost + ") higher than beat period (" + currentBeatPeriod + ")");
+                        frame.log("Performance forcibly interruupted due to current overall latency (" + timeLost + ") higher than beat period (" + currentBeatPeriod + ")", true);
+                        try {
+                            stopPerformance();
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
                     }
                     Main.wait((int) remainingSleepTime);
 
@@ -324,7 +365,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                         adaptCommonFeaturesTo(currentChordMessage.chordOriginID);
 
                         //Log solo
-                        frame.log("@ " + frame.agentDummies.get(currentSoloistID).name + " is soloing!");
+                        frame.log("@ " + frame.agentDummies.get(currentSoloistID).name + " is soloing!", true);
                         //Play agent solo
                         frame.agentConnections.get(currentChordMessage.chordOriginID).playSolo();
                     } catch (RemoteException e) {
@@ -345,7 +386,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
         //This breaks the BeatHarmony service
         isPerforming = false;
-        frame.log("Performance stopped!");
+        frame.log("Performance stopped!", true);
         for (AgentInterface agentConnection : frame.agentConnections) {
             agentConnection.performanceStopped();
         }

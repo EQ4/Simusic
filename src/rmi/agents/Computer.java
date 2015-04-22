@@ -68,15 +68,19 @@ public class Computer extends Agent {
     @Override
     public void loadAgent() {
         //Extract chords
+        log("Extracting chord sequences from MIDI files...", false);
         chords = ChordExtractor.extractChordsFromMidiFiles(midiFiles, this);
+        log("Chord sequences extracted!", false);
 
         //Extract features
+        log("Extracting features from MIDI files...", false);
         fextract = new FeatureExtractor(midiFiles, featuresFolder, false, this);
 
         //Train Markov chord model
+        log("Training Markov model...", false);
         markovChordModel = new MarkovModel(markovChordModelMaxDepth, new Chord());
         markovChordModel.trainModel(chords);
-        log("Trained Markov chord model with max depth " + markovChordModelMaxDepth);
+        log("Trained Markov chord model with max depth " + markovChordModelMaxDepth, false);
 
         try {
             //Get neighbour ID from registry
@@ -86,12 +90,12 @@ public class Computer extends Agent {
             if (roleModelDummy != null) {
                 roleModelConnection = (AgentInterface) Naming.lookup(roleModelDummy.getRMIAddress());
                 roleModelConnection.connectNeighbour(agentID);
-                log("My role model is " + roleModelDummy.name + " with distance of " + roleModelDummy.roleModelMessage);
+                log("My role model is " + roleModelDummy.name + " with distance of " + roleModelDummy.roleModelMessage, false);
                 roleModelInfo = roleModelDummy.roleModelMessage;
             }
 
             //Finished loading - report to registry
-            log("Loading finished!");
+            log("Loading finished!", false);
             this.isLoading = false;
             registryConnection.agentLoaded(agentID);
         } catch (Exception e) {
@@ -99,41 +103,83 @@ public class Computer extends Agent {
         }
     }
 
+    //Sent by other AI agents to become neighbours
     @Override
-    public AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException {
+    public boolean connectNeighbour(int neighbourID) throws RemoteException {
+        AgentDummy newNeighbourDummy = registryConnection.getAgentDummyByID(neighbourID);
+        AgentInterface newNeighbourConnection = (AgentInterface) RMIconnect(newNeighbourDummy.getRMIAddress());
+        if (newNeighbourConnection != null) {
+            neighbourDummies.put(neighbourID, newNeighbourDummy);
+            neighbourConnections.put(neighbourID, newNeighbourConnection);
+            registryConnection.reportNeighbourConnection(neighbourID, agentID);
+            log(newNeighbourDummy.name + " connected to me! I am his role model.", false);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public synchronized AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException {
         AuctionMessage resultMessage = new AuctionMessage(auctionType);
 
         // Chord auction
         if (auctionType == AuctionType.ChordAuction) {
-            if (neighbourConnections.isEmpty()) {
-                //Base case
-                resultMessage.chord = (Chord) markovChordModel.getNextPlayable();
-                resultMessage.chordOriginID = agentID;
-            } else {
-                //Recursive case
+            Chord nextChord = (Chord) markovChordModel.getNextPlayable();
+            resultMessage.chordBase = nextChord.getBaseLetter();
+            resultMessage.chordMode = nextChord.getMode();
+            resultMessage.chordProbability = nextChord.getProbability();
+            resultMessage.chordOriginID = agentID;
+            //Recursive case
 
-                ArrayList<AuctionMessage> ballotBox = new ArrayList<>();
+            ArrayList<AuctionMessage> ballotBox = new ArrayList<>();
 
-                //Add neighbour chords to box (distributed recursive call)
-                for (AgentInterface neighbourConnection : neighbourConnections.values()) {
-                    AuctionMessage ownLocalAuctionResultMessage = neighbourConnection.executeLocalAuction(auctionType, args);
-                    ballotBox.add(ownLocalAuctionResultMessage);
-                }
-
-                //Pick best chord
-                resultMessage.chord = new Chord();
-                resultMessage.chord.setProbability(-1);
-                for (AuctionMessage message : ballotBox) {
-                    if (message.chord.getProbability() > resultMessage.chord.getProbability()) {
-                        resultMessage.chord = message.chord;
-                        resultMessage.chordOriginID = message.chordOriginID;
-                    }
-                }
-                //Influence winning chord probability with own probability for same chord
-                Playable myChordSameAsWinning = markovChordModel.getTopCondensedProcessedPlayableWhichEquals(resultMessage.chord);
-                //Get the mean of winning and own probability
-                resultMessage.chord.setProbability((resultMessage.chord.getProbability() + myChordSameAsWinning.getProbability()) / 2);
+            //Add neighbour chords to box (distributed recursive call)
+            for (AgentInterface neighbourConnection : neighbourConnections.values()) {
+                AuctionMessage response = neighbourConnection.executeLocalAuction(auctionType, args);
+                ballotBox.add(response);
             }
+
+            //Pick best chord
+            for (AuctionMessage message : ballotBox) {
+                if (message.chordProbability > resultMessage.chordProbability) {
+                    resultMessage.chordBase = message.chordBase;
+                    resultMessage.chordMode = message.chordMode;
+                    resultMessage.chordProbability = message.chordProbability;
+                    resultMessage.chordOriginID = message.chordOriginID;
+                }
+            }
+
+            //Influence the winning chord probability with own probability for same chord
+            ArrayList<Playable> probabilities = markovChordModel.getCondensedProcessedProbabilities();
+            Chord winningChord = new Chord(resultMessage.chordBase, resultMessage.chordMode);
+            int winningChordMarkovInteger = winningChord.getMarkovInteger();
+            double myProbabilityOfWinningChord = probabilities.get(winningChordMarkovInteger).getProbability();
+            //Get the mean of winning and own probability
+            double newProbability = ((resultMessage.chordProbability + myProbabilityOfWinningChord) / 2);
+            
+            
+            if (Double.isNaN(newProbability)) {
+                resultMessage.chordProbability = newProbability;
+            }
+
+            if (Double.isNaN(resultMessage.chordProbability) || resultMessage.chordProbability == 0) {
+                //log("No one knows a next chord. Mutating...", false);
+                String[] newChord = new Chord().getNewPlayableFromMarkovNumeric(Main.rand.nextInt(24)).toString().split("-");
+                resultMessage.chordBase = newChord[0];
+                resultMessage.chordMode = newChord[1];
+                resultMessage.chordProbability = 0.0000001;
+                resultMessage.isMutatedChord = true;
+            }
+
+            //Log auction result
+            String ballotContent = "";
+            for (AuctionMessage message : ballotBox) {
+                ballotContent += "\n\n\tChord base: " + message.chordBase;
+                ballotContent += "\n\tChord mode: " + message.chordMode;
+                ballotContent += "\n\tChord probability: " + message.chordProbability;
+                ballotContent += "\n\tOrigin ID: " + message.chordOriginID;
+            }
+            //log("My local CHORD Auction was won by " + resultMessage.chordOriginID + " and the result is " + resultMessage.chordBase + "-" + resultMessage.chordMode + ", probability " + resultMessage.chordProbability + "Ballot content: " + ballotContent, false);
         }
 
         // Feature auction
@@ -156,6 +202,7 @@ public class Computer extends Agent {
                 //Mean again
                 resultMessage.feature = (resultMessage.feature + fextract.getAverageFeatureValue(resultMessage.featureName)) / 2;
             }
+            log("My local FEATURE Auction result is: " + resultMessage.featureName + " = " + resultMessage.feature, false);
         }
 
         return resultMessage;
@@ -164,24 +211,27 @@ public class Computer extends Agent {
     @Override
     public void performanceStarted(int currentTempo) throws RemoteException {
         this.currentTempo = currentTempo;
-        log("Performance started with tempo " + currentTempo + ", beat period " + Main.getBeatPeriod(currentTempo));
+        log("Performance started with tempo " + currentTempo + ", beat period " + Main.getBeatPeriod(currentTempo), false);
     }
 
     @Override
     public void performanceStopped() throws RemoteException {
-        log("Performance stopped!");
+        log("Performance stopped!", false);
     }
 
     @Override
     public void beat(Chord chord) throws RemoteException {
-        int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
-        // TODO: Play chord using beatPeriod
         new Thread() {
             @Override
             public void run() {
-                // Play chord / arpeggio 
-                //Main.player.playArpeggio(chord, beatPeriod);
-                logPrecise("I played a chord!");
+                // TODO: Play chord using beatPeriod (or not)
+                int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
+
+                markovChordModel.livePush(chord);
+                Main.player.playArpeggio(chord, currentBeatPeriod);
+
+                //Uncomment to test latency
+                //logPrecise("I played " + chord.toString());
             }
         }.start();
     }
@@ -191,12 +241,12 @@ public class Computer extends Agent {
         // TODO: Play solo using beatPeriod 
         // ON THE SAME THREAD!
 
-        logPrecise("I started soloing!");
+        log("I started soloing!", true);
 
         //TODO: Solo.
         Main.wait(8000);
 
-        logPrecise("I finished soloing!");
+        log("I finished soloing!", true);
     }
 
     @Override

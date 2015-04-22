@@ -4,11 +4,13 @@
  */
 package music.elements;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Martin
  */
-public class Note extends Playable {
+public class Note extends Playable implements Serializable {
 
     public static final int maxMarkovInteger = 12;
     public static final String letters[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",};

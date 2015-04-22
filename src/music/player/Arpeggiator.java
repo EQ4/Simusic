@@ -9,7 +9,7 @@ import java.util.Random;
 import org.jfugue.player.Player;
 
 /**
- *
+ * TODO: DELETE
  * @author Martin
  */
 public class Arpeggiator {

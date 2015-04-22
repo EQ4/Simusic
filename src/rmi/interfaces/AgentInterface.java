@@ -25,6 +25,7 @@ public interface AgentInterface extends Remote  {
     public boolean ping() throws RemoteException;
     public void update(UpdateMessage update) throws RemoteException;
     public void unicast(String message, int senderID) throws RemoteException;
+    public void loadAgent() throws RemoteException;
     public boolean disconnectNeighbour(int agentID) throws RemoteException;
     public boolean shutdown() throws RemoteException;
     public AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException;

@@ -32,7 +32,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     //AI methods
     @Override
     public void unicast(String message, int senderID) throws RemoteException {
-        frame.log("Agent " + senderID + " told me '" + message + "'");
+        frame.log("Agent " + senderID + " told me '" + message + "'", false);
     }
 
     @Override
@@ -43,25 +43,25 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     //Monitor methods
     @Override
     public String sayHello() throws RemoteException {
-        frame.log("Registry says hi!");
+        frame.log("Registry says hi!", false);
         return "Hi from agent!";
     }
 
     @Override
     public void update(UpdateMessage update) throws RemoteException {
-        frame.log("Monitor view updated");
+        frame.log("Monitor view updated", false);
         frame.processUpdate(update);
     }
 
     @Override
     public boolean connectNeighbour(int optimisticAgentID) {
-        frame.log("Agent #" + optimisticAgentID + " is trying to neighbour a monitor.");
+        frame.log("Agent #" + optimisticAgentID + " is trying to neighbour a monitor.", false);
         return false;
     }
 
     @Override
     public boolean disconnectNeighbour(int neighbourID) throws RemoteException {
-        frame.log("Impossible!");
+        frame.log("Impossible!", false);
         return false;
     }
 
@@ -69,7 +69,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     public boolean shutdown() throws RemoteException {
         //Simply disconnect from registry
         frame.disconnect();
-        frame.log("Registry has shut itself down.");
+        frame.log("Registry has shut itself down.", false);
         return false;
     }
 
@@ -81,13 +81,13 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
 
     @Override
     public void performanceStarted(int initialTempo) throws RemoteException {
-        frame.log("Performance started at tempo " + initialTempo);
+        frame.log("Performance started at tempo " + initialTempo, false);
         frame.setPerformingStatus(true);
     }
 
     @Override
     public void performanceStopped() throws RemoteException {
-        frame.log("Performance stopped");
+        frame.log("Performance stopped", false);
         frame.setPerformingStatus(false);
     }
 
@@ -99,7 +99,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
 
     @Override
     public void beat(Chord chord) throws RemoteException {
-        frame.log("Current chord: " + chord.toString());
+        frame.log("Current chord: " + chord.toString() + " by agent #" + chord.agentID + ", probability: " + chord.getProbability() + (chord.isMutated ? " MUTATED!" : ""), true);
     }
 
     @Override
@@ -112,4 +112,10 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
         //Not Applicable
         return (double) -1;
     }
+    
+    
+    @Override
+    public void loadAgent() throws RemoteException {
+        //Not applicable
+    };
 }

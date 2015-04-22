@@ -99,7 +99,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     + "\n    - ip: " + selectedIPInterface
                     + "\n    - port " + monitorPort
                     + "\n    - s. port " + monitorServicePort
-                    + "\n");
+                    + "\n", false);
             statusTextField.setText("Idle (not connected to a registry)");
         } catch (ExportException e) {
             if (e.getMessage().contains("already in use")) {
@@ -161,7 +161,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             monitorIdTextField.setText("");
             agentsMenu.setEnabled(false);
             performanceMenu.setEnabled(false);
-            log("Disconnected");
+            log("Disconnected", false);
             revalidate();
         }
         return truthValue;
@@ -178,7 +178,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 + "\n    - ip: " + selectedIPInterface
                 + "\n    - port " + d.getRegPort()
                 + "\n    - s. port " + d.getRegServicePort()
-                + "\n    - address: " + monitorRMIAddress
+                + "\n    - address: " + monitorRMIAddress, false
         );
 
         Main.wait(NEW_AGENT_INITIALIZE_TIME);
@@ -188,11 +188,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     private void connectToRegistry(String registryURL) throws RemoteException {
-        log("Connecting to " + registryURL);
+        log("Connecting to " + registryURL, false);
         try {
             registryConnection = (RegistryInterface) Naming.lookup(registryURL);
         } catch (Exception e) {
-            log("Could not connect to registry. Look at console for exception stack trace");
+            log("Could not connect to registry. Look at console for exception stack trace", false);
             alert("Could not connect to registry. Look at console for exception stack trace");
             e.printStackTrace();
         }
@@ -211,7 +211,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         monitorIdTextField.setText(monitorID + "");
 
         if (checkConnection()) {
-            log("Connected!");
+            log("Connected!", false);
             statusTextField.setText("Connected to " + registryURL);
             monitorIdTextField.setText(monitorID.toString());
             agentsMenu.setEnabled(true);
@@ -324,8 +324,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         }
     }
 
-    public void log(String message) {
-        logField.append(Main.getCurrentTimestamp() + message + "\n");
+    public void log(String message, boolean precise) {
+        logField.append(Main.getCurrentTimestamp(precise) + message + "\n");
     }
 
     private void test() throws RemoteException {
@@ -338,10 +338,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         if (status) {
             statusTextField.setText("Performing at " + registryURL);
-            log("Started performing in " + registryURL);
+            log("Started performing in " + registryURL, false);
         } else {
             statusTextField.setText("Not performing at " + registryURL);
-            log("Stopped performing in " + registryURL);
+            log("Stopped performing in " + registryURL, false);
         }
     }
 
@@ -464,7 +464,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     } else {
                         continue;
                     }
-                    newGraphics2D.fill3DRect(icon.getX() + rectXOffset - (rectangleBaseWidth / 2), icon.getY() + rectYOffset - (rectangleBaseHeight / 2), rectangleBaseWidth, rectangleBaseHeight, false);
+                    newGraphics2D.fill3DRect(icon.getX() + rectXOffset - (rectangleBaseWidth / 2), icon.getY() + rectYOffset - (rectangleBaseHeight / 2), rectangleBaseWidth, rectangleBaseHeight, true);
                 }
 
                 for (AgentDummyLink link : update.updatedLinks) {
@@ -539,7 +539,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     //Draw arrow base
                     newGraphics2D = (Graphics2D) g.create();
                     newGraphics2D.setColor(java.awt.Color.ORANGE);
-                    newGraphics2D.fill3DRect(pointFrom.x + rectXOffset - (rectangleBaseWidth / 2), pointFrom.y + rectYOffset - (rectangleBaseHeight / 2), rectangleBaseWidth, rectangleBaseHeight, false);
+                    newGraphics2D.fill3DRect(pointFrom.x + rectXOffset - (rectangleBaseWidth / 2), pointFrom.y + rectYOffset - (rectangleBaseHeight / 2), rectangleBaseWidth, rectangleBaseHeight, true);
 
                 }
             }
@@ -886,7 +886,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         try {
             addAiPerformer();
         } catch (RemoteException e) {
-            log(e.getLocalizedMessage());
+            log(e.getLocalizedMessage(), false);
             e.printStackTrace();
         }
     }//GEN-LAST:event_addAiPerformerMenuItemActionPerformed
@@ -895,7 +895,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         try {
             addHumanPerformer();
         } catch (RemoteException e) {
-            log(e.getLocalizedMessage());
+            log(e.getLocalizedMessage(), false);
             e.printStackTrace();
         }
     }//GEN-LAST:event_addHumanPerformerMenuItemActionPerformed
@@ -908,7 +908,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         try {
             test();
         } catch (RemoteException e) {
-            log(e.getLocalizedMessage());
+            log(e.getLocalizedMessage(), false);
             e.printStackTrace();
         }
     }//GEN-LAST:event_testMenuItemActionPerformed
