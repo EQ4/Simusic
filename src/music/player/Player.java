@@ -24,7 +24,7 @@ public class Player {
         }
     }
 
-    public void playArpeggio(Chord chord, int timeFrame) {
-        //TODO: Implement
+    public void playArpeggio(Chord chord, int instrument, int timeFrame) {
+        //
     }
 }

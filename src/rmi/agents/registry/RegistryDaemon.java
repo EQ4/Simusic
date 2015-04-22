@@ -306,7 +306,6 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                         break;
                     }
 
-
                     // Broadcast next beat
                     for (AgentInterface agentConnection : frame.agentConnections) {
                         try {
@@ -331,7 +330,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                      true);
                      */
                     // Sleep remaining time from beat
-                    int remainingSleepTime = (currentBeatPeriod - timeLost);
+                    int remainingSleepTime = ((4 * currentBeatPeriod) - timeLost);
                     if (remainingSleepTime < 0) {
                         frame.log("Performance forcibly interruupted due to current overall latency (" + timeLost + ") higher than beat period (" + currentBeatPeriod + ")", true);
                         try {

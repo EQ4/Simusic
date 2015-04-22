@@ -21,6 +21,7 @@ import rmi.interfaces.AgentInterface;
 import enums.AgentType;
 import enums.AuctionType;
 import music.elements.Playable;
+import music.extractors.instrument.InstrumentExtractor;
 import music.player.Arpeggiator;
 import org.jfugue.player.Player;
 import rmi.messages.AuctionMessage;
@@ -43,6 +44,7 @@ public class Computer extends Agent {
     private String roleModelInfo;
     private boolean isLoading;
     private int currentTempo;
+    private int agentInstrument;
 
     AgentDummy roleModelDummy;
     AgentInterface roleModelConnection;
@@ -75,6 +77,9 @@ public class Computer extends Agent {
         //Extract features
         log("Extracting features from MIDI files...", false);
         fextract = new FeatureExtractor(midiFiles, featuresFolder, false, this);
+        
+        //Extract instrument
+        agentInstrument = InstrumentExtractor.getMostFrequentInstrument(midiFiles);
 
         //Train Markov chord model
         log("Training Markov model...", false);
@@ -228,7 +233,7 @@ public class Computer extends Agent {
                 int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
 
                 markovChordModel.livePush(chord);
-                Main.player.playArpeggio(chord, currentBeatPeriod);
+                Main.player.playArpeggio(chord, agentInstrument, currentBeatPeriod);
 
                 //Uncomment to test latency
                 //logPrecise("I played " + chord.toString());
