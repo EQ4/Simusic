@@ -72,6 +72,18 @@ public class Main {
     public static final int ROUNDING_DIGITS = 1000;
 
     /**
+     * MIDI Note On Value
+     */
+    public static final int NOTE_ON = 0x90;
+
+    /**
+     * MIDI Note Off Value
+     */
+    public static final int NOTE_OFF = 0x80;
+    
+    public static final int MAX_MIDI_PITCH = 250;
+    
+    /**
      *
      */
     public static String[] names;

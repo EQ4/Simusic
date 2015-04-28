@@ -47,7 +47,8 @@ public class Note extends Playable implements Serializable {
      * From C (0) to B (11)
      * MIDI compatible
      */
-    public static final String letters[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",};
+    public static final String letters[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    private String letter;
 
     /**
      * Adds semitones to a note and returns the new note string
@@ -66,15 +67,25 @@ public class Note extends Playable implements Serializable {
     }
 
     /**
-     * Adds semitones to the note C
+     * Gets a note string representation of a pitch value
      * E.g. if 2 is passed as the argument, returns "D"
-     * @param integer Number of semitones to add
-     * @return The new note
+     * @param integer Note integer
+     * @return The note string
      */
-    public static String integerToNote(int integer) {
+    public static String integerToNoteString(int integer) {
         return integerToNote(integer, "C");
     }
-    private String letter;
+    
+    
+    /**
+     * Gets a new note object from pitch value
+     * E.g. if 2 is passed as the argument, returns a new D note
+     * @param integer Note integer
+     * @return The note object
+     */
+    public static Note integerToNewNote(int integer) {
+        return new Note(integerToNoteString(integer));
+    }
 
     /**
      * An empty constructor
@@ -119,7 +130,7 @@ public class Note extends Playable implements Serializable {
      */
     @Override
     public Playable getNewPlayableFromMarkovNumeric(int numeric) {
-        return new Note(Note.integerToNote(numeric));
+        return new Note(Note.integerToNoteString(numeric));
     }
     
     /**

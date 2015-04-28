@@ -23,16 +23,17 @@
  */
 package markov;
 
-import extractors.ChordExtractorTest;
-import static extractors.ChordExtractorTest.extractChords;
+import extractors.ContentExtractTest;
+import java.io.File;
 import java.util.ArrayList;
 import music.elements.Chord;
 import music.elements.Playable;
 import music.elements.Sequence;
+import music.extractors.content.ContentExtractor;
 import music.markov.MarkovModel;
-import run.AllTests;
-import static run.AllTests.featurePath;
-import static run.AllTests.midiPath;
+import testvars.General;
+import static testvars.General.featurePath;
+import static testvars.General.midiPath;
 import run.Main;
 
 /**
@@ -51,10 +52,12 @@ public class MarkovTest {
 
     public static void main(String[] args) {
         //Extract chords first
-        ArrayList<Sequence> chords = extractChords(AllTests.midiPath);
+        File[] midiFileList = General.getFileArrayFromPathString(General.midiPath);
+        ContentExtractor cextract = new ContentExtractor(midiFileList, null);
+        ArrayList<Sequence> harmonySequences = cextract.getHarmonySequences();
 
         //Train Markov model
-        MarkovModel markovModel = trainMarkov(chords);
+        MarkovModel markovModel = trainMarkov(harmonySequences);
 
         //Add chords to live sequence
         while (true) {

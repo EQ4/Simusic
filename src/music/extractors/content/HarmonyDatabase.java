@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package music.extractors.chord;
+package music.extractors.content;
 
 import java.util.*;
 import music.elements.Note;
@@ -31,7 +31,7 @@ import music.elements.Note;
  * Currently only major and minor chords implemented, but will add more in future
  * @author Martin Minovski <martin at minovski.net>
  */
-public class ChordDatabase {
+public class HarmonyDatabase {
 
     int[][] dbNotes = {
         
@@ -179,7 +179,7 @@ public class ChordDatabase {
     /**
      * Default constructor; empty.
      */
-    public ChordDatabase() {
+    public HarmonyDatabase() {
     }
 
     /**
@@ -201,7 +201,7 @@ public class ChordDatabase {
                 }
             }
             if (success) {
-                chord = Note.integerToNote(base + dbOffset[i]) + "-" + dbNames[i][0];
+                chord = Note.integerToNoteString(base + dbOffset[i]) + "-" + dbNames[i][0];
                 break;
             }
         }

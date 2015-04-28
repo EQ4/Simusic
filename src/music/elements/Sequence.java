@@ -35,7 +35,7 @@ public class Sequence {
 
     private ArrayList<Playable> sequence;
     private String MIDIFileSource;
-    private Integer harmonyChannel;
+    private Integer MIDIChannel;
     private Chord songKey;
 
     /**
@@ -46,7 +46,7 @@ public class Sequence {
         
         //Initially null; set later
         this.MIDIFileSource = null;
-        this.harmonyChannel = null;
+        this.MIDIChannel = null;
         this.songKey = null;
     }
 
@@ -73,12 +73,12 @@ public class Sequence {
         return MIDIFileSource;
     }
     
-    public void setHarmonyChannel(int channelNumber) {
-        harmonyChannel = channelNumber;
+    public void setMIDIChannel(int channelNumber) {
+        MIDIChannel = channelNumber;
     }
     
-    public Integer getHarmonyChannel() {
-        return harmonyChannel;
+    public Integer getMIDIChannel() {
+        return MIDIChannel;
     }
     
     public void setSongKey(Chord chord) {

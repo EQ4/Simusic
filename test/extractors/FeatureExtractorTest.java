@@ -25,7 +25,7 @@ package extractors;
 
 import java.io.File;
 import music.extractors.feature.FeatureExtractor;
-import run.AllTests;
+import testvars.General;
 
 /**
  *
@@ -35,14 +35,14 @@ public class FeatureExtractorTest {
 
     public static void main(String[] args) {
         //Extract features
-        FeatureExtractor fextract = extractChords(AllTests.midiPath, AllTests.featurePath);
+        FeatureExtractor fextract = extractChords(General.midiPath, General.featurePath);
         //Print all average features
         System.out.println(fextract.getAverageFeatures());
     }
 
     public static FeatureExtractor extractChords(String midiPath, String featureFolderPath) {
 
-        File[] midiFileArray = AllTests.getFileArrayFromPathString(midiPath);
+        File[] midiFileArray = General.getFileArrayFromPathString(midiPath);
         File featureFolder = new File(featureFolderPath);
 
         //true stands for overwrite XML files

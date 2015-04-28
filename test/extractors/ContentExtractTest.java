@@ -26,27 +26,33 @@ package extractors;
 import java.io.File;
 import java.util.ArrayList;
 import music.elements.Sequence;
-import music.extractors.chord.ChordExtractorMain;
-import run.AllTests;
+import music.extractors.content.ContentExtractor;
+import testvars.General;
 
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
-public class ChordExtractorTest {
+public class ContentExtractTest {
 
     public static void main(String[] args) {
-        ArrayList<Sequence> sequences = extractChords(AllTests.midiPath);
-        //Print chord sequences
-        System.out.println("Printing all extracted chord sequences...");
-        for (Sequence sequence : sequences) {
-            System.out.println("Source: " + sequence.getMIDISource() + ", harmony channel " + sequence.getHarmonyChannel() + ", song key: " + sequence.getSongKey().toString() + "\n"
-                    + "Sequence: " + sequence.toString() + "\n");
-        }
-    }
 
-    public static ArrayList<Sequence> extractChords(String fileOrFolderPath) {
-        File[] midiFileArray = AllTests.getFileArrayFromPathString(fileOrFolderPath);
-        return ChordExtractorMain.extractChordsFromMidiFiles(midiFileArray, null);
+        File[] midiFileArray = General.getFileArrayFromPathString(General.midiPath);
+        ContentExtractor cextract = new ContentExtractor(midiFileArray, null);
+
+        ArrayList<Sequence> harmonySequences = cextract.getHarmonySequences();
+        ArrayList<Sequence> melodySequences = cextract.getMelodySequences();
+
+        //Print chord sequences
+        System.out.println("\nPrinting all extracted HARMONY sequences...\n");
+        for (Sequence sequence : harmonySequences) {
+            System.out.println("\tSource: " + sequence.getMIDISource() + ", winning harmony channel " + sequence.getMIDIChannel() + ", song key: " + sequence.getSongKey().toString() + "\n"
+                    + "\tChord Sequence: " + sequence.toString() + "\n");
+        }
+        System.out.println("\nPrinting all extracted MELODY sequences...\n");
+        for (Sequence sequence : melodySequences) {
+            System.out.println("\tSource: " + sequence.getMIDISource() + ", winning melody channel " + sequence.getMIDIChannel() + ", song key: " + sequence.getSongKey().toString() + "\n"
+                    + "\tNote Sequence: " + sequence.toString() + "\n");
+        }
     }
 }

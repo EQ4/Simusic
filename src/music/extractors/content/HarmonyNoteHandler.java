@@ -21,17 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package music.extractors.chord;
+package music.extractors.content;
 
 import music.elements.Chord;
 import java.util.*;
+import music.elements.Note;
 
 /**
  * Chord recognizer for a single file
  * Transposes the song into C Major / A Minor for consistency
  * @author Martin Minovski <martin at minovski.net>
  */
-public class NoteHandler {
+public class HarmonyNoteHandler {
 
     final boolean DEBUG = false;
     int base;
@@ -41,7 +42,7 @@ public class NoteHandler {
     /**
      * Default constructor
      */
-    public NoteHandler() {
+    public HarmonyNoteHandler() {
         base = 128;
         notes = new ArrayList<Integer>();
         lastChord = "";
@@ -122,14 +123,14 @@ public class NoteHandler {
      * Employs the chord DB
      * @param sequence
      */
-    public void actionMethod(ArrayList<Chord> sequence) {
+    public void harmonyAction(ArrayList<Chord> sequence) {
 
         List<Integer> workingList = getCurrentNotesCondensed();
         Collections.sort(workingList);
         //printNotes(workingList);
 
 
-        ChordDatabase chordDB = new ChordDatabase();
+        HarmonyDatabase chordDB = new HarmonyDatabase();
         String chordString = chordDB.getChord(workingList, base);
 
         if (!chordString.isEmpty()) {
@@ -139,4 +140,5 @@ public class NoteHandler {
             lastChord = chordString;
         }
     }
+    
 }

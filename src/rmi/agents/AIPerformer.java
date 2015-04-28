@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import music.elements.Chord;
 import music.elements.Sequence;
-import music.extractors.chord.ChordExtractorMain;
+import music.extractors.content.ContentExtractor;
 import music.extractors.feature.FeatureExtractor;
 import music.markov.MarkovModel;
 import rmi.interfaces.AgentInterface;
@@ -102,7 +102,8 @@ public class AIPerformer extends Agent {
     public void loadAgent() {
         //Extract chords
         log("Extracting chord sequences from MIDI files...", false);
-        chords = ChordExtractorMain.extractChordsFromMidiFiles(midiFiles, this);
+        ContentExtractor cextract = new ContentExtractor(midiFiles, this);
+        chords = cextract.getHarmonySequences();
         log("Chord sequences extracted!", false);
 
         //Extract features

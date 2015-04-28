@@ -21,9 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package music.extractors.chord;
+package music.extractors.content;
 
-import music.extractors.chord.NoteHandler;
 import music.elements.Chord;
 import java.io.File;
 import java.util.ArrayList;
@@ -34,77 +33,51 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
+import music.elements.Note;
+import static run.Main.NOTE_OFF;
+import static run.Main.NOTE_ON;
 
 /**
  * Helper chord scanner class
+ *
  * @author Martin Minovski <martin at minovski.net>
  */
-public class ChordScanner {
+public class SequentialScanner {
 
-    /**
-     * Logs rankings
-     */
-    public static final boolean printRankings = false;
-
-    /**
-     * If false, the notes of all channels will be used as harmony
-     * Do not change
-     */
-    public static final boolean useSingleChannel = true;
-
-    /**
-     * MIDI Note On Value
-     */
-    public static final int NOTE_ON = 0x90;
-
-    /**
-     * MIDI Note Off Value
-     */
-    public static final int NOTE_OFF = 0x80;
-
-    /**
-     * The ChordRecognizer Instance
-     */
-    public NoteHandler recognizer = new NoteHandler();
+    ChannelRanking ranking;
+    public HarmonyNoteHandler harmonyHandler = new HarmonyNoteHandler();
     ArrayList<Chord> chordSequence;
-    private int channelNumber = 0;
+    ArrayList<Note> noteSequence;
 
-    private void noteOn(int note, int channel) {
-        if ((channel == channelNumber) || (!useSingleChannel)) {
-            recognizer.addNote(note);
-            recognizer.actionMethod(chordSequence);
-        }
-    }
-
-    private void noteOff(int note, int channel) {
-        if ((channel == channelNumber) || (!useSingleChannel)) {
-            recognizer.removeNote(note);
-            recognizer.actionMethod(chordSequence);
-        }
-    }
+    //Melody line variables
+    private boolean melodyLineLock;
+    private int lastMelodyPitchValue;
 
     /**
      * Default constructor - scans a single file
+     *
      * @param path The file to scan
-     * @throws Exception In every life we have some trouble, and if you worry you make it double. Don't worry. Be happy.
+     * @throws Exception In every life we have some trouble, and if you worry
+     * you make it double. Don't worry. Be happy.
      */
-    public ChordScanner(String path) throws Exception {
-
-        chordSequence = new ArrayList<>();
-
+    public SequentialScanner(String path) throws Exception {
         Sequence sequence = MidiSystem.getSequence(new File(path));
 
-        ChannelRanking ranking = new ChannelRanking(sequence);
-        channelNumber = ranking.getWinningChannel();
+        // Get the melody and harmony rankings
+        this.ranking = new ChannelRanking(sequence);
 
+        // Initializes content sequences
+        this.chordSequence = new ArrayList<>();
+        this.noteSequence = new ArrayList<>();
+        this.melodyLineLock = false;
 
+        // Main scan loop for harmony and melody
         for (Track track : sequence.getTracks()) {
             for (int i = 0; i < track.size(); i++) {
                 MidiEvent event = track.get(i);
                 MidiMessage message = event.getMessage();
                 if (message instanceof ShortMessage) {
                     ShortMessage sm = (ShortMessage) message;
-
                     if ((sm.getCommand() == NOTE_ON) && (sm.getData2() != 0)) {
                         noteOn(sm.getData1(), sm.getChannel());
                     } else if ((sm.getCommand() == NOTE_ON) || (sm.getCommand() == NOTE_OFF)) {
@@ -115,15 +88,53 @@ public class ChordScanner {
         }
     }
 
+    private void noteOn(int note, int channel) {
+        if (channel == ranking.getWinningHarmonyChannel()) {
+            harmonyHandler.addNote(note);
+            harmonyHandler.harmonyAction(chordSequence);
+        }
+        if (channel == ranking.getWinningMelodyChannel()) {
+            //If melody lock is free, obtain it
+            //Also note should be different from last melody note
+            if ((!melodyLineLock) && (note % 12 != lastMelodyPitchValue % 12)) {
+                melodyLineLock = true;
+                lastMelodyPitchValue = note;
+                noteSequence.add(Note.integerToNewNote(note));
+            }
+        }
+    }
+
+    private void noteOff(int note, int channel) {
+        if (channel == ranking.getWinningHarmonyChannel()) {
+            harmonyHandler.removeNote(note);
+            harmonyHandler.harmonyAction(chordSequence);
+        }
+        if (channel == ranking.getWinningMelodyChannel()) {
+            if ((melodyLineLock) && (note == lastMelodyPitchValue)) {
+                // If the unplayed note equals the last melody note, release melody lock
+                melodyLineLock = false;
+            }
+        }
+    }
+
     /**
      * Returns the chord sequence of the song
+     *
      * @return
      */
-    public ArrayList<Chord> getSequence() {
+    public ArrayList<Chord> getHarmonySequence() {
         return chordSequence;
     }
-    
-    public int getWinningChannel() {
-        return channelNumber;
+
+    public ArrayList<Note> getMelodySequence() {
+        return noteSequence;
+    }
+
+    public int getWinningHarmonyChannel() {
+        return ranking.getWinningHarmonyChannel();
+    }
+
+    public int getWinningMelodyChannel() {
+        return ranking.getWinningMelodyChannel();
     }
 }

@@ -128,7 +128,7 @@ public class Chord extends Playable implements Serializable {
      */
     @Override
     public Playable getNewPlayableFromMarkovNumeric(int numeric) {
-        String newLetter = Note.integerToNote(numeric % 12);
+        String newLetter = Note.integerToNoteString(numeric % 12);
         String newMode = (numeric >= 12) ? "maj" : "min";
         return new Chord(newLetter, newMode);
     }

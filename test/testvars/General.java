@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package run;
+package testvars;
 
-import extractors.ChordExtractorTest;
+import extractors.ContentExtractTest;
 import java.io.File;
 import music.elements.Chord;
 import java.util.*;
 import music.markov.MarkovModel;
-import music.extractors.chord.ChordExtractorMain;
+import music.extractors.content.ContentExtractor;
 import music.elements.Playable;
 import music.elements.Sequence;
 import music.extractors.feature.FeatureExtractor;
@@ -44,9 +44,10 @@ import sun.audio.AudioStream;
  *
  * @author Martin
  */
-public class AllTests {
+public class General {
 
-    public static String midiPath = "runtime/test_files/midi";
+    //public static String midiPath = "runtime/test_files/midi/imagine.mid";
+    public static String midiPath = "runtime/sample_agents/_Einstein";
     public static String featurePath = "runtime/test_files/features";
 
     /**
@@ -54,7 +55,8 @@ public class AllTests {
      * @param args
      */
     public static void main(String[] args) {
-
+        // Nothing - this class is used to hold static test variables. 
+        // To test, run files in other test packages.
     }
 
     public static File[] getFileArrayFromPathString(String path) {
