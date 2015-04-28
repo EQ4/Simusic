@@ -1,7 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package rmi.agents.registry;
 
@@ -35,7 +53,7 @@ import rmi.agents.monitor.AgentDummyLink.AgentLinkType;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
 public class RegistryDaemon extends UnicastRemoteObject implements RegistryInterface {
 
@@ -58,6 +76,11 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     HashMap<String, Double> sessionFeatures;
 
+    /**
+     *
+     * @param frame
+     * @throws RemoteException
+     */
     public RegistryDaemon(RegistryFrame frame) throws RemoteException {
         super(frame.registryServicePort);
         this.frame = frame;
@@ -66,6 +89,16 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         populateSessionFeatures();
     }
 
+    /**
+     *
+     * @param agentType
+     * @param agentName
+     * @param agentIP
+     * @param agentPort
+     * @param masterMonitorID
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public synchronized UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException {
         //If performance has started, no more agents can connect
@@ -129,6 +162,10 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         }
     }
 
+    /**
+     *
+     * @throws RemoteException
+     */
     public synchronized void triggerGlobalUpdate() throws RemoteException {
         for (AgentInterface agent : frame.agentConnections) {
             if (agent != null) {
@@ -160,17 +197,34 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         return (latencySum / LATENCY_PINGS_PER_AGENT) / 2;
     }
 
+    /**
+     *
+     * @param id
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public boolean ping(int id) throws RemoteException {
         frame.log("Agent " + id + " pinged and got ponged!", false);
         return true;
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public boolean isPerforming() throws RemoteException {
         return isPerforming;
     }
 
+    /**
+     *
+     * @param id
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public synchronized boolean disconnect(int id) throws RemoteException {
         AgentDummy agent = frame.agentDummies.get(id);
@@ -185,22 +239,45 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         return true;
     }
 
+    /**
+     *
+     * @param sender
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public String sayHello(String sender) throws RemoteException {
         frame.log(sender + " says hi!", false);
         return "Hello from registry!";
     }
 
+    /**
+     *
+     * @param message
+     * @param loggerID
+     * @throws RemoteException
+     */
     @Override
     public void log(String message, int loggerID) throws RemoteException {
         frame.log("<" + frame.agentDummies.get(loggerID).name + "> " + message, false);
     }
 
+    /**
+     *
+     * @param agentID
+     * @return
+     */
     @Override
     public AgentDummy getAgentDummyByID(int agentID) {
         return frame.agentDummies.get(agentID);
     }
 
+    /**
+     *
+     * @param fromAgentID
+     * @param toAgentID
+     * @throws RemoteException
+     */
     @Override
     public void reportNeighbourConnection(int fromAgentID, int toAgentID) throws RemoteException {
         int newLinkID = frame.agentDummyLinks.size();
@@ -211,12 +288,24 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         triggerGlobalUpdate();
     }
 
+    /**
+     *
+     * @param agentID
+     * @throws RemoteException
+     */
     @Override
     public void agentLoaded(int agentID) throws RemoteException {
         frame.agentDummies.get(agentID).isReady = true;
         triggerGlobalUpdate();
     }
 
+    /**
+     *
+     * @param agentID
+     * @param featureValues
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public AgentDummy getRoleModel(int agentID, Double[] featureValues) throws RemoteException {
         AgentDummy roleModel = null;
@@ -253,6 +342,11 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         return roleModel;
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public String startPerformance() throws RemoteException {
         //Check if there is at least one AI agent
@@ -379,6 +473,11 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         return null;
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public String stopPerformance() throws RemoteException {
         //Perform "can stop" check

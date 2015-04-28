@@ -1,7 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package rmi.agents.registry;
 
@@ -23,26 +41,76 @@ import run.Main;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
 public class RegistryFrame extends javax.swing.JFrame implements Runnable {
 
     static final int DISCONNECT_REQUEST_WAIT_TIME = 500;
     static final int DISCONNECT_REQUEST_ATTEMPTS = 5;
     
+    /**
+     *
+     */
     public boolean lock;
+
+    /**
+     *
+     */
     public ArrayList<AgentInterface> agentConnections;
+
+    /**
+     *
+     */
     public ArrayList<AgentDummy> agentDummies;
+
+    /**
+     *
+     */
     public ArrayList<AgentDummyLink> agentDummyLinks;
     
+    /**
+     *
+     */
     public String registryIPAddress;
+
+    /**
+     *
+     */
     public String registryName;
+
+    /**
+     *
+     */
     public String registryFullAddress;
+
+    /**
+     *
+     */
     public int registryPort;
+
+    /**
+     *
+     */
     public int registryServicePort;
+
+    /**
+     *
+     */
     public RegistryDaemon registryDaemon;
+
+    /**
+     *
+     */
     public java.rmi.registry.Registry rmiRegistryLocation;
     
+    /**
+     *
+     * @param registryIPAddress
+     * @param registryName
+     * @param registryPort
+     * @param registryServicePort
+     * @throws RemoteException
+     */
     public RegistryFrame(String registryIPAddress, String registryName, int registryPort, int registryServicePort) throws RemoteException {
         initComponents();
         Main.windowsOpened++;
@@ -68,6 +136,9 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         
     }
     
+    /**
+     *
+     */
     public void startDaemon() {
         Thread daemonThread = new Thread(this);
         daemonThread.setDaemon(true);
@@ -148,6 +219,11 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
     }
     
+    /**
+     *
+     * @param message
+     * @param precise
+     */
     public void log(String message, boolean precise) {
         registryLog.append(Main.getCurrentTimestamp(precise) + message + "\n");
     }

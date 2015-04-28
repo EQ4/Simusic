@@ -1,7 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package rmi.agents;
 
@@ -14,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import music.elements.Chord;
 import music.elements.Sequence;
-import music.extractors.chord.ChordExtractor;
+import music.extractors.chord.ChordExtractorMain;
 import music.extractors.feature.FeatureExtractor;
 import music.markov.MarkovModel;
 import rmi.interfaces.AgentInterface;
@@ -28,9 +46,9 @@ import run.Main;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
-public class Computer extends Agent {
+public class AIPerformer extends Agent {
 
     private File[] midiFiles;
     private File featuresFolder;
@@ -47,7 +65,19 @@ public class Computer extends Agent {
     AgentDummy roleModelDummy;
     AgentInterface roleModelConnection;
 
-    public Computer(String name, String registryURL, String ip, int port, int servicePort, int masterMonitorID, File[] midiFiles, int markovChordModelMaxDepth) throws RemoteException {
+    /**
+     *
+     * @param name
+     * @param registryURL
+     * @param ip
+     * @param port
+     * @param servicePort
+     * @param masterMonitorID
+     * @param midiFiles
+     * @param markovChordModelMaxDepth
+     * @throws RemoteException
+     */
+    public AIPerformer(String name, String registryURL, String ip, int port, int servicePort, int masterMonitorID, File[] midiFiles, int markovChordModelMaxDepth) throws RemoteException {
         super(name, registryURL, ip, port, servicePort, masterMonitorID);
 
         //Get paths
@@ -65,11 +95,14 @@ public class Computer extends Agent {
         this.isLoading = true;
     }
 
+    /**
+     *
+     */
     @Override
     public void loadAgent() {
         //Extract chords
         log("Extracting chord sequences from MIDI files...", false);
-        chords = ChordExtractor.extractChordsFromMidiFiles(midiFiles, this);
+        chords = ChordExtractorMain.extractChordsFromMidiFiles(midiFiles, this);
         log("Chord sequences extracted!", false);
 
         //Extract features
@@ -108,7 +141,14 @@ public class Computer extends Agent {
     }
 
     //Sent by other AI agents to become neighbours
-    @Override
+
+    /**
+     *
+     * @param neighbourID
+     * @return
+     * @throws RemoteException
+     */
+        @Override
     public boolean connectNeighbour(int neighbourID) throws RemoteException {
         AgentDummy newNeighbourDummy = registryConnection.getAgentDummyByID(neighbourID);
         AgentInterface newNeighbourConnection = (AgentInterface) RMIconnect(newNeighbourDummy.getRMIAddress());
@@ -122,6 +162,13 @@ public class Computer extends Agent {
         return false;
     }
 
+    /**
+     *
+     * @param auctionType
+     * @param args
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public synchronized AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException {
         AuctionMessage resultMessage = new AuctionMessage(auctionType);
@@ -211,17 +258,31 @@ public class Computer extends Agent {
         return resultMessage;
     }
 
+    /**
+     *
+     * @param currentTempo
+     * @throws RemoteException
+     */
     @Override
     public void performanceStarted(int currentTempo) throws RemoteException {
         this.currentTempo = currentTempo;
         log("Performance started with tempo " + currentTempo + ", beat period " + Main.getBeatPeriod(currentTempo), false);
     }
 
+    /**
+     *
+     * @throws RemoteException
+     */
     @Override
     public void performanceStopped() throws RemoteException {
         log("Performance stopped!", false);
     }
 
+    /**
+     *
+     * @param chord
+     * @throws RemoteException
+     */
     @Override
     public void beat(Chord chord) throws RemoteException {
         new Thread() {
@@ -239,6 +300,10 @@ public class Computer extends Agent {
         }.start();
     }
 
+    /**
+     *
+     * @throws RemoteException
+     */
     @Override
     public void playSolo() throws RemoteException {
         // TODO: Play solo using beatPeriod 
@@ -252,11 +317,20 @@ public class Computer extends Agent {
         log("I finished soloing!", true);
     }
 
+    /**
+     *
+     * @return
+     */
     @Override
     public AgentType getAgentType() {
         return AgentType.AIPerformer;
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public String getAgentTypeSpecificInfo() throws RemoteException {
         String result = "I am AI agent!\n";
@@ -271,6 +345,12 @@ public class Computer extends Agent {
         return result;
     }
 
+    /**
+     *
+     * @param featureName
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public Double getAverageFeature(String featureName) throws RemoteException {
         if (fextract.hasFeature(featureName)) {

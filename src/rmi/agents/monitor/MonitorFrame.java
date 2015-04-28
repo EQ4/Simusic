@@ -1,7 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package rmi.agents.monitor;
 
@@ -54,8 +72,8 @@ import enums.AgentType;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
 import rmi.agents.Agent;
-import rmi.agents.Computer;
-import rmi.agents.Human;
+import rmi.agents.AIPerformer;
+import rmi.agents.HumanPerformer;
 import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
 import rmi.agents.registry.RegistryDaemon;
@@ -64,25 +82,70 @@ import run.Main;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
 public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     static final int NEW_AGENT_INITIALIZE_TIME = 200;
 
+    /**
+     *
+     */
     public RegistryInterface registryConnection;
+
+    /**
+     *
+     */
     public String registryURL;
+
+    /**
+     *
+     */
     public Integer monitorID;
+
+    /**
+     *
+     */
     public int updateDelay;
+
+    /**
+     *
+     */
     public String monitorRMIAddress;
+
+    /**
+     *
+     */
     public String selectedIPInterface;
+
+    /**
+     *
+     */
     public String monitorName;
+
+    /**
+     *
+     */
     public int monitorPort;
+
+    /**
+     *
+     */
     public int monitorServicePort;
 
+    /**
+     *
+     */
     public MonitorDaemon monitorDaemon;
+
+    /**
+     *
+     */
     public java.rmi.registry.Registry rmiRegistryLocation;
 
+    /**
+     *
+     */
     public HashMap<Integer, AgentInterface> spawnedAgentConnections;
 
     @Override
@@ -112,6 +175,9 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         }
     }
 
+    /**
+     *
+     */
     public MonitorFrame() {
         initComponents();
         Main.windowsOpened++;
@@ -133,6 +199,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     public boolean pingRegistry() throws RemoteException {
         if (registryConnection == null) {
             return false;
@@ -140,10 +211,20 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         return registryConnection.ping(monitorID);
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     public boolean isAssignedID() throws RemoteException {
         return (monitorID != null);
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     public boolean checkConnection() throws RemoteException {
         boolean truthValue = (pingRegistry() && isAssignedID());
         if (truthValue) {
@@ -294,12 +375,12 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 }
                 
                 //Create agent
-                newAgent = new Computer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, agentFiles, Integer.parseInt(maxMarkovChainLevel));
+                newAgent = new AIPerformer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, agentFiles, Integer.parseInt(maxMarkovChainLevel));
             } else {
                 //TODO: Select USB MIDI interface
 
                 //Create agent
-                newAgent = new Human(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
+                newAgent = new HumanPerformer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID);
             }
             newAgent.start();
             //Wait for agent to initialize
@@ -326,6 +407,11 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         }
     }
 
+    /**
+     *
+     * @param message
+     * @param precise
+     */
     public void log(String message, boolean precise) {
         logField.append(Main.getCurrentTimestamp(precise) + message + "\n");
     }
@@ -334,6 +420,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         alert("Testing");
     }
 
+    /**
+     *
+     * @param status
+     */
     public void setPerformingStatus(boolean status) {
         startPerformanceItem.setEnabled(!status);
         stopPerformanceItem.setEnabled(status);
@@ -368,6 +458,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         return result.toArray(new String[result.size()]);
     }
 
+    /**
+     *
+     * @throws RemoteException
+     */
     public void disconnect() throws RemoteException {
         try {
             registryConnection.disconnect(monitorID);
@@ -1006,7 +1100,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                             midiFiles.add(file);
                         }
                     }
-                    Agent newAgent = new Computer(agentFolder.getName().replace(" ", ""), registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, midiFiles.toArray(new File[midiFiles.size()]), Integer.parseInt(maxMarkovChainLevel));
+                    Agent newAgent = new AIPerformer(agentFolder.getName().replace(" ", ""), registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, midiFiles.toArray(new File[midiFiles.size()]), Integer.parseInt(maxMarkovChainLevel));
                     newAgent.start();
                     //Wait for agent to initialize
                     Main.wait(NEW_AGENT_INITIALIZE_TIME);

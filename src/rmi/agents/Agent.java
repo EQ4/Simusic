@@ -1,7 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package rmi.agents;
 
@@ -19,39 +37,115 @@ import run.Main;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
 public abstract class Agent extends UnicastRemoteObject implements Runnable, AgentInterface {
     
+    /**
+     *
+     */
     public String name;
+
+    /**
+     *
+     */
     public int agentID;
+
+    /**
+     *
+     */
     public String ip;
+
+    /**
+     *
+     */
     public int port;
+
+    /**
+     *
+     */
     public int servicePort;
+
+    /**
+     *
+     */
     public String agentRmiAddress;
+
+    /**
+     *
+     */
     public String registryURL;
+
+    /**
+     *
+     */
     public int masterMonitorID;
     
     private java.rmi.registry.Registry rmiRegistryLocation;
+
+    /**
+     *
+     */
     public HashMap<Integer, AgentInterface> neighbourConnections;
+
+    /**
+     *
+     */
     public HashMap<Integer, AgentDummy> neighbourDummies;
+
+    /**
+     *
+     */
     public RegistryInterface registryConnection;
 
     //Abstract methods
-    @Override
+
+    /**
+     *
+     * @throws RemoteException
+     */
+        @Override
     public abstract void loadAgent() throws RemoteException;
     
+    /**
+     *
+     * @return
+     */
     public abstract AgentType getAgentType();
     
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
     
+    /**
+     *
+     * @param initialTempo
+     * @throws RemoteException
+     */
     @Override
     public abstract void performanceStarted(int initialTempo) throws RemoteException;
     
+    /**
+     *
+     * @throws RemoteException
+     */
     @Override
     public abstract void performanceStopped() throws RemoteException;
     
+    /**
+     *
+     * @param name
+     * @param registryURL
+     * @param ip
+     * @param port
+     * @param servicePort
+     * @param masterMonitorID
+     * @throws RemoteException
+     */
     public Agent(String name, String registryURL, String ip, int port, int servicePort, int masterMonitorID) throws RemoteException {
         super(servicePort);
         this.name = name;
@@ -66,6 +160,9 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         this.neighbourDummies = new HashMap<>();
     }
     
+    /**
+     *
+     */
     public void start() {
         Thread agentDaemon = new Thread(this);
         agentDaemon.setDaemon(true);
@@ -85,6 +182,11 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         }
     }
     
+    /**
+     *
+     * @param url
+     * @return
+     */
     public Object RMIconnect(String url) {
         try {
             return Naming.lookup(url);
@@ -107,14 +209,30 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         registryConnection.disconnect(agentID);
     }
     
+    /**
+     *
+     * @param message
+     * @param precise
+     */
     public void log(String message, boolean precise) {
         System.out.println(Main.getCurrentTimestamp(precise) + "<" + name + ", " + getAgentType().toString() + " #" + agentID + "> " + message);
     }
     
+    /**
+     *
+     * @param logMessage
+     * @throws RemoteException
+     */
     public void logInRegistry(String logMessage) throws RemoteException {
         registryConnection.log(logMessage, agentID);
     }
     
+    /**
+     *
+     * @param message
+     * @param senderID
+     * @throws RemoteException
+     */
     @Override
     public void unicast(String message, int senderID) throws RemoteException {
         String logMessage;
@@ -129,7 +247,13 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     //Sent by registry or monitor to
-    @Override
+
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
+        @Override
     public boolean shutdown() throws RemoteException {
         logInRegistry("Shutdown triggered by master monitor #" + masterMonitorID);
         disconnectFromRegistry();
@@ -144,6 +268,11 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         return true;
     }
     
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public boolean ping() throws RemoteException {
         log("Someone pinged me!", false);
@@ -151,9 +280,22 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     //Sent by other AI agents to become neighbours
-    @Override
+
+    /**
+     *
+     * @param neighbourID
+     * @return
+     * @throws RemoteException
+     */
+        @Override
     public abstract boolean connectNeighbour(int neighbourID) throws RemoteException;
     
+    /**
+     *
+     * @param agentID
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public boolean disconnectNeighbour(int agentID) throws RemoteException {
         //To do in future
@@ -162,12 +304,22 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         return true;
     }
     
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public String sayHello() throws RemoteException {
         log("Someone said hi!", false);
         return "Hi from " + name + "!";
     }
     
+    /**
+     *
+     * @param update
+     * @throws RemoteException
+     */
     @Override
     public void update(UpdateMessage update) throws RemoteException {
         //TODO: Check dummies and links for ones that contain this agent

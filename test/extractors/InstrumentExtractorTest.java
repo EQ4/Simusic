@@ -21,23 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package enums;
-
-import java.io.Serializable;
+package extractors;
 
 /**
- * Auction type enum
+ *
  * @author Martin Minovski <martin at minovski.net>
  */
-public enum AuctionType implements Serializable {
-
-    /**
-     * Chord auction
-     */
-    ChordAuction,
-
-    /**
-     * Feature auction
-     */
-    FeatureAuction
+public class InstrumentExtractorTest {
+    
 }

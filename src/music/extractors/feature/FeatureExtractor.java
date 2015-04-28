@@ -1,6 +1,25 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package music.extractors.feature;
 
@@ -14,7 +33,7 @@ import rmi.agents.Agent;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
 public class FeatureExtractor {
 
@@ -25,6 +44,13 @@ public class FeatureExtractor {
     ArrayList<String> listOfSongNames;
     int numberOfSongs;
 
+    /**
+     *
+     * @param midiFiles
+     * @param featureFolder
+     * @param overwrite
+     * @param callingAgent
+     */
     public FeatureExtractor(File[] midiFiles, File featureFolder, boolean overwrite, Agent callingAgent) {
         boolean agentIsLogging = (callingAgent != null);
 
@@ -139,24 +165,49 @@ public class FeatureExtractor {
         }
     }
 
+    /**
+     *
+     * @param songNumber
+     * @param featureName
+     * @return
+     */
     public double getFeatureValue(int songNumber, String featureName) {
         //return listOfSongMapsOfFeatures.get(songNumber).get(featureName);
         return mapOfSongListsOfFeatures.get(featureName).get(songNumber);
     }
 
+    /**
+     *
+     * @param featureName
+     * @return
+     */
     public double getAverageFeatureValue(String featureName) {
         //return listOfSongMapsOfFeatures.get(songNumber).get(featureName);
         return mapOfAverageFeatures.get(featureName);
     }
 
+    /**
+     *
+     * @param songNumber
+     * @return
+     */
     public String getSongName(int songNumber) {
         return listOfSongNames.get(songNumber);
     }
 
+    /**
+     *
+     * @param songNumber
+     * @param featureName
+     */
     public void printFeature(int songNumber, String featureName) {
         System.out.println(featureName + " of " + getSongName(songNumber) + ": " + getFeatureValue(songNumber, featureName));
     }
 
+    /**
+     *
+     * @return
+     */
     public int getNumberOfSongs() {
         return numberOfSongs;
     }
@@ -172,6 +223,10 @@ public class FeatureExtractor {
         return sum;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getAverageFeatures() {
         String result = "\n\n--Listing Average Features:\n";
         for (Map.Entry<String, Double> entry : mapOfAverageFeatures.entrySet()) {
@@ -180,10 +235,19 @@ public class FeatureExtractor {
         return result + "\n";
     }
 
+    /**
+     *
+     * @return
+     */
     public Double[] getAverageFeatureValues() {
         return mapOfAverageFeatures.values().toArray(new Double[mapOfAverageFeatures.size()]);
     }
 
+    /**
+     *
+     * @param featureName
+     * @return
+     */
     public boolean hasFeature(String featureName) {
         return mapOfAverageFeatures.containsKey(featureName);
     }

@@ -21,23 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package enums;
+package extractors;
 
-import java.io.Serializable;
+import java.io.File;
+import java.util.ArrayList;
+import music.elements.Sequence;
+import music.extractors.chord.ChordExtractorMain;
+import run.AllTests;
 
 /**
- * Auction type enum
+ *
  * @author Martin Minovski <martin at minovski.net>
  */
-public enum AuctionType implements Serializable {
+public class ChordExtractorTest {
 
-    /**
-     * Chord auction
-     */
-    ChordAuction,
+    public static void main(String[] args) {
+        ArrayList<Sequence> sequences = extractChords(AllTests.midiPath);
+        //Print chord sequences
+        System.out.println("Printing all extracted chord sequences...");
+        for (Sequence sequence : sequences) {
+            System.out.println("Source: " + sequence.getMIDISource() + ", harmony channel " + sequence.getHarmonyChannel() + ", song key: " + sequence.getSongKey().toString() + "\n"
+                    + "Sequence: " + sequence.toString() + "\n");
+        }
+    }
 
-    /**
-     * Feature auction
-     */
-    FeatureAuction
+    public static ArrayList<Sequence> extractChords(String fileOrFolderPath) {
+        File[] midiFileArray = AllTests.getFileArrayFromPathString(fileOrFolderPath);
+        return ChordExtractorMain.extractChordsFromMidiFiles(midiFileArray, null);
+    }
 }

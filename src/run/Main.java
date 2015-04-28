@@ -1,7 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package run;
 
@@ -29,24 +47,55 @@ import rmi.agents.monitor.MonitorFrame;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
 public class Main {
 
+    /**
+     *
+     */
     public static final int DEFAULT_MARKOV_DEPTH = 3;
+
+    /**
+     *
+     */
     public static final int MIN_PORT = 51000;
+
+    /**
+     *
+     */
     public static final int MAX_PORT = 59000;
+
+    /**
+     *
+     */
     public static final int ROUNDING_DIGITS = 1000;
 
+    /**
+     *
+     */
     public static String[] names;
+
+    /**
+     *
+     */
     public static Random rand;
+
+    /**
+     *
+     */
     public static int windowsOpened;
+
+    /**
+     *
+     */
     public static Player player;
 
     private static MonitorFrame mainMonitorFrame;
 
     /**
      * @param args the command line arguments
+     * @throws java.rmi.RemoteException
      */
     public static void main(String args[]) throws RemoteException {
         //Initialise static variables
@@ -102,6 +151,10 @@ public class Main {
         });
     }
 
+    /**
+     *
+     * @param window
+     */
     public static void closeWindow(JFrame window) {
         if (--windowsOpened == 0) {
             System.exit(1);
@@ -111,15 +164,33 @@ public class Main {
         window.dispose();
     }
 
+    /**
+     *
+     * @param ipAddress
+     * @param registryName
+     * @param regPort
+     * @param regSport
+     * @throws RemoteException
+     */
     public static void startLocalRegistryDaemon(String ipAddress, String registryName, int regPort, int regSport) throws RemoteException {
         RegistryFrame newRegistryFrame = new RegistryFrame(ipAddress, registryName, regPort, regSport);
         newRegistryFrame.startDaemon();
     }
 
+    /**
+     *
+     * @return
+     */
     public static int getRandomPort() {
         return MIN_PORT + rand.nextInt(MAX_PORT - MIN_PORT);
     }
 
+    /**
+     *
+     * @param filename
+     * @return
+     * @throws IOException
+     */
     public static String[] readLines(String filename) throws IOException {
         FileReader fileReader = new FileReader(filename);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -132,6 +203,10 @@ public class Main {
         return lines.toArray(new String[lines.size()]);
     }
 
+    /**
+     *
+     * @return
+     */
     public static String getRandomName() {
         return names[rand.nextInt(names.length)];
     }
@@ -149,20 +224,39 @@ public class Main {
         }
     }
 
+    /**
+     *
+     * @param precise
+     * @return
+     */
     public static String getCurrentTimestamp(boolean precise) {
         Date currentDate = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat(precise ? "HH:mm:ss.SSS" : "HH:mm:ss");
         return dateFormat.format(currentDate) + " ";
     }
 
+    /**
+     *
+     * @param value
+     * @return
+     */
     public static double getRoundedValue(double value) {
         return (double) Math.round(value * ROUNDING_DIGITS) / ROUNDING_DIGITS;
     }
 
+    /**
+     *
+     * @return
+     */
     public static File getRuntimeDir() {
         return new File("runtime");
     }
 
+    /**
+     *
+     * @param tempo
+     * @return
+     */
     public static int getBeatPeriod(int tempo) {
         double beatPeriod = (double) 1000 * ((double) 60 / (double) tempo);
         return (int) beatPeriod;

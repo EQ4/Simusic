@@ -1,6 +1,25 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package music.extractors.chord;
 
@@ -15,11 +34,19 @@ import rmi.agents.Agent;
 import sun.security.krb5.internal.SeqNumber;
 
 /**
- *
- * @author Martin
+ * Main Chord Extractor class
+ * Created and used by agents
+ * @author Martin Minovski <martin at minovski.net>
  */
-public class ChordExtractor {
+public class ChordExtractorMain {
 
+    /**
+     * Extracts chord sequences from MIDI files
+     * Lists the sequence of every file as a new Sequence object
+     * @param files The array of MIDI file paths to extract from
+     * @param callingAgent Callback agent object - used for logging
+     * @return An ArrayList of Chord Sequences
+     */
     public static ArrayList<Sequence> extractChordsFromMidiFiles(File[] files, Agent callingAgent) {
         boolean agentIsLogging = (callingAgent != null);
 
@@ -40,9 +67,9 @@ public class ChordExtractor {
                 if (files[i].isFile()) {
                     String file = files[i].getPath();
 
-                    ChordScanner ce = new ChordScanner(file);
+                    ChordScanner scanner = new ChordScanner(file);
 
-                    ArrayList<Chord> sequence = ce.getSequence();
+                    ArrayList<Chord> sequence = scanner.getSequence();
                     if (sequence.isEmpty()) {
                         //Commented out - the Markov model handles and records empty sequences
                         //Commented in  - exception occurs
@@ -61,6 +88,12 @@ public class ChordExtractor {
                         Chord chord = sequence.get(j);
                         normalizedSequence.addPlayable(chord.getTransposedTwinChord(songOffset));
                     }
+                    
+                    //Set winning channel (+ 1 because MIDI channels start from 1 outside programming)
+                    normalizedSequence.setHarmonyChannel(scanner.getWinningChannel() + 1);
+                    
+                    //Set song key
+                    normalizedSequence.setSongKey(songKey);
 
                 }
             } catch (Exception e) {
@@ -69,6 +102,7 @@ public class ChordExtractor {
                 }
                 e.printStackTrace();
             }
+            normalizedSequence.setMIDISource(files[i].getName());
             fullSequence.add(normalizedSequence);
         }
 

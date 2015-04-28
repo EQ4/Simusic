@@ -1,6 +1,25 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2015 Martin Minovski <martin at minovski.net>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package music.markov;
 
@@ -11,7 +30,7 @@ import java.util.*;
 
 /**
  *
- * @author Martin
+ * @author Martin Minovski <martin at minovski.net>
  */
 public class MarkovModel {
 
@@ -27,6 +46,11 @@ public class MarkovModel {
     private int emptyInputSequences;
     private int allPlayablesRecorded;
 
+    /**
+     *
+     * @param depth
+     * @param modelType
+     */
     public MarkovModel(int depth, Playable modelType) {
         this.modelType = modelType;
         this.depth = depth;
@@ -66,6 +90,10 @@ public class MarkovModel {
         return 1;
     }
 
+    /**
+     *
+     * @param inputSequences
+     */
     public void trainModel(ArrayList<Sequence> inputSequences) {
         this.inputSequences = inputSequences;
         for (Sequence sequence : inputSequences) {
@@ -103,10 +131,17 @@ public class MarkovModel {
         stream.add(playable);
     }
 
+    /**
+     *
+     * @param playable
+     */
     public void livePush(Playable playable) {
         recordPlayable(liveStream, playable);
     }
 
+    /**
+     *
+     */
     public void liveFlush() {
         liveStream.clear();
     }
@@ -136,6 +171,11 @@ public class MarkovModel {
         return row;
     }
 
+    /**
+     *
+     * @param queryDepth
+     * @return
+     */
     public ArrayList<Playable> getSortedProbabilities(int queryDepth) {
         ArrayList<Playable> result = getProbabilities(queryDepth);
         if (result == null) {
@@ -145,6 +185,11 @@ public class MarkovModel {
         return result;
     }
 
+    /**
+     *
+     * @param queryDepth
+     * @return
+     */
     public ArrayList<Playable> getProbabilities(int queryDepth) {
         if (queryDepth > depth) { // -1 ?
             //Error. Query depth cannot be larger than model depth
@@ -164,6 +209,11 @@ public class MarkovModel {
         return result;
     }
 
+    /**
+     *
+     * @param queryDepth
+     * @return
+     */
     public String printSortedPlayables(int queryDepth) {
         String result = ("Sorted probabilities for live sequence with depth " + queryDepth + "\n");
         Collection<Playable> markovOutput = getSortedProbabilities(queryDepth);
@@ -212,6 +262,9 @@ public class MarkovModel {
         return result.toString();
     }
 
+    /**
+     *
+     */
     public void printAllInputSequeces() {
         String result = "Input sequences:\n";
         for (int i = 0; i < inputSequences.size(); i++) {
@@ -225,6 +278,10 @@ public class MarkovModel {
         System.out.println(result);
     }
 
+    /**
+     *
+     * @return
+     */
     public ArrayList<Playable> getAllInputSequences() {
         ArrayList<Playable> result = new ArrayList<>();
         for (Sequence sequence : inputSequences) {
@@ -233,18 +290,33 @@ public class MarkovModel {
         return result;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getEmptyInputSequenceCount() {
         return emptyInputSequences;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getTableSize() {
         return markovTable.length;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getAllPlayablesRecorded() {
         return allPlayablesRecorded;
     }
 
+    /**
+     *
+     */
     public void testMethod() {
         int testSum = 0;
         for (int i = 1; i <= 5000; i++) {
@@ -254,7 +326,13 @@ public class MarkovModel {
     }
 
     //Added in April
-    public ArrayList<Playable> getProcessedProbabilities(int queryDepth) {
+
+    /**
+     *
+     * @param queryDepth
+     * @return
+     */
+        public ArrayList<Playable> getProcessedProbabilities(int queryDepth) {
         ArrayList<Playable> result = getProbabilities(queryDepth);
 
         for (int i = 0; i < length; i++) {
@@ -270,6 +348,10 @@ public class MarkovModel {
         return result;
     }
 
+    /**
+     *
+     * @return
+     */
     public ArrayList<Playable> getCondensedProcessedProbabilities() {
 
         ArrayList<Playable> utilities = new ArrayList<>();
@@ -296,12 +378,20 @@ public class MarkovModel {
         return utilities;
     }
 
+    /**
+     *
+     * @return
+     */
     public ArrayList<Playable> getCondensedProcessedSortedProbabilities() {
         ArrayList<Playable> result = getCondensedProcessedProbabilities();
         Collections.sort(result);
         return result;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getCondensedProcessedSortedProbabilityString() {
         String result = "\n\n--Initial playable probabilities:\n" + printSortedPlayables(0) + "\n";
         result += "Next playable condensed probabilities:\n";
@@ -313,10 +403,18 @@ public class MarkovModel {
         return result;
     }
 
+    /**
+     *
+     * @return
+     */
     public Playable getTopCondensedProcessedPlayable() {
         return getCondensedProcessedSortedProbabilities().get(0);
     }
 
+    /**
+     *
+     * @return
+     */
     public Playable getNextPlayable() {
         Playable nextPlayable = getTopCondensedProcessedPlayable();
         return nextPlayable;

@@ -21,23 +21,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package enums;
+package run;
 
-import java.io.Serializable;
+import extractors.ChordExtractorTest;
+import java.io.File;
+import music.elements.Chord;
+import java.util.*;
+import music.markov.MarkovModel;
+import music.extractors.chord.ChordExtractorMain;
+import music.elements.Playable;
+import music.elements.Sequence;
+import music.extractors.feature.FeatureExtractor;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import music.player.Player;
+import run.Main;
+import static run.Main.player;
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
 
 /**
- * Auction type enum
- * @author Martin Minovski <martin at minovski.net>
+ *
+ * @author Martin
  */
-public enum AuctionType implements Serializable {
+public class AllTests {
+
+    public static String midiPath = "runtime/test_files/midi";
+    public static String featurePath = "runtime/test_files/features";
 
     /**
-     * Chord auction
+     *
+     * @param args
      */
-    ChordAuction,
+    public static void main(String[] args) {
 
-    /**
-     * Feature auction
-     */
-    FeatureAuction
+    }
+
+    public static File[] getFileArrayFromPathString(String path) {
+        File inputPath = new File(path);
+        File[] fileArray;
+        if (inputPath.isDirectory()) {
+            fileArray = inputPath.listFiles();
+        } else {
+            fileArray = new File[]{inputPath};
+        }
+        return fileArray;
+    }
+
 }

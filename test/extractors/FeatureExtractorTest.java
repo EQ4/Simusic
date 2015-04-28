@@ -21,23 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package enums;
+package extractors;
 
-import java.io.Serializable;
+import java.io.File;
+import music.extractors.feature.FeatureExtractor;
+import run.AllTests;
 
 /**
- * Auction type enum
+ *
  * @author Martin Minovski <martin at minovski.net>
  */
-public enum AuctionType implements Serializable {
+public class FeatureExtractorTest {
 
-    /**
-     * Chord auction
-     */
-    ChordAuction,
+    public static void main(String[] args) {
+        //Extract features
+        FeatureExtractor fextract = extractChords(AllTests.midiPath, AllTests.featurePath);
+        //Print all average features
+        System.out.println(fextract.getAverageFeatures());
+    }
 
-    /**
-     * Feature auction
-     */
-    FeatureAuction
+    public static FeatureExtractor extractChords(String midiPath, String featureFolderPath) {
+
+        File[] midiFileArray = AllTests.getFileArrayFromPathString(midiPath);
+        File featureFolder = new File(featureFolderPath);
+
+        //true stands for overwrite XML files
+        //null stands for no logger agent
+        FeatureExtractor fextract = new FeatureExtractor(midiFileArray, featureFolder, true, null);
+        return fextract;
+    }
 }
