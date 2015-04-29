@@ -51,59 +51,19 @@ import rmi.agents.monitor.MonitorFrame;
  */
 public class Main {
 
-    /**
-     *
-     */
     public static final int DEFAULT_MARKOV_DEPTH = 3;
-
-    /**
-     *
-     */
-    public static final int MIN_PORT = 51000;
-
-    /**
-     *
-     */
-    public static final int MAX_PORT = 59000;
-
-    /**
-     *
-     */
+    public static final int MIN_PORT = 54000;
+    public static final int MAX_PORT = 56000;
     public static final int ROUNDING_DIGITS = 1000;
-
-    /**
-     * MIDI Note On Value
-     */
     public static final int NOTE_ON = 0x90;
-
-    /**
-     * MIDI Note Off Value
-     */
     public static final int NOTE_OFF = 0x80;
-    
     public static final int MAX_MIDI_PITCH = 250;
-    
-    /**
-     *
-     */
+    public static final int NUMBER_OF_SOLO_PHRASES_PER_AGENT = 4;
+    public static final int MAXIMUM_NUMBER_OF_NOTES_PER_PHRASE = 16;
     public static String[] names;
-
-    /**
-     *
-     */
     public static Random rand;
-
-    /**
-     *
-     */
     public static int windowsOpened;
-
-    /**
-     *
-     */
     public static Player player;
-
-    private static MonitorFrame mainMonitorFrame;
 
     /**
      * @param args the command line arguments
@@ -158,7 +118,7 @@ public class Main {
             @Override
             public void run() {
                 //Start main monitor frame
-                mainMonitorFrame = new MonitorFrame();
+                new MonitorFrame();
             }
         });
     }

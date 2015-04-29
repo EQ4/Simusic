@@ -21,68 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package rmi.messages;
+package music.extractors.feature;
 
-import enums.AuctionType;
 import java.io.Serializable;
-import music.elements.Chord;
 
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
-public class AuctionMessage implements Serializable {
-
-    /**
-     *
-     */
-    public AuctionType auctionType;
-
-    //Chord type
-
-    /**
-     *
-     */
-        public String chordBase;
-
-    /**
-     *
-     */
-    public String chordMode;
-
-    /**
-     *
-     */
-    public double chordProbability;
-
-    /**
-     *
-     */
-    public int chordOriginID;
-
-    /**
-     *
-     */
-    public boolean isDefaultChord = false;
-
-    //Feature type
-
-    /**
-     *
-     */
-        public String featureName;
-
-    /**
-     *
-     */
-    public Double feature;
-
-    /**
-     *
-     * @param auctionType
-     */
-    public AuctionMessage(AuctionType auctionType) {
-        this.auctionType = auctionType;
+public class GlobalFeatureContainer implements Serializable {
+    int currentTempo;
+    
+    public GlobalFeatureContainer() {
+        //Initialize vars
     }
-
+    
+    public void setCurrentTempo(int currentTempo) {
+        this.currentTempo = currentTempo;
+    }
+    
+    public int getCurrentTempo() {
+        return currentTempo;
+    }
 }

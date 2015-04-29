@@ -47,7 +47,7 @@ public class FeatureExtractorTest {
 
         //true stands for overwrite XML files
         //null stands for no logger agent
-        FeatureExtractor fextract = new FeatureExtractor(midiFileArray, featureFolder, true, null);
+        FeatureExtractor fextract = new FeatureExtractor(midiFileArray, featureFolder, false, null);
         return fextract;
     }
 }

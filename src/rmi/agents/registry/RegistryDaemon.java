@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import music.elements.Chord;
+import music.extractors.feature.GlobalFeatureContainer;
 import rmi.messages.AuctionMessage;
 import rmi.agents.monitor.AgentDummyLink;
 import rmi.agents.monitor.AgentDummyLink.AgentLinkType;
@@ -66,7 +67,6 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     RegistryFrame frame;
 
     int conductorAgentID = -1;
-    int currentTempo;
     AuctionMessage currentChordMessage;
     Integer currentSoloistID;
 
@@ -75,6 +75,8 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     RegistryServiceType newServiceFlag;
 
     HashMap<String, Double> sessionFeatures;
+    
+    GlobalFeatureContainer globalFeatures;
 
     /**
      *
@@ -86,6 +88,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         this.frame = frame;
         isPerforming = false;
         this.featureDummies = new ArrayList<>();
+        globalFeatures = new GlobalFeatureContainer();
         populateSessionFeatures();
     }
 
@@ -125,7 +128,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                 + "    - name: " + agentName + "\n"
                 + "    - type: " + agentType.toString() + "\n"
                 + "    - ip: " + agentIP + "\n"
-                + "    - port: " + agentName + "\n"
+                + "    - port: " + agentPort + "\n"
                 + "    - latency: " + newAgentDummy.latency + "\n"
                 + "    - ID: " + id + "\n"
                 + "    - owned by: " + masterMonitorID, false
@@ -371,15 +374,15 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
         //TODO: Measure average latencies (just in case)
         //Idea: Also check that recursive ping duration doesn't exceed beat period
-        currentTempo = getFeatureWithAuction("Initial Tempo").intValue();
+        globalFeatures.setCurrentTempo(getFeatureWithAuction("Initial Tempo").intValue());
         // Idea: Tempo could vary during runtime using service threads (concurrency issues ahead)
 
         //Ready to start performance services
         isPerforming = true;
-        frame.log("Starting performance at tempo " + currentTempo + "bpm, beat period: " + Main.getBeatPeriod(currentTempo) + "[before beat loop]", true);
+        frame.log("Starting performance at tempo " + globalFeatures.getCurrentTempo() + "bpm, beat period: " + Main.getBeatPeriod(globalFeatures.getCurrentTempo()) + "[before beat loop]", true);
 
         for (AgentInterface agentConnection : frame.agentConnections) {
-            agentConnection.performanceStarted(currentTempo);
+            agentConnection.performanceStarted(globalFeatures.getCurrentTempo());
         }
 
         //Start beat service
@@ -390,7 +393,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                 // Start beat cycle
                 while (isPerforming) {
                     long beatInvokedTime = System.currentTimeMillis();
-                    int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
+                    int currentBeatPeriod = Main.getBeatPeriod(globalFeatures.getCurrentTempo());
 
                     // Get next chord (TODO: don't change on every beat!)
                     try {
@@ -404,7 +407,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                     for (AgentInterface agentConnection : frame.agentConnections) {
                         try {
                             Chord nextChord = new Chord(currentChordMessage.chordBase, currentChordMessage.chordMode);
-                            nextChord.isMutated = currentChordMessage.isMutatedChord;
+                            nextChord.isDefault = currentChordMessage.isDefaultChord;
                             nextChord.agentID = currentChordMessage.chordOriginID;
                             nextChord.setProbability(currentChordMessage.chordProbability);
                             agentConnection.beat(nextChord);
@@ -507,6 +510,11 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     private void adaptCommonFeaturesTo(int agentID) throws RemoteException {
         //TODO: Implement
+    }
+    
+    @Override
+    public GlobalFeatureContainer getGlobalFeatures() throws RemoteException {
+        return globalFeatures;
     }
 
 }

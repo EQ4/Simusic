@@ -122,7 +122,7 @@ public class Sequence {
      * Adds a new playable to the sequence. Used mostly by extractors
      * @param playable The new playable to add
      */
-    public void addPlayable(Playable playable) {
+    public void appendPlayable(Playable playable) {
         sequence.add(playable);
     }
 

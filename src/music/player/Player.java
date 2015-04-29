@@ -29,6 +29,11 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Synthesizer;
 import music.elements.Chord;
+import music.elements.Note;
+import music.elements.Playable;
+import music.elements.Sequence;
+import music.extractors.feature.FeatureExtractor;
+import music.extractors.feature.GlobalFeatureContainer;
 import run.Main;
 
 /**
@@ -49,8 +54,8 @@ public class Player {
      * @param args
      */
     public static void main(String[] args) {
-        Player player = new Player();
-        player.playArpeggio(new Chord("C", "maj"), 0, 1600, 4, 70);
+        //Player player = new Player();
+        //player.playArpeggio(new Chord("C", "maj"), 0, 1600, 4, 70);
     }
 
     /**
@@ -85,16 +90,79 @@ public class Player {
         }
     }
 
-    /**
-     *
-     * @param chord
-     * @param instrument
-     * @param measureTime
-     * @param notesToPlay
-     * @param velocity
-     */
-    public void playArpeggio(Chord chord, int instrument, int measureTime, int notesToPlay, int velocity) {
+    public void playHarmony(Chord chord, int instrument, FeatureExtractor agentFextract, GlobalFeatureContainer globalFeatures) {
+        //Get MIDI channel number
+        Integer channel = getChannelForInstrument(instrument);
+        if (channel == null) {
+            return;
+        }
+
+        //Initialize tone picker
         TonePicker tonePicker = new TonePicker(chord.isMajor(), rand);
+
+        //Performance variables
+        int numberOfNotesToPlay = 4; // can be 3 for TRIPLETS !!!!!!
+        int beatPeriod = Main.getBeatPeriod(globalFeatures.getCurrentTempo());
+        int octaveHigher = 3;
+        int octavesBetweenBassAndHarmony = 1;
+        int base = chord.getMarkovInteger() % 12;
+        int timeOfWholeMeasure = 4 * beatPeriod;
+        int bassNote = (octaveHigher * 12) + base;
+        int velocity = 70;
+
+        //Play now
+        for (int i = 0; i < numberOfNotesToPlay; i++) {
+            if (i == 0) {
+                //First beat is always bass
+                channels[channel].noteOn(bassNote, velocity);
+            }
+            int noteNumber = ((octaveHigher + octavesBetweenBassAndHarmony) * 12) + (rand.nextInt(2) * 12) + base + tonePicker.getNextTone();
+            channels[channel].noteOn(noteNumber, velocity);
+            Main.wait(timeOfWholeMeasure / numberOfNotesToPlay);
+            channels[channel].noteOff(noteNumber);
+
+            //Bass note is on for whole measure
+            if (i == numberOfNotesToPlay - 1) {
+                channels[channel].noteOff(bassNote);
+            }
+        }
+    }
+
+    public void playSoloPhrase(Sequence sequence, int instrument, FeatureExtractor agentFextract, GlobalFeatureContainer globalFeatures) {
+        Integer channel = getChannelForInstrument(instrument);
+        if (channel == null) {
+            return;
+        }
+
+        if (sequence.isEmpty()) {
+            System.out.println("Player: EMPTY SOLO SEQUENCE!");
+            Main.wait(1000);
+            return;
+        }
+
+        int beatPeriod = Main.getBeatPeriod(globalFeatures.getCurrentTempo());
+        int timeOfWholeMeasure = 4 * beatPeriod;
+        //Octave is randomized for now
+        int octavesHigher = 5 + Main.rand.nextInt(2);
+        int measureDividedBy = 4 + sequence.getSize();
+        int velocity = 100;
+
+        //Play now
+        boolean isFirstBeat = true;
+        for (Playable playable : sequence.getSequence()) {
+            if (isFirstBeat) {
+                velocity += 20;
+                isFirstBeat = false;
+            }
+            Note note = (Note) playable;
+            int noteNumber = note.getMarkovInteger() + (octavesHigher * 12);
+            channels[channel].noteOn(noteNumber, velocity);
+            Main.wait(timeOfWholeMeasure / measureDividedBy);
+            channels[channel].noteOff(noteNumber);
+        }
+    }
+
+    private Integer getChannelForInstrument(int instrument) {
         int channel = instrumentToChannelMap[instrument];
         if (channel == -1) {
             //Max 9 instruments
@@ -105,29 +173,9 @@ public class Player {
                 channels[channelCounter].programChange(instrument);
                 channelCounter++;
             } else {
-                return;
+                return null;
             }
         }
-
-        //Now play
-        int base = chord.getMarkovInteger() % 12;
-
-        for (int i = 0; i < notesToPlay; i++) {
-            int bassNote = 36 + base;
-            if (i == 0) {
-                channels[channel].noteOn(bassNote, velocity);
-            }
-            
-            
-            
-            int noteNumber = 48 + (rand.nextInt(2) * 12) + base + tonePicker.getNextTone();
-            channels[channel].noteOn(noteNumber, velocity);
-            Main.wait(measureTime / notesToPlay);
-            channels[channel].noteOff(noteNumber);
-
-            if (i == notesToPlay - 1) {
-                channels[channel].noteOff(bassNote);
-            }
-        }
+        return channel;
     }
 }

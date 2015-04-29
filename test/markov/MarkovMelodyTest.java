@@ -23,29 +23,26 @@
  */
 package markov;
 
-import extractors.ContentExtractTest;
 import java.io.File;
 import java.util.ArrayList;
-import music.elements.Chord;
+import music.elements.Note;
 import music.elements.Playable;
 import music.elements.Sequence;
 import music.extractors.content.ContentExtractor;
 import music.markov.MarkovModel;
 import testvars.General;
-import static testvars.General.featurePath;
-import static testvars.General.midiPath;
 import run.Main;
 
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
-public class MarkovTest {
+public class MarkovMelodyTest {
 
-    static MarkovModel trainMarkov(ArrayList<Sequence> chords) {
+    static MarkovModel trainMarkov(ArrayList<Sequence> notes) {
         //Train new markov model
-        MarkovModel markovModel = new MarkovModel(3, new Chord());
-        markovModel.trainModel(chords);
+        MarkovModel markovModel = new MarkovModel(3, new Note());
+        markovModel.trainModel(notes);
         System.out.println(markovModel.toString());
         return markovModel;
     }
@@ -54,16 +51,16 @@ public class MarkovTest {
         //Extract chords first
         File[] midiFileList = General.getFileArrayFromPathString(General.midiPath);
         ContentExtractor cextract = new ContentExtractor(midiFileList, null);
-        ArrayList<Sequence> harmonySequences = cextract.getHarmonySequences();
+        ArrayList<Sequence> melodySequences = cextract.getMelodySequences();
 
         //Train Markov model
-        MarkovModel markovModel = trainMarkov(harmonySequences);
+        MarkovModel markovModel = trainMarkov(melodySequences);
 
         //Add chords to live sequence
         while (true) {
-            Playable nextChord = markovModel.getTopCondensedProcessedPlayable();
-            markovModel.livePush(nextChord);
-            System.out.println(nextChord.toString());
+            Playable nextNote = markovModel.getTopCondensedProcessedPlayable();
+            markovModel.livePush(nextNote);
+            System.out.println(nextNote.toString());
             Main.wait(400);
         }
 

@@ -49,6 +49,8 @@ public class SequentialScanner {
     ArrayList<Chord> chordSequence;
     ArrayList<Note> noteSequence;
 
+    ArrayList<ArrayList<Note>> noteByChordSequences;
+
     //Melody line variables
     private boolean melodyLineLock;
     private int lastMelodyPitchValue;
@@ -69,6 +71,12 @@ public class SequentialScanner {
         // Initializes content sequences
         this.chordSequence = new ArrayList<>();
         this.noteSequence = new ArrayList<>();
+
+        this.noteByChordSequences = new ArrayList<>();
+        for (int i = 0; i < Chord.maxMarkovInteger; i++) {
+            noteByChordSequences.add(new ArrayList<>());
+        }
+
         this.melodyLineLock = false;
 
         // Main scan loop for harmony and melody
@@ -89,26 +97,36 @@ public class SequentialScanner {
     }
 
     private void noteOn(int note, int channel) {
+        //Harmony
         if (channel == ranking.getWinningHarmonyChannel()) {
             harmonyHandler.addNote(note);
             harmonyHandler.harmonyAction(chordSequence);
         }
+        //Melody
         if (channel == ranking.getWinningMelodyChannel()) {
             //If melody lock is free, obtain it
             //Also note should be different from last melody note
             if ((!melodyLineLock) && (note % 12 != lastMelodyPitchValue % 12)) {
                 melodyLineLock = true;
                 lastMelodyPitchValue = note;
-                noteSequence.add(Note.integerToNewNote(note));
+                Note newMelodyNote = Note.integerToNewNote(note);
+                noteSequence.add(newMelodyNote);
+
+                if (!chordSequence.isEmpty()) {
+                    int lastChordMarkovInteger = chordSequence.get(chordSequence.size() - 1).getMarkovInteger();
+                    noteByChordSequences.get(lastChordMarkovInteger).add(newMelodyNote);
+                }
             }
         }
     }
 
     private void noteOff(int note, int channel) {
+        //Harmony
         if (channel == ranking.getWinningHarmonyChannel()) {
             harmonyHandler.removeNote(note);
             harmonyHandler.harmonyAction(chordSequence);
         }
+        //Melody
         if (channel == ranking.getWinningMelodyChannel()) {
             if ((melodyLineLock) && (note == lastMelodyPitchValue)) {
                 // If the unplayed note equals the last melody note, release melody lock
@@ -128,6 +146,10 @@ public class SequentialScanner {
 
     public ArrayList<Note> getMelodySequence() {
         return noteSequence;
+    }
+    
+    public ArrayList<ArrayList<Note>> getMelodyByChordSequences() {
+        return noteByChordSequences;
     }
 
     public int getWinningHarmonyChannel() {

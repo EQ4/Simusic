@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import rmi.messages.UpdateMessage;
 import rmi.agents.registry.RegistryDaemon;
 import enums.AgentType;
+import music.extractors.feature.FeatureExtractor;
+import music.extractors.feature.GlobalFeatureContainer;
 import rmi.agents.monitor.AgentDummy;
 
 /**
@@ -37,102 +39,19 @@ import rmi.agents.monitor.AgentDummy;
  */
 public interface RegistryInterface extends Remote {
     
-    /**
-     *
-     * @param agentType
-     * @param agentName
-     * @param agentIP
-     * @param agentPort
-     * @param masterMonitorID
-     * @return
-     * @throws RemoteException
-     */
-    public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException;
-
-    /**
-     *
-     * @param id
-     * @return
-     * @throws RemoteException
-     */
-    public boolean ping(int id) throws RemoteException;
-
-    /**
-     *
-     * @param id
-     * @return
-     * @throws RemoteException
-     */
-    public AgentDummy getAgentDummyByID(int id) throws RemoteException;
-
-    /**
-     *
-     * @param agentID
-     * @param featureValues
-     * @return
-     * @throws RemoteException
-     */
-    public AgentDummy getRoleModel(int agentID, Double[] featureValues) throws RemoteException;
-
-    /**
-     *
-     * @param agentID
-     * @throws RemoteException
-     */
-    public void agentLoaded(int agentID) throws RemoteException;
-
-    /**
-     *
-     * @param fromAgentID
-     * @param toAgentID
-     * @throws RemoteException
-     */
-    public void reportNeighbourConnection(int fromAgentID, int toAgentID) throws RemoteException;
-
-    /**
-     *
-     * @return
-     * @throws RemoteException
-     */
-    public String startPerformance() throws RemoteException;
-
-    /**
-     *
-     * @return
-     * @throws RemoteException
-     */
-    public String stopPerformance() throws RemoteException;
-
-    /**
-     *
-     * @return
-     * @throws RemoteException
-     */
-    public boolean isPerforming() throws RemoteException;
-
-    /**
-     *
-     * @param message
-     * @param loggerID
-     * @throws RemoteException
-     */
-    public void log(String message, int loggerID) throws RemoteException;
-
-    /**
-     *
-     * @param id
-     * @return
-     * @throws RemoteException
-     */
-    public boolean disconnect(int id) throws RemoteException;
     
-    //Test
- 
-    /**
-     *
-     * @param sender
-     * @return
-     * @throws RemoteException
-     */
-        public String sayHello(String sender) throws RemoteException; 
+    public UpdateMessage connect(AgentType agentType, String agentName, String agentIP, int agentPort, Integer masterMonitorID) throws RemoteException;
+    public boolean ping(int id) throws RemoteException;
+    public AgentDummy getAgentDummyByID(int id) throws RemoteException;
+    public AgentDummy getRoleModel(int agentID, Double[] featureValues) throws RemoteException;
+    public void agentLoaded(int agentID) throws RemoteException;
+    public void reportNeighbourConnection(int fromAgentID, int toAgentID) throws RemoteException;
+    public String startPerformance() throws RemoteException;
+    public String stopPerformance() throws RemoteException;
+    public boolean isPerforming() throws RemoteException;
+    public void log(String message, int loggerID) throws RemoteException;
+    public boolean disconnect(int id) throws RemoteException;
+    public String sayHello(String sender) throws RemoteException; 
+    public GlobalFeatureContainer getGlobalFeatures() throws RemoteException; 
+    
 }

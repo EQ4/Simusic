@@ -38,11 +38,15 @@ import music.markov.MarkovModel;
 import rmi.interfaces.AgentInterface;
 import enums.AgentType;
 import enums.AuctionType;
+import music.elements.Note;
 import music.elements.Playable;
+import music.extractors.feature.GlobalFeatureContainer;
 import music.extractors.instrument.InstrumentExtractor;
 import rmi.messages.AuctionMessage;
 import rmi.agents.monitor.AgentDummy;
 import run.Main;
+import static run.Main.MAXIMUM_NUMBER_OF_NOTES_PER_PHRASE;
+import static run.Main.NUMBER_OF_SOLO_PHRASES_PER_AGENT;
 
 /**
  *
@@ -53,13 +57,20 @@ public class AIPerformer extends Agent {
     private File[] midiFiles;
     private File featuresFolder;
 
-    private ArrayList<Sequence> chords;
+    private ArrayList<Sequence> harmonySequences;
+    private ArrayList<Sequence> melodyByChordSequences;
+
     private MarkovModel markovChordModel;
+    private MarkovModel[] markovMelodyModels;
+
+    private int markovModelMaxDepth;
+
     private FeatureExtractor fextract;
-    private int markovChordModelMaxDepth;
+    private GlobalFeatureContainer globalFeatures;
+    private int lastGlobalChordMarkovInteger;
+
     private String roleModelInfo;
     private boolean isLoading;
-    private int currentTempo;
     private int agentInstrument;
 
     AgentDummy roleModelDummy;
@@ -82,7 +93,8 @@ public class AIPerformer extends Agent {
 
         //Get paths
         this.midiFiles = midiFiles;
-        this.markovChordModelMaxDepth = markovChordModelMaxDepth;
+        this.markovModelMaxDepth = markovChordModelMaxDepth;
+        this.lastGlobalChordMarkovInteger = 0;
         if (midiFiles.length != 0) {
             try {
                 featuresFolder = new File(midiFiles[0].getParentFile().getCanonicalPath() + "/simusic/features");
@@ -101,10 +113,12 @@ public class AIPerformer extends Agent {
     @Override
     public void loadAgent() {
         //Extract chords
-        log("Extracting chord sequences from MIDI files...", false);
+        log("Extracting harmony and melody sequences from MIDI files...", false);
         ContentExtractor cextract = new ContentExtractor(midiFiles, this);
-        chords = cextract.getHarmonySequences();
-        log("Chord sequences extracted!", false);
+        harmonySequences = cextract.getHarmonySequences();
+        melodyByChordSequences = cextract.getMelodyByChordSequences();
+
+        log("Harmonies and melodies extracted!", false);
 
         //Extract features
         log("Extracting features from MIDI files...", false);
@@ -114,11 +128,24 @@ public class AIPerformer extends Agent {
         log("Extracting instrument...", false);
         agentInstrument = InstrumentExtractor.getMostFrequentInstrument(midiFiles);
 
-        //Train Markov chord model
-        log("Training Markov model...", false);
-        markovChordModel = new MarkovModel(markovChordModelMaxDepth, new Chord());
-        markovChordModel.trainModel(chords);
-        log("Trained Markov chord model with max depth " + markovChordModelMaxDepth, false);
+        //Train Markov harmony and melody models
+        log("Training Markov harmony and melody models...", false);
+
+        markovChordModel = new MarkovModel(markovModelMaxDepth, new Chord());
+        markovChordModel.trainModel(harmonySequences);
+        //TODO: Customize markovChordModelMaxDepth for MELODY
+        markovMelodyModels = new MarkovModel[Chord.maxMarkovInteger];
+        for (int i = 0; i < Chord.maxMarkovInteger; i++) {
+            //Initialize chord-dependent model
+            markovMelodyModels[i] = new MarkovModel(markovModelMaxDepth, new Note());
+            //Train model
+            Sequence singleSequence = melodyByChordSequences.get(i);
+            ArrayList<Sequence> singleSequenceList = new ArrayList<>();
+            singleSequenceList.add(singleSequence);
+            markovMelodyModels[i].trainModel(singleSequenceList);
+        }
+
+        log("Trained Markov harmony and melody models with max depth " + markovModelMaxDepth, false);
 
         try {
             //Get neighbour ID from registry
@@ -142,14 +169,13 @@ public class AIPerformer extends Agent {
     }
 
     //Sent by other AI agents to become neighbours
-
     /**
      *
      * @param neighbourID
      * @return
      * @throws RemoteException
      */
-        @Override
+    @Override
     public boolean connectNeighbour(int neighbourID) throws RemoteException {
         AgentDummy newNeighbourDummy = registryConnection.getAgentDummyByID(neighbourID);
         AgentInterface newNeighbourConnection = (AgentInterface) RMIconnect(newNeighbourDummy.getRMIAddress());
@@ -214,12 +240,12 @@ public class AIPerformer extends Agent {
             }
 
             if (Double.isNaN(resultMessage.chordProbability) || resultMessage.chordProbability == 0) {
-                //log("No one knows a next chord. Mutating...", false);
-                String[] newChord = new Chord().getNewPlayableFromMarkovNumeric(Main.rand.nextInt(24)).toString().split("-");
-                resultMessage.chordBase = newChord[0];
-                resultMessage.chordMode = newChord[1];
+                log("I don't know what the next chord should be. Flushing my live queue...", false);
+                resultMessage.chordBase = "A";
+                resultMessage.chordMode = "min";
                 resultMessage.chordProbability = 0.0000001;
-                resultMessage.isMutatedChord = true;
+                resultMessage.isDefaultChord = true;
+                markovChordModel.liveFlush();
             }
 
             //Log auction result
@@ -266,7 +292,6 @@ public class AIPerformer extends Agent {
      */
     @Override
     public void performanceStarted(int currentTempo) throws RemoteException {
-        this.currentTempo = currentTempo;
         log("Performance started with tempo " + currentTempo + ", beat period " + Main.getBeatPeriod(currentTempo), false);
     }
 
@@ -289,11 +314,11 @@ public class AIPerformer extends Agent {
         new Thread() {
             @Override
             public void run() {
-                // TODO: Play chord using beatPeriod (or not)
-                int currentBeatPeriod = Main.getBeatPeriod(currentTempo);
+                updateGlobalFeatures();
 
+                lastGlobalChordMarkovInteger = chord.getMarkovInteger();
                 markovChordModel.livePush(chord);
-                Main.player.playArpeggio(chord, agentInstrument, currentBeatPeriod * 4, 4, 70);
+                Main.player.playHarmony(chord, agentInstrument, fextract, globalFeatures);
 
                 //Uncomment to test latency
                 //logPrecise("I played " + chord.toString());
@@ -307,15 +332,37 @@ public class AIPerformer extends Agent {
      */
     @Override
     public void playSolo() throws RemoteException {
-        // TODO: Play solo using beatPeriod 
-        // ON THE SAME THREAD!
-
+        updateGlobalFeatures();
+        
         log("I started soloing!", true);
 
-        //TODO: Solo.
-        Main.wait(8000);
+        for (int i = 0; i < NUMBER_OF_SOLO_PHRASES_PER_AGENT; i++) {
+            MarkovModel currentMelodyModel = markovMelodyModels[lastGlobalChordMarkovInteger];
+            Sequence soloSequence = new Sequence();
+            Double lastNoteProbability = Double.MIN_NORMAL;
+            int numberOfNotes = 4 + Main.rand.nextInt(5);
+            for (int j = 0; j < numberOfNotes; j++) {
+                if (Double.isNaN(lastNoteProbability)) {
+                    break;
+                }
+                Note nextNote = (Note) currentMelodyModel.getNextPlayable();
+                soloSequence.appendPlayable(nextNote);
+                lastNoteProbability = nextNote.getProbability();
+                currentMelodyModel.livePush(nextNote);
+            }
+            currentMelodyModel.liveFlush();
+            Main.player.playSoloPhrase(soloSequence, agentInstrument, fextract, globalFeatures);
+        }
 
         log("I finished soloing!", true);
+    }
+
+    private void updateGlobalFeatures() {
+        try {
+            globalFeatures = registryConnection.getGlobalFeatures();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -329,8 +376,7 @@ public class AIPerformer extends Agent {
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public String getAgentTypeSpecificInfo() throws RemoteException {

@@ -187,7 +187,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
      */
     @Override
     public void beat(Chord chord) throws RemoteException {
-        frame.log("Current chord: " + chord.toString() + " by agent #" + chord.agentID + ", probability: " + chord.getProbability() + (chord.isMutated ? " MUTATED!" : ""), true);
+        frame.log("Current chord: " + chord.toString() + " by agent #" + chord.agentID + ", probability: " + chord.getProbability() + (chord.isDefault ? " DEFAULT - NOONE KNOWS NEXT CHORD!" : ""), true);
     }
 
     /**

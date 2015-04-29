@@ -34,10 +34,11 @@ import java.util.*;
  */
 public class MarkovModel {
 
-    private Playable modelType;
-    private int depth;
-    private int length;
-    private int tableHeight;
+    //Final variables not tested
+    private final Playable modelType;
+    private final int depth;
+    private final int length;
+    private final int tableHeight;
     private ArrayList<Sequence> inputSequences; // Dispose???
     int[][] markovTable; // oh well
     Queue<Playable> trainStream;

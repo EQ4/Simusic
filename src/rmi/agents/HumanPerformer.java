@@ -28,6 +28,7 @@ import enums.AgentType;
 import enums.AuctionType;
 import music.elements.Chord;
 import music.elements.Playable;
+import music.extractors.feature.GlobalFeatureContainer;
 import rmi.messages.AuctionMessage;
 import run.Main;
 
@@ -36,6 +37,8 @@ import run.Main;
  * @author Martin Minovski <martin at minovski.net>
  */
 public class HumanPerformer extends Agent {
+
+    GlobalFeatureContainer globalFeatures;
 
     /**
      *
@@ -58,6 +61,7 @@ public class HumanPerformer extends Agent {
     public void loadAgent() {
         //TODO: Select MIDI USB port, etc.
         try {
+            globalFeatures = registryConnection.getGlobalFeatures();
             registryConnection.agentLoaded(agentID);
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -92,8 +96,7 @@ public class HumanPerformer extends Agent {
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public String getAgentTypeSpecificInfo() throws RemoteException {
@@ -144,7 +147,7 @@ public class HumanPerformer extends Agent {
         //Not Applicable
         return null;
     }
-    
+
     /**
      *
      * @param neighbourID

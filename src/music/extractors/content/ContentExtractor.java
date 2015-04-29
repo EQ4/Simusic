@@ -45,12 +45,18 @@ public class ContentExtractor {
     Agent callingAgent;
     ArrayList<Sequence> allChordSequences;
     ArrayList<Sequence> allNoteSequences;
+    ArrayList<Sequence> allNoteByChordSequences;
 
     public ContentExtractor(File[] files, Agent callingAgent) {
         this.files = files;
         this.callingAgent = callingAgent;
         allChordSequences = new ArrayList<>();
         allNoteSequences = new ArrayList<>();
+
+        allNoteByChordSequences = new ArrayList<>();
+        for (int i = 0; i < Chord.maxMarkovInteger; i++) {
+            allNoteByChordSequences.add(new Sequence());
+        }
 
         extractContent();
     }
@@ -108,13 +114,13 @@ public class ContentExtractor {
                     if (!songKey.isMajor()) {
                         songOffset -= 3;
                     }
-                    
+
                     //Purify offset
                     songOffset %= 12;
 
                     for (int j = 0; j < harmonySequence.size(); j++) {
                         Chord chord = harmonySequence.get(j);
-                        currentHarmonySequence.addPlayable(chord.getTransposedTwinChord(songOffset));
+                        currentHarmonySequence.appendPlayable(chord.getTransposedTwinChord(songOffset));
                     }
 
                     //Set winning channel (+ 1 because MIDI channels start from 1 outside programming)
@@ -130,7 +136,16 @@ public class ContentExtractor {
 
                     for (Note note : melodySequence) {
                         int noteInt = (note.getMarkovInteger() + songOffset) % 12;
-                        currentMelodySequence.addPlayable(Note.integerToNewNote(noteInt));
+                        currentMelodySequence.appendPlayable(Note.integerToNewNote(noteInt));
+                    }
+
+                    //Chord-dependent melody sequences
+                    ArrayList<ArrayList<Note>> melodyByChordSequences = scanner.getMelodyByChordSequences();
+                    for (int j = 0; j < Chord.maxMarkovInteger; j++) {
+                        for (Note note : melodyByChordSequences.get(j)) {
+                            int noteInt = (note.getMarkovInteger() + songOffset) % 12;
+                            allNoteByChordSequences.get(j).appendPlayable(Note.integerToNewNote(noteInt));
+                        }
                     }
 
                     //Set winning channel (+ 1 because MIDI channels start from 1 outside programming)
@@ -186,6 +201,10 @@ public class ContentExtractor {
 
     public ArrayList<Sequence> getMelodySequences() {
         return allNoteSequences;
+    }
+
+    public ArrayList<Sequence> getMelodyByChordSequences() {
+        return allNoteByChordSequences;
     }
 
 }

@@ -24,6 +24,7 @@
 package music.extractors.feature;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -75,6 +76,9 @@ public class FeatureExtractor {
         for (File file : midiFiles) {
 
             try {
+                if (file.isDirectory()) {
+                    continue;
+                }
                 //If not (overwrite), check if xml already exists
                 if (!overwrite) {
                     File f = new File(featurePath + file.getName() + ".xml");

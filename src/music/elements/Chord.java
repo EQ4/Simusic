@@ -52,7 +52,7 @@ public class Chord extends Playable implements Serializable {
     /**
      * Temporary field. Must be removed
      */
-    public boolean isMutated = false;
+    public boolean isDefault = false;
     
     /**
      * An empty constructor
