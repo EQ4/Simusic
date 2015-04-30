@@ -27,11 +27,8 @@ import enums.AuctionType;
 import rmi.messages.UpdateMessage;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.text.SimpleDateFormat;
 import music.elements.Chord;
-import music.elements.Playable;
 import rmi.interfaces.AgentInterface;
-import rmi.interfaces.RegistryInterface;
 import rmi.messages.AuctionMessage;
 
 /**

@@ -25,11 +25,8 @@ package rmi.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import rmi.messages.UpdateMessage;
-import rmi.agents.registry.RegistryDaemon;
 import enums.AgentType;
-import music.extractors.feature.FeatureExtractor;
 import music.extractors.feature.GlobalFeatureContainer;
 import rmi.agents.monitor.AgentDummy;
 

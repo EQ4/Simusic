@@ -23,8 +23,6 @@
  */
 package rmi.agents.registry;
 
-import java.util.ArrayList;
-import javax.swing.DefaultComboBoxModel;
 import run.Main;
 
 /**

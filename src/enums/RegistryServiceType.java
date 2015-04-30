@@ -23,7 +23,6 @@
  */
 package enums;
 
-import java.io.Serializable;
 
 /**
  * Used by registry service thread to distinguish between services

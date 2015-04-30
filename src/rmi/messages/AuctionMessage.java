@@ -25,7 +25,6 @@ package rmi.messages;
 
 import enums.AuctionType;
 import java.io.Serializable;
-import music.elements.Chord;
 
 /**
  *

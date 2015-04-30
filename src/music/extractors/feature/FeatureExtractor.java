@@ -24,7 +24,6 @@
 package music.extractors.feature;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

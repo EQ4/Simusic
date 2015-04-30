@@ -25,7 +25,6 @@
 package music.elements;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 /**
  * Chord class inheriting Playable abstract class

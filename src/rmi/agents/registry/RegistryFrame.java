@@ -23,15 +23,12 @@
  */
 package rmi.agents.registry;
 
-import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.server.ExportException;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
 import rmi.agents.monitor.AgentDummy;

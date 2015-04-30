@@ -24,9 +24,7 @@
 package rmi.agents;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +43,6 @@ import music.extractors.instrument.InstrumentExtractor;
 import rmi.messages.AuctionMessage;
 import rmi.agents.monitor.AgentDummy;
 import run.Main;
-import static run.Main.MAXIMUM_NUMBER_OF_NOTES_PER_PHRASE;
 import static run.Main.NUMBER_OF_SOLO_PHRASES_PER_AGENT;
 
 /**

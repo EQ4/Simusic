@@ -25,7 +25,6 @@ package rmi.agents.monitor;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import javax.swing.JOptionPane;
 import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
 

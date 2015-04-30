@@ -26,7 +26,6 @@ package music.player;
 import java.util.Random;
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequencer;
 import javax.sound.midi.Synthesizer;
 import music.elements.Chord;
 import music.elements.Note;

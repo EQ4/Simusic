@@ -25,7 +25,6 @@ package music.extractors.content;
 
 import music.elements.Chord;
 import java.util.*;
-import music.elements.Note;
 
 /**
  * Chord recognizer for a single file

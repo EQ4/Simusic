@@ -26,12 +26,9 @@ package rmi.interfaces;
 import enums.AuctionType;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import music.elements.Chord;
-import music.elements.Playable;
 import rmi.messages.AuctionMessage;
 import rmi.messages.UpdateMessage;
-import rmi.agents.registry.RegistryDaemon;
 
 /**
  *

@@ -24,7 +24,6 @@
 package music.elements;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A sequence of playables

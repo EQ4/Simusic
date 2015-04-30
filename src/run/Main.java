@@ -23,13 +23,10 @@
  */
 package run;
 
-import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -38,10 +35,7 @@ import java.util.List;
 import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
 import music.player.Player;
-import rmi.interfaces.RegistryInterface;
-import rmi.agents.registry.RegistryDaemon;
 import rmi.agents.registry.RegistryFrame;
 import rmi.agents.monitor.MonitorFrame;
 
