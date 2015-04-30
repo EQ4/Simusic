@@ -180,7 +180,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
      */
     public MonitorFrame() {
         initComponents();
-        Main.windowsOpened++;
+        Main.windowsCurrentlyOpened++;
 
         //Set some values
         monitorPortField.setText(Main.getRandomPort() + "");
@@ -362,14 +362,13 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 }
                 
                 //Get Markov level
-                String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(
-                        this,
-                        "Specify maximum Markov chain depth\n(press OK if unsure)",
+                String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(this,
+                        "Specify maximum Markov chain order\nI.e. agent memory span\n(press OK if unsure)",
                         "Creating new agent...",
                         JOptionPane.PLAIN_MESSAGE,
                         null,
                         null,
-                        Main.DEFAULT_MARKOV_DEPTH);
+                        Main.DEFAULT_MAX_MARKOV_ORDER);
                 if (maxMarkovChainLevel == null) {
                     return;
                 }
@@ -1075,14 +1074,13 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             }
             
             //Get markov level
-            String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(
-                    this,
+            String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(this,
                     "Specify maximum Markov chain depth\n(press OK if unsure)",
                     "Importing agents...",
                     JOptionPane.PLAIN_MESSAGE,
                     null,
                     null,
-                    Main.DEFAULT_MARKOV_DEPTH);
+                    Main.DEFAULT_MAX_MARKOV_ORDER);
             if (maxMarkovChainLevel == null) {
                 return;
             }

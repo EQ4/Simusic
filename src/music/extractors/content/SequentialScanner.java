@@ -34,8 +34,8 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 import music.elements.Note;
-import static run.Main.NOTE_OFF;
-import static run.Main.NOTE_ON;
+import static run.Main.MIDI_NOTE_OFF;
+import static run.Main.MIDI_NOTE_ON;
 
 /**
  * Helper chord scanner class
@@ -86,9 +86,9 @@ public class SequentialScanner {
                 MidiMessage message = event.getMessage();
                 if (message instanceof ShortMessage) {
                     ShortMessage sm = (ShortMessage) message;
-                    if ((sm.getCommand() == NOTE_ON) && (sm.getData2() != 0)) {
+                    if ((sm.getCommand() == MIDI_NOTE_ON) && (sm.getData2() != 0)) {
                         noteOn(sm.getData1(), sm.getChannel());
-                    } else if ((sm.getCommand() == NOTE_ON) || (sm.getCommand() == NOTE_OFF)) {
+                    } else if ((sm.getCommand() == MIDI_NOTE_ON) || (sm.getCommand() == MIDI_NOTE_OFF)) {
                         noteOff(sm.getData1(), sm.getChannel());
                     }
                 }

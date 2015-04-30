@@ -333,14 +333,19 @@ public class AIPerformer extends Agent {
     @Override
     public void playSolo() throws RemoteException {
         updateGlobalFeatures();
-        
+
         log("I started soloing!", true);
 
         for (int i = 0; i < NUMBER_OF_SOLO_PHRASES_PER_AGENT; i++) {
             MarkovModel currentMelodyModel = markovMelodyModels[lastGlobalChordMarkovInteger];
             Sequence soloSequence = new Sequence();
             Double lastNoteProbability = Double.MIN_NORMAL;
-            int numberOfNotes = 4 + Main.rand.nextInt(5);
+            
+            //int numberOfNotes = 4 + Main.rand.nextInt(5);
+            //3, 4, 6 or 8
+            int numberOfNotes = (3 + Main.rand.nextInt(1)) * (1 + Main.rand.nextInt(1));
+            
+            
             for (int j = 0; j < numberOfNotes; j++) {
                 if (Double.isNaN(lastNoteProbability)) {
                     break;

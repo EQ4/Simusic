@@ -51,18 +51,19 @@ import rmi.agents.monitor.MonitorFrame;
  */
 public class Main {
 
-    public static final int DEFAULT_MARKOV_DEPTH = 3;
     public static final int MIN_PORT = 54000;
     public static final int MAX_PORT = 56000;
-    public static final int ROUNDING_DIGITS = 1000;
-    public static final int NOTE_ON = 0x90;
-    public static final int NOTE_OFF = 0x80;
+    public static final int DEFAULT_MAX_MARKOV_ORDER = 4;
+    public static final int PROBABILITY_ROUNDING_DIGITS = 1000;
+    public static final int MIDI_NOTE_ON = 0x90;
+    public static final int MIDI_NOTE_OFF = 0x80;
     public static final int MAX_MIDI_PITCH = 250;
     public static final int NUMBER_OF_SOLO_PHRASES_PER_AGENT = 4;
     public static final int MAXIMUM_NUMBER_OF_NOTES_PER_PHRASE = 16;
+    
     public static String[] names;
     public static Random rand;
-    public static int windowsOpened;
+    public static int windowsCurrentlyOpened;
     public static Player player;
 
     /**
@@ -72,7 +73,7 @@ public class Main {
     public static void main(String args[]) throws RemoteException {
         //Initialise static variables
         rand = new Random();
-        windowsOpened = 0;
+        windowsCurrentlyOpened = 0;
 
         player = new Player();
 
@@ -128,7 +129,7 @@ public class Main {
      * @param window
      */
     public static void closeWindow(JFrame window) {
-        if (--windowsOpened == 0) {
+        if (--windowsCurrentlyOpened == 0) {
             System.exit(1);
         } else {
             JOptionPane.showMessageDialog(window, "Simusic will exit once all windows are closed.");
@@ -213,7 +214,7 @@ public class Main {
      * @return
      */
     public static double getRoundedValue(double value) {
-        return (double) Math.round(value * ROUNDING_DIGITS) / ROUNDING_DIGITS;
+        return (double) Math.round(value * PROBABILITY_ROUNDING_DIGITS) / PROBABILITY_ROUNDING_DIGITS;
     }
 
     /**

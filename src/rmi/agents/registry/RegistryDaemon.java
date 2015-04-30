@@ -143,7 +143,8 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         //Update agents
         triggerGlobalUpdate();
 
-        //Start loader thread (explain synchro)
+        //Start loader thread
+        //Only one agent loads at a time
         new Thread() {
             @Override
             public void run() {
@@ -158,8 +159,9 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         return getFirstUpdate(newAgentDummy);
     }
 
-    //TODO: EXPLAIN SYNCHRONIZED!
+    
     private void loadAgentSync(int agentID) throws RemoteException {
+        //This method ensures that only 1 agent is being loaded at a time.
         synchronized (loadAgentLock) {
             frame.agentConnections.get(agentID).loadAgent();
         }

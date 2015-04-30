@@ -113,7 +113,7 @@ public class RegistryFrame extends javax.swing.JFrame implements Runnable {
      */
     public RegistryFrame(String registryIPAddress, String registryName, int registryPort, int registryServicePort) throws RemoteException {
         initComponents();
-        Main.windowsOpened++;
+        Main.windowsCurrentlyOpened++;
 
         //Maybe implement locks?
         this.agentConnections = new ArrayList<>();

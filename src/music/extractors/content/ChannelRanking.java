@@ -29,8 +29,8 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 import static run.Main.MAX_MIDI_PITCH;
-import static run.Main.NOTE_OFF;
-import static run.Main.NOTE_ON;
+import static run.Main.MIDI_NOTE_OFF;
+import static run.Main.MIDI_NOTE_ON;
 
 /**
  * Channel Harmony Ranking algorithm class Recognizes the harmony channel
@@ -65,9 +65,9 @@ public class ChannelRanking {
                     ShortMessage sm = (ShortMessage) message;
                     // IMPORTANT
                     // Channel 9 or in practice 10 (drums & percussion) shouldn't be ranked. Drums have no corresponding NOTE_OFF message
-                    if ((sm.getCommand() == NOTE_ON) && (sm.getData2() != 0) && (sm.getChannel() != 9)) {
+                    if ((sm.getCommand() == MIDI_NOTE_ON) && (sm.getData2() != 0) && (sm.getChannel() != 9)) {
                         noteOn(sm.getData1(), sm.getChannel());
-                    } else if ((sm.getCommand() == NOTE_ON) || (sm.getCommand() == NOTE_OFF)) {
+                    } else if ((sm.getCommand() == MIDI_NOTE_ON) || (sm.getCommand() == MIDI_NOTE_OFF)) {
                         noteOff(sm.getData1(), sm.getChannel());
                     }
                 }

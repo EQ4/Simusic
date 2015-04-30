@@ -47,8 +47,8 @@ import sun.audio.AudioStream;
 public class General {
 
     //public static String midiPath = "runtime/test_files/midi/imagine.mid";
-    public static String midiPath = "runtime/grouped_agents/Group3/Agent5";
-    public static String featurePath = "runtime/grouped_agents/Group3/Agent5/simusic/features";
+    public static String midiPath = "runtime/grouped_agents/Group4/Trance";
+    public static String featurePath = "runtime/grouped_agents/Group4/Trance/simusic/features";
     //public static String featurePath = "runtime/test_files/features";
 
     /**
