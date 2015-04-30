@@ -45,7 +45,7 @@ import rmi.agents.monitor.MonitorFrame;
  */
 public class Main {
 
-    public static final int MIN_PORT = 54000;
+    public static final int MIN_PORT = 51000;
     public static final int MAX_PORT = 56000;
     public static final int DEFAULT_MAX_MARKOV_ORDER = 4;
     public static final int PROBABILITY_ROUNDING_DIGITS = 1000;

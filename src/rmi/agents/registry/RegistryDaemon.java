@@ -304,7 +304,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
      * @throws RemoteException
      */
     @Override
-    public AgentDummy getRoleModel(int agentID, Double[] featureValues) throws RemoteException {
+    public synchronized AgentDummy getRoleModel(int agentID, Double[] featureValues) throws RemoteException {
         AgentDummy roleModel = null;
         String roleModelMessage = "Agent #" + agentID + "'s role model info:\n";
         double minDistance = Double.MAX_VALUE;
@@ -507,7 +507,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
     
     @Override
-    public GlobalFeatureContainer getGlobalFeatures() throws RemoteException {
+    public synchronized GlobalFeatureContainer getGlobalFeatures() throws RemoteException {
         return globalFeatures;
     }
 
