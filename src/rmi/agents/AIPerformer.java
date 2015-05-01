@@ -46,7 +46,7 @@ import run.Main;
 import static run.Main.NUMBER_OF_SOLO_PHRASES_PER_AGENT;
 
 /**
- *
+ * Main AI Performer class
  * @author Martin Minovski <martin at minovski.net>
  */
 public class AIPerformer extends Agent {
@@ -74,15 +74,15 @@ public class AIPerformer extends Agent {
     AgentInterface roleModelConnection;
 
     /**
-     *
-     * @param name
-     * @param registryURL
-     * @param ip
-     * @param port
-     * @param servicePort
-     * @param masterMonitorID
-     * @param midiFiles
-     * @param markovChordModelMaxDepth
+     * Default constructor
+     * @param name The agent name
+     * @param registryURL The registry RMI URL
+     * @param ip IP
+     * @param port Port
+     * @param servicePort Service Port
+     * @param masterMonitorID Monitor that created it
+     * @param midiFiles List of MIDI files to process
+     * @param markovChordModelMaxDepth "Memory span" of agent
      * @throws RemoteException
      */
     public AIPerformer(String name, String registryURL, String ip, int port, int servicePort, int masterMonitorID, File[] midiFiles, int markovChordModelMaxDepth) throws RemoteException {
@@ -105,7 +105,7 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
+     * Sent by Registry to command agent to load
      */
     @Override
     public void loadAgent() {
@@ -128,18 +128,30 @@ public class AIPerformer extends Agent {
         //Train Markov harmony and melody models
         log("Training Markov harmony and melody models...", false);
 
-        markovChordModel = new MarkovModel(markovModelMaxDepth, new Chord());
-        markovChordModel.trainModel(harmonySequences);
-        //TODO: Customize markovChordModelMaxDepth for MELODY
-        markovMelodyModels = new MarkovModel[Chord.maxMarkovInteger];
-        for (int i = 0; i < Chord.maxMarkovInteger; i++) {
-            //Initialize chord-dependent model
-            markovMelodyModels[i] = new MarkovModel(markovModelMaxDepth, new Note());
-            //Train model
-            Sequence singleSequence = melodyByChordSequences.get(i);
-            ArrayList<Sequence> singleSequenceList = new ArrayList<>();
-            singleSequenceList.add(singleSequence);
-            markovMelodyModels[i].trainModel(singleSequenceList);
+        try {
+            markovChordModel = new MarkovModel(markovModelMaxDepth, new Chord());
+            markovChordModel.trainModel(harmonySequences);
+            //TODO: Customize markovChordModelMaxDepth for MELODY
+            markovMelodyModels = new MarkovModel[Chord.maxMarkovInteger];
+            for (int i = 0; i < Chord.maxMarkovInteger; i++) {
+                //Initialize chord-dependent model
+                markovMelodyModels[i] = new MarkovModel(markovModelMaxDepth, new Note());
+                //Train model
+                Sequence singleSequence = melodyByChordSequences.get(i);
+                ArrayList<Sequence> singleSequenceList = new ArrayList<>();
+                singleSequenceList.add(singleSequence);
+                markovMelodyModels[i].trainModel(singleSequenceList);
+            }
+        } catch (OutOfMemoryError e) {
+            String message = "I died because there is not enough memory for my Markov matrices";
+            log(message, false);
+            try {
+                registryConnection.log(message, agentID);
+                registryConnection.disconnect(agentID);
+                return;
+            } catch (RemoteException e2) {
+                //Disconnecting anyway
+            }
         }
 
         log("Trained Markov harmony and melody models with max depth " + markovModelMaxDepth, false);
@@ -165,11 +177,10 @@ public class AIPerformer extends Agent {
         }
     }
 
-    //Sent by other AI agents to become neighbours
     /**
-     *
+     * Sent by other AI agents to become neighbours
      * @param neighbourID
-     * @return
+     * @return Result of the message
      * @throws RemoteException
      */
     @Override
@@ -187,10 +198,13 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
-     * @param auctionType
-     * @param args
-     * @return
+     * This method recursively executes a local auction
+     * among all neighbour agents of this one 
+     * (i.e. those who have this agent as role model)
+     * Base case for recursion is when agent has no neighbours
+     * @param auctionType The type of auction
+     * @param args Auction-specific arguments
+     * @return The AuctionMessage containing auction result
      * @throws RemoteException
      */
     @Override
@@ -283,8 +297,8 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
-     * @param currentTempo
+     * Used by registry to inform agent of performance start
+     * @param currentTempo The current tempo of the performance
      * @throws RemoteException
      */
     @Override
@@ -293,7 +307,7 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
+     * Used by registry to inform agent of performance stop
      * @throws RemoteException
      */
     @Override
@@ -302,8 +316,8 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
-     * @param chord
+     * CALLED BY REGISTRY HARMONY SERVICE
+     * @param chord The chord to play as arpeggio
      * @throws RemoteException
      */
     @Override
@@ -324,7 +338,7 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
+     * CALLED BY REGISTRY MELODY SERVICE
      * @throws RemoteException
      */
     @Override
@@ -366,7 +380,7 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
+     * Returns type of agent
      * @return
      */
     @Override
@@ -375,7 +389,8 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
+     * Used by monitor's Agent Control Panel
+     * to show info about agents
      * @return @throws RemoteException
      */
     @Override
@@ -395,9 +410,10 @@ public class AIPerformer extends Agent {
     }
 
     /**
-     *
-     * @param featureName
-     * @return
+     * Used by registry to calculate distances
+     * between agents
+     * @param featureName The feature name
+     * @return The feature value
      * @throws RemoteException
      */
     @Override
@@ -409,6 +425,11 @@ public class AIPerformer extends Agent {
         return null;
     }
 
+    /**
+     * used by monitors to list the agent instrument
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public Integer getInstrument() throws RemoteException {
         return agentInstrument;

@@ -31,7 +31,10 @@ import music.extractors.feature.GlobalFeatureContainer;
 import rmi.messages.AuctionMessage;
 
 /**
- *
+ * This class has not been implemented
+ * The overall functionality and purpose of the Human Performer
+ * has to be elaborated in Design
+ * Future work.
  * @author Martin Minovski <martin at minovski.net>
  */
 public class HumanPerformer extends Agent {
@@ -39,7 +42,7 @@ public class HumanPerformer extends Agent {
     GlobalFeatureContainer globalFeatures;
 
     /**
-     *
+     * Default constructor
      * @param name
      * @param registryURL
      * @param ip
@@ -52,9 +55,6 @@ public class HumanPerformer extends Agent {
         super(name, registryURL, ip, port, servicePort, masterMonitorID);
     }
 
-    /**
-     *
-     */
     @Override
     public void loadAgent() {
         //TODO: Select MIDI USB port, etc.
@@ -66,44 +66,26 @@ public class HumanPerformer extends Agent {
         }
     }
 
-    /**
-     *
-     * @param initialTempo
-     */
     @Override
     public void performanceStarted(int initialTempo) {
         log("Performance started at tempo " + initialTempo, false);
     }
 
-    /**
-     *
-     */
     @Override
     public void performanceStopped() {
         log("Performance stopped", false);
     }
 
-    /**
-     *
-     * @return
-     */
     @Override
     public AgentType getAgentType() {
         return AgentType.HumanPerformer;
     }
 
-    /**
-     *
-     * @return @throws RemoteException
-     */
     @Override
     public String getAgentTypeSpecificInfo() throws RemoteException {
         return "I am human!";
     }
 
-    /**
-     *
-     */
     @Override
     public void playSolo() {
         // Human plays all the time or...?
@@ -111,47 +93,23 @@ public class HumanPerformer extends Agent {
         // ...while agents listen to the human performance and learn (patterns, tempo, dynamics, etc).
     }
 
-    /**
-     *
-     * @param chord
-     * @throws RemoteException
-     */
     @Override
     public void beat(Chord chord) throws RemoteException {
         // Humans can play chords on a guitar without having to call their void methods Now.
     }
 
-    /**
-     *
-     * @param featureName
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public Double getAverageFeature(String featureName) throws RemoteException {
         //Not Applicable
         return (double) -1;
     }
 
-    /**
-     *
-     * @param auctionType
-     * @param args
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException {
         //Not Applicable
         return null;
     }
 
-    /**
-     *
-     * @param neighbourID
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public boolean connectNeighbour(int neighbourID) throws RemoteException {
         //Not applicable

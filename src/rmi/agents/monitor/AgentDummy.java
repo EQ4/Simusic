@@ -27,96 +27,37 @@ import java.io.Serializable;
 import enums.AgentType;
 
 /**
- *
+ * Class for creating objects which represent the agents in GUI
  * @author Martin Minovski <martin at minovski.net>
  */
 public class AgentDummy implements Serializable {
 
-    /**
-     *
-     */
     public AgentType agentType;
-
-    /**
-     *
-     */
     public String name;
-
-    /**
-     *
-     */
     public String ip;
-
-    /**
-     *
-     */
     public int port;
-
-    /**
-     *
-     */
     public int agentID;
-
-    /**
-     *
-     */
     public Integer masterMonitorID;
-
-    /**
-     *
-     */
     public int latency;
-
-    /**
-     *
-     */
     public boolean isReady;
-
-    /**
-     *
-     */
     public boolean isOffline;
-
-    /**
-     *
-     */
     public boolean isChordWinner;
-
-    /**
-     *
-     */
     public boolean isSoloing;
-
-    /**
-     *
-     */
     public boolean isConductor;
-
-    /**
-     *
-     */
     public boolean isLeafAgent;
 
     //Feature/role model vars
-
-    /**
-     *
-     */
         public Double[] features;
-
-    /**
-     *
-     */
     public String roleModelMessage;
 
     /**
-     *
-     * @param agentType
-     * @param name
-     * @param ID
-     * @param ip
-     * @param port
-     * @param masterMonitorID
+     * Default constructor
+     * @param agentType The agent type
+     * @param name The agent name
+     * @param ID Agent ID in Registry
+     * @param ip Agent IP
+     * @param port Agent port
+     * @param masterMonitorID Master monitor ID
      */
     public AgentDummy(AgentType agentType, String name, int ID, String ip, int port, Integer masterMonitorID) {
         this.agentType = agentType;
@@ -143,7 +84,7 @@ public class AgentDummy implements Serializable {
     }
 
     /**
-     *
+     * Returns the icon filename
      * @return
      */
     public String getIconFilename() {
@@ -161,7 +102,7 @@ public class AgentDummy implements Serializable {
     ;
     
     /**
-     *
+     * Returns the RMI address
      * @return
      */
     public String getRMIAddress() {
@@ -169,7 +110,7 @@ public class AgentDummy implements Serializable {
     }
 
     /**
-     *
+     * Indicates the agent is offline.
      */
     public void disconnect() {
         this.isOffline = true;

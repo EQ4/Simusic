@@ -26,7 +26,9 @@ package music.extractors.feature;
 import java.io.Serializable;
 
 /**
- *
+ * This class is used by AI Performers and Human performers
+ * to communicate decisions on the global musical performance
+ * Not yet implemented
  * @author Martin Minovski <martin at minovski.net>
  */
 public class GlobalFeatureContainer implements Serializable {

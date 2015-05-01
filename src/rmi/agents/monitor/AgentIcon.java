@@ -24,7 +24,8 @@
 package rmi.agents.monitor;
 
 /**
- *
+ * The class used by Registry to describe topology to monitors
+ * Also clickable to display control panel.
  * @author Martin Minovski <martin at minovski.net>
  */
 import java.awt.event.MouseAdapter;

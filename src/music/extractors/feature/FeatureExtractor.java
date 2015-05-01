@@ -31,7 +31,7 @@ import org.w3c.dom.*;
 import rmi.agents.Agent;
 
 /**
- *
+ * Feature extractor class which uses jSymbolic
  * @author Martin Minovski <martin at minovski.net>
  */
 public class FeatureExtractor {
@@ -44,10 +44,10 @@ public class FeatureExtractor {
     int numberOfSongs;
 
     /**
-     *
-     * @param midiFiles
-     * @param featureFolder
-     * @param overwrite
+     * Default constructor
+     * @param midiFiles the list of midi files to extract from
+     * @param featureFolder the path to write xml files to
+     * @param overwrite 
      * @param callingAgent
      */
     public FeatureExtractor(File[] midiFiles, File featureFolder, boolean overwrite, Agent callingAgent) {
@@ -176,7 +176,7 @@ public class FeatureExtractor {
     }
 
     /**
-     *
+     * Returns a specific feature value from a song number
      * @param songNumber
      * @param featureName
      * @return
@@ -187,8 +187,8 @@ public class FeatureExtractor {
     }
 
     /**
-     *
-     * @param featureName
+     * Gets an average feature value
+     * @param featureName Name as string
      * @return
      */
     public double getAverageFeatureValue(String featureName) {
@@ -197,7 +197,7 @@ public class FeatureExtractor {
     }
 
     /**
-     *
+     * Gets the song name by its number
      * @param songNumber
      * @return
      */
@@ -206,7 +206,7 @@ public class FeatureExtractor {
     }
 
     /**
-     *
+     * Prints a certain feature
      * @param songNumber
      * @param featureName
      */
@@ -214,10 +214,6 @@ public class FeatureExtractor {
         System.out.println(featureName + " of " + getSongName(songNumber) + ": " + getFeatureValue(songNumber, featureName));
     }
 
-    /**
-     *
-     * @return
-     */
     public int getNumberOfSongs() {
         return numberOfSongs;
     }
@@ -232,11 +228,7 @@ public class FeatureExtractor {
         }
         return sum;
     }
-
-    /**
-     *
-     * @return
-     */
+    
     public String getAverageFeatures() {
         String result = "\n\n--Listing Average Features:\n";
         for (Map.Entry<String, Double> entry : mapOfAverageFeatures.entrySet()) {
@@ -245,19 +237,12 @@ public class FeatureExtractor {
         return result + "\n";
     }
 
-    /**
-     *
-     * @return
-     */
+    
     public Double[] getAverageFeatureValues() {
         return mapOfAverageFeatures.values().toArray(new Double[mapOfAverageFeatures.size()]);
     }
 
-    /**
-     *
-     * @param featureName
-     * @return
-     */
+    
     public boolean hasFeature(String featureName) {
         return mapOfAverageFeatures.containsKey(featureName);
     }

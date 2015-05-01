@@ -36,106 +36,43 @@ import rmi.messages.UpdateMessage;
 import run.Main;
 
 /**
- *
+ * Agent abstract class. All basic agent functionality is in this class
  * @author Martin Minovski <martin at minovski.net>
  */
 public abstract class Agent extends UnicastRemoteObject implements Runnable, AgentInterface {
 
-    /**
-     *
-     */
     public String name;
-
-    /**
-     *
-     */
     public int agentID;
-
-    /**
-     *
-     */
     public String ip;
-
-    /**
-     *
-     */
     public int port;
-
-    /**
-     *
-     */
     public int servicePort;
-
-    /**
-     *
-     */
     public String agentRmiAddress;
-
-    /**
-     *
-     */
     public String registryURL;
-
-    /**
-     *
-     */
     public int masterMonitorID;
 
     private java.rmi.registry.Registry rmiRegistryLocation;
-
-    /**
-     *
-     */
     public HashMap<Integer, AgentInterface> neighbourConnections;
-
-    /**
-     *
-     */
     public HashMap<Integer, AgentDummy> neighbourDummies;
-
-    /**
-     *
-     */
     public RegistryInterface registryConnection;
 
     //Abstract methods
     /**
-     *
+     * Implements the interface method, but inheriting classes must override it
      * @throws RemoteException
      */
     @Override
     public abstract void loadAgent() throws RemoteException;
 
-    /**
-     *
-     * @return
-     */
     public abstract AgentType getAgentType();
-
-    /**
-     *
-     * @return @throws RemoteException
-     */
     @Override
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
-
-    /**
-     *
-     * @param initialTempo
-     * @throws RemoteException
-     */
     @Override
     public abstract void performanceStarted(int initialTempo) throws RemoteException;
-
-    /**
-     *
-     * @throws RemoteException
-     */
     @Override
     public abstract void performanceStopped() throws RemoteException;
 
     /**
-     *
+     * Abstract constructor, used by specific agents
      * @param name
      * @param registryURL
      * @param ip
@@ -159,7 +96,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     /**
-     *
+     * This thread starts the agent daemon (its RMI registry, etc)
      */
     public void start() {
         Thread agentDaemon = new Thread(this);
@@ -181,7 +118,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     /**
-     *
+     * Connects to a registry
      * @param url
      * @return
      */
@@ -208,16 +145,16 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     /**
-     *
+     * Logs in console with precise time and agent name
      * @param message
-     * @param precise
+     * @param precise Adds milliseconds if true
      */
     public void log(String message, boolean precise) {
         System.out.println(Main.getCurrentTimestamp(precise) + "<" + name + ", " + getAgentType().toString() + " #" + agentID + "> " + message);
     }
 
     /**
-     *
+     * Logs message in the registry.
      * @param logMessage
      * @throws RemoteException
      */
@@ -226,7 +163,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     /**
-     *
+     * Simple unicast messaging service
      * @param message
      * @param senderID
      * @throws RemoteException
@@ -247,9 +184,8 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         logInRegistry(logMessage);
     }
 
-    //Sent by registry or monitor to
     /**
-     *
+     * Sent by registry or monitor to indicate shutdown
      * @return @throws RemoteException
      */
     @Override
@@ -268,7 +204,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     /**
-     *
+     * Ping service, used to calculate latency
      * @return @throws RemoteException
      */
     @Override
@@ -288,7 +224,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     public abstract boolean connectNeighbour(int neighbourID) throws RemoteException;
 
     /**
-     *
+     * Agent is no longer role model of the specified agent
      * @param agentID
      * @return
      * @throws RemoteException
@@ -302,7 +238,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     /**
-     *
+     * Say hi!
      * @return @throws RemoteException
      */
     @Override
@@ -312,7 +248,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     /**
-     *
+     * Check dummies and links for ones that contain this agent
      * @param update
      * @throws RemoteException
      */

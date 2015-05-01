@@ -29,7 +29,7 @@ import rmi.interfaces.AgentInterface;
 import rmi.interfaces.RegistryInterface;
 
 /**
- *
+ * Class for displaying the agent control panel
  * @author Martin Minovski <martin at minovski.net>
  */
 public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
@@ -40,7 +40,7 @@ public class AgentControlPanel extends javax.swing.JFrame implements Runnable {
     int monitorID;
 
     /**
-     *
+     * Constructor
      * @param dummy
      * @param monitorID
      * @param registryConnection

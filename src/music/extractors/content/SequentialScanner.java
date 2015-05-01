@@ -45,6 +45,10 @@ import static run.Main.MIDI_NOTE_ON;
 public class SequentialScanner {
 
     ChannelRanking ranking;
+
+    /**
+     *
+     */
     public HarmonyNoteHandler harmonyHandler = new HarmonyNoteHandler();
     ArrayList<Chord> chordSequence;
     ArrayList<Note> noteSequence;
@@ -144,18 +148,34 @@ public class SequentialScanner {
         return chordSequence;
     }
 
+    /**
+     *
+     * @return
+     */
     public ArrayList<Note> getMelodySequence() {
         return noteSequence;
     }
     
+    /**
+     *
+     * @return
+     */
     public ArrayList<ArrayList<Note>> getMelodyByChordSequences() {
         return noteByChordSequences;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getWinningHarmonyChannel() {
         return ranking.getWinningHarmonyChannel();
     }
 
+    /**
+     *
+     * @return
+     */
     public int getWinningMelodyChannel() {
         return ranking.getWinningMelodyChannel();
     }

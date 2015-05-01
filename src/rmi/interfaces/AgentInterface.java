@@ -35,112 +35,20 @@ import rmi.messages.UpdateMessage;
  * @author Martin Minovski <martin at minovski.net>
  */
 public interface AgentInterface extends Remote {
-    //AI methods
-
-    /**
-     *
-     * @param agentID
-     * @return
-     * @throws RemoteException
-     */
     public boolean connectNeighbour(int agentID) throws RemoteException;
-
-    /**
-     *
-     * @return @throws RemoteException
-     */
     public boolean ping() throws RemoteException;
-
-    /**
-     *
-     * @param update
-     * @throws RemoteException
-     */
     public void update(UpdateMessage update) throws RemoteException;
-
-    /**
-     *
-     * @param message
-     * @param senderID
-     * @throws RemoteException
-     */
     public void unicast(String message, int senderID) throws RemoteException;
-
-    /**
-     *
-     * @throws RemoteException
-     */
     public void loadAgent() throws RemoteException;
-
-    /**
-     *
-     * @param agentID
-     * @return
-     * @throws RemoteException
-     */
     public boolean disconnectNeighbour(int agentID) throws RemoteException;
-
-    /**
-     *
-     * @return @throws RemoteException
-     */
     public boolean shutdown() throws RemoteException;
-
-    /**
-     *
-     * @param auctionType
-     * @param args
-     * @return
-     * @throws RemoteException
-     */
     public AuctionMessage executeLocalAuction(AuctionType auctionType, String[] args) throws RemoteException;
-
-    /**
-     *
-     * @param featureName
-     * @return
-     * @throws RemoteException
-     */
     public Double getAverageFeature(String featureName) throws RemoteException;
-
-    /**
-     *
-     * @return @throws RemoteException
-     */
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
-
-    /**
-     *
-     * @param initialTempo
-     * @throws RemoteException
-     */
     public void performanceStarted(int initialTempo) throws RemoteException;
-
-    /**
-     *
-     * @throws RemoteException
-     */
     public void performanceStopped() throws RemoteException;
-
-    /**
-     *
-     * @param chord
-     * @throws RemoteException
-     */
     public void beat(Chord chord) throws RemoteException;
-
-    /**
-     *
-     * @throws RemoteException
-     */
     public void playSolo() throws RemoteException;
-
-    //Test
-    /**
-     *
-     * @return @throws RemoteException
-     */
     public String sayHello() throws RemoteException;
-
     public Integer getInstrument() throws RemoteException;
 }

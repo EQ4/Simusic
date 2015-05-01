@@ -26,7 +26,7 @@ package rmi.agents.registry;
 import run.Main;
 
 /**
- *
+ * New Registry Dialog
  * @author Martin Minovski <martin at minovski.net>
  */
 public class NewRegistryDialog extends javax.swing.JDialog {
@@ -34,7 +34,7 @@ public class NewRegistryDialog extends javax.swing.JDialog {
     boolean submit = false;
 
     /**
-     *
+     * Default Constructor
      * @param parent
      * @param modal
      * @param ipAddress

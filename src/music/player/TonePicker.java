@@ -26,21 +26,10 @@ package music.player;
 import java.util.Random;
 
 /**
- *
+ * This class selects tones that have not been played the last 4 beats
  * @author Martin Minovski <martin at minovski.net>
  */
 public final class TonePicker {
-
-    /**
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        TonePicker tp = new TonePicker(false, new Random());
-        for (int i = 0; i < 100; i++) {
-            System.out.println(tp.getNextTone());
-        }
-    }
 
     Random rand;
     final int[] majorTones = new int[]{0, 4, 7};
@@ -51,7 +40,7 @@ public final class TonePicker {
     boolean isMajor;
 
     /**
-     *
+     * Default constructor
      * @param isMajor
      * @param rand
      */
@@ -77,8 +66,9 @@ public final class TonePicker {
     }
 
     /**
-     *
-     * @return
+     * Selects the next tone
+     * that has not been played the last 4 beats
+     * @return The MIDI pitch value
      */
     public int getNextTone() {
         while (counter > 0) {

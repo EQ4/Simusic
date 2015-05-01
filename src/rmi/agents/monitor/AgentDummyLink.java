@@ -26,24 +26,26 @@ package rmi.agents.monitor;
 import java.io.Serializable;
 
 /**
+ * Dummy link class used by Registry to describe topology to monitors
  *
  * @author Martin Minovski <martin at minovski.net>
  */
 public class AgentDummyLink implements Serializable {
-    
+
     AgentLinkType linkType;
     int ID;
     int fromAgentID;
     int toAgentID;
-    
+
     //Not used yet, just ideas
     boolean isActive = true;
     int strength = 1;
-    
+
     /**
+     * Default constructor
      *
-     * @param linkType
-     * @param ID
+     * @param linkType The link type
+     * @param ID Link ID
      * @param fromAgentID
      * @param toAgentID
      */
@@ -53,26 +55,13 @@ public class AgentDummyLink implements Serializable {
         this.fromAgentID = fromAgentID;
         this.toAgentID = toAgentID;
     }
-    
-    /**
-     *
-     */
+
     public enum AgentLinkType {
-        //Nice!
 
-        /**
-         *
-         */
-                AINeighbourLink,
+        //To implement in future
 
-        /**
-         *
-         */
+        AINeighbourLink,
         HumanToPerformerLink,
-
-        /**
-         *
-         */
         MonitorOwnLink
     };
 }

@@ -32,7 +32,7 @@ import rmi.interfaces.AgentInterface;
 import rmi.messages.AuctionMessage;
 
 /**
- *
+ * Monitor Daemon class. RMI registry class for Monitors
  * @author Martin Minovski <martin at minovski.net>
  */
 public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface {
@@ -40,7 +40,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     MonitorFrame frame;
 
     /**
-     *
+     * Default constructor called by the frame
      * @param frame
      * @throws RemoteException
      */
@@ -51,7 +51,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
 
     //AI methods
     /**
-     *
+     * Simple unicast message
      * @param message
      * @param senderID
      * @throws RemoteException
@@ -216,6 +216,11 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
         //Not applicable
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public Integer getInstrument() throws RemoteException {
         //Not applicable

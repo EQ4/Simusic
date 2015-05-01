@@ -47,6 +47,11 @@ public class ContentExtractor {
     ArrayList<Sequence> allNoteSequences;
     ArrayList<Sequence> allNoteByChordSequences;
 
+    /**
+     *
+     * @param files
+     * @param callingAgent
+     */
     public ContentExtractor(File[] files, Agent callingAgent) {
         this.files = files;
         this.callingAgent = callingAgent;
@@ -65,6 +70,9 @@ public class ContentExtractor {
         return !(callingAgent == null);
     }
 
+    /**
+     *
+     */
     public final void extractContent() {
 
         if (isAgentLogging()) {
@@ -195,14 +203,26 @@ public class ContentExtractor {
         return new Chord(result[0], result[1]);
     }
 
+    /**
+     *
+     * @return
+     */
     public ArrayList<Sequence> getHarmonySequences() {
         return allChordSequences;
     }
 
+    /**
+     *
+     * @return
+     */
     public ArrayList<Sequence> getMelodySequences() {
         return allNoteSequences;
     }
 
+    /**
+     *
+     * @return
+     */
     public ArrayList<Sequence> getMelodyByChordSequences() {
         return allNoteByChordSequences;
     }

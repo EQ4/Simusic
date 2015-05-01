@@ -29,7 +29,7 @@ import music.elements.Chord;
 import java.util.*;
 
 /**
- *
+ * The Markov model class
  * @author Martin Minovski <martin at minovski.net>
  */
 public class MarkovModel {
@@ -48,11 +48,11 @@ public class MarkovModel {
     private int allPlayablesRecorded;
 
     /**
-     *
-     * @param depth
-     * @param modelType
+     * Default constructor
+     * @param depth The maximum Markov order 
+     * @param modelType Chord or Note
      */
-    public MarkovModel(int depth, Playable modelType) {
+    public MarkovModel(int depth, Playable modelType) throws OutOfMemoryError {
         this.modelType = modelType;
         this.depth = depth;
         this.length = modelType.getMaximumMarkovInteger();
@@ -66,8 +66,8 @@ public class MarkovModel {
         emptyInputSequences = 0;
         allPlayablesRecorded = 0;
     }
-
-    private void initializeTable() {
+ 
+    private void initializeTable() throws OutOfMemoryError {
         markovTable = new int[tableHeight + 1][length + 1];
 
         for (int i = 0; i <= tableHeight; i++) {
@@ -92,7 +92,8 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Use this method to train the model with 
+     * an array of playable sequences extracted from MIDI
      * @param inputSequences
      */
     public void trainModel(ArrayList<Sequence> inputSequences) {
@@ -133,15 +134,17 @@ public class MarkovModel {
     }
 
     /**
-     *
-     * @param playable
+     * Use this method to record a current event
+     * during performance
+     * @param playable The playable the occurred
      */
     public void livePush(Playable playable) {
         recordPlayable(liveStream, playable);
     }
 
     /**
-     *
+     * Use this method to reset the live queue
+     * Used when no agent has an idea what the next chord should be.
      */
     public void liveFlush() {
         liveStream.clear();
@@ -173,7 +176,7 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Returns an array of the sorted next playables by probability
      * @param queryDepth
      * @return
      */
@@ -186,11 +189,6 @@ public class MarkovModel {
         return result;
     }
 
-    /**
-     *
-     * @param queryDepth
-     * @return
-     */
     public ArrayList<Playable> getProbabilities(int queryDepth) {
         if (queryDepth > depth) { // -1 ?
             //Error. Query depth cannot be larger than model depth
@@ -210,11 +208,6 @@ public class MarkovModel {
         return result;
     }
 
-    /**
-     *
-     * @param queryDepth
-     * @return
-     */
     public String printSortedPlayables(int queryDepth) {
         String result = ("Sorted probabilities for live sequence with depth " + queryDepth + "\n");
         Collection<Playable> markovOutput = getSortedProbabilities(queryDepth);
@@ -264,7 +257,7 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Test method
      */
     public void printAllInputSequeces() {
         String result = "Input sequences:\n";
@@ -280,7 +273,7 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Test method
      * @return
      */
     public ArrayList<Playable> getAllInputSequences() {
@@ -292,7 +285,7 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Test method
      * @return
      */
     public int getEmptyInputSequenceCount() {
@@ -300,24 +293,17 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Returns the number of possible events
      * @return
      */
     public int getTableSize() {
         return markovTable.length;
     }
 
-    /**
-     *
-     * @return
-     */
     public int getAllPlayablesRecorded() {
         return allPlayablesRecorded;
     }
 
-    /**
-     *
-     */
     public void testMethod() {
         int testSum = 0;
         for (int i = 1; i <= 5000; i++) {
@@ -327,13 +313,13 @@ public class MarkovModel {
     }
 
     //Added in April
-
     /**
-     *
-     * @param queryDepth
-     * @return
+     * Gets the weighted probabilities
+     * Uses all Markov orders up to M
+     * @param queryDepth The maximum depth M
+     * @return An array list
      */
-        public ArrayList<Playable> getProcessedProbabilities(int queryDepth) {
+    public ArrayList<Playable> getProcessedProbabilities(int queryDepth) {
         ArrayList<Playable> result = getProbabilities(queryDepth);
 
         for (int i = 0; i < length; i++) {
@@ -350,7 +336,8 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Gets the weighted utilities
+     * Uses all Markov orders up to M
      * @return
      */
     public ArrayList<Playable> getCondensedProcessedProbabilities() {
@@ -380,7 +367,8 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Gets the weighted sorted chords by utility
+     * Uses all Markov orders up to M
      * @return
      */
     public ArrayList<Playable> getCondensedProcessedSortedProbabilities() {
@@ -390,7 +378,9 @@ public class MarkovModel {
     }
 
     /**
-     *
+     * Gets a string representing
+     * the weighted sorted chords by utility
+     * Uses all Markov orders up to M
      * @return
      */
     public String getCondensedProcessedSortedProbabilityString() {
@@ -405,16 +395,20 @@ public class MarkovModel {
     }
 
     /**
-     *
-     * @return
+     * Gets the chord with highest
+     * weighted utility
+     * Uses all Markov orders up to M
+     * @return The best playable
      */
     public Playable getTopCondensedProcessedPlayable() {
         return getCondensedProcessedSortedProbabilities().get(0);
     }
 
     /**
-     *
-     * @return
+     * Gets the chord with highest
+     * weighted utility
+     * Uses all Markov orders up to M
+     * @return The best playable
      */
     public Playable getNextPlayable() {
         Playable nextPlayable = getTopCondensedProcessedPlayable();

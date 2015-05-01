@@ -66,77 +66,34 @@ import rmi.agents.registry.NewRegistryDialog;
 import run.Main;
 
 /**
+ * Main Monitor frame
  *
  * @author Martin Minovski <martin at minovski.net>
  */
 public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     static final int NEW_AGENT_INITIALIZE_TIME = 200;
-
-    /**
-     *
-     */
     public RegistryInterface registryConnection;
-
-    /**
-     *
-     */
     public String registryURL;
-
-    /**
-     *
-     */
     public Integer monitorID;
-
-    /**
-     *
-     */
     public int updateDelay;
-
-    /**
-     *
-     */
     public String monitorRMIAddress;
-
-    /**
-     *
-     */
     public String selectedIPInterface;
-
-    /**
-     *
-     */
     public String monitorName;
-
-    /**
-     *
-     */
     public int monitorPort;
-
-    /**
-     *
-     */
     public int monitorServicePort;
-
-    /**
-     *
-     */
     public MonitorDaemon monitorDaemon;
-
-    /**
-     *
-     */
     public java.rmi.registry.Registry rmiRegistryLocation;
-
-    /**
-     *
-     */
     public HashMap<Integer, AgentInterface> spawnedAgentConnections;
 
     private DefaultCaret logCaret;
 
     private MidiDevice.Info[] midiInfos;
 
+    /**
+     * This method is called by a second thread (not the main frame thread) to
+     * spawn the Monitor Daemon
+     */
     @Override
     public void run() {
         try {
@@ -165,7 +122,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     /**
-     *
+     * Default constructor, called by Main
      */
     public MonitorFrame() {
         initComponents();
@@ -192,7 +149,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     /**
-     *
+     * Ping Registry
      * @return @throws RemoteException
      */
     public boolean pingRegistry() throws RemoteException {
@@ -476,21 +433,20 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         return result.toArray(new String[result.size()]);
     }
 
-    
     private void setGlobalPlayerChoice() {
         /*
-        for (int i = 0; i < midiInfos.length; i++) {
-            try {
-                String midiString = midiInfos[i].getDescription() + " " + midiInfos[i].getName();
-                if (midiString.equals((String) midiCombo.getSelectedItem())) {
-                    Main.selectedMidiSynth = (Synthesizer) MidiSystem.getMidiDevice(midiInfos[i]);
-                }
+         for (int i = 0; i < midiInfos.length; i++) {
+         try {
+         String midiString = midiInfos[i].getDescription() + " " + midiInfos[i].getName();
+         if (midiString.equals((String) midiCombo.getSelectedItem())) {
+         Main.selectedMidiSynth = (Synthesizer) MidiSystem.getMidiDevice(midiInfos[i]);
+         }
 
-            } catch (MidiUnavailableException e) {
-                e.printStackTrace();
-            }
-        }
-        */
+         } catch (MidiUnavailableException e) {
+         e.printStackTrace();
+         }
+         }
+         */
     }
 
     /**

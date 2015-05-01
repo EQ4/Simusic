@@ -38,7 +38,7 @@ import music.extractors.feature.GlobalFeatureContainer;
 import run.Main;
 
 /**
- *
+ * The main Player class
  * @author Martin Minovski <martin at minovski.net>
  */
 public class Player {
@@ -51,16 +51,8 @@ public class Player {
     int channelCounter;
 
     /**
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        //Player player = new Player();
-        //player.playArpeggio(new Chord("C", "maj"), 0, 1600, 4, 70);
-    }
-
-    /**
-     *
+     * Main constructor
+     * Uses the MIDI Synth variable in Main
      */
     public Player() {
         rand = new Random();
@@ -86,6 +78,13 @@ public class Player {
         }
     }
 
+    /**
+     * Called by agents to play arpeggios
+     * @param chord The chord to play
+     * @param instrument
+     * @param agentFextract The object containing agent-specific features
+     * @param globalFeatures The object containing the global features
+     */
     public void playHarmony(Chord chord, int instrument, FeatureExtractor agentFextract, GlobalFeatureContainer globalFeatures) {
         //Get MIDI channel number
         Integer channel = getChannelForInstrument(instrument);
@@ -124,6 +123,13 @@ public class Player {
         }
     }
 
+    /**
+     * Method used by agents for solos
+     * @param sequence The sequence to play
+     * @param instrument
+     * @param agentFextract The object containing agent-specific features
+     * @param globalFeatures The object containing the global features
+     */
     public void playSoloPhrase(Sequence sequence, int instrument, FeatureExtractor agentFextract, GlobalFeatureContainer globalFeatures) {
         Integer channel = getChannelForInstrument(instrument);
         if (channel == null) {

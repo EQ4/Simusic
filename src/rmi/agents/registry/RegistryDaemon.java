@@ -45,7 +45,8 @@ import rmi.agents.monitor.AgentDummyLink;
 import rmi.agents.monitor.AgentDummyLink.AgentLinkType;
 
 /**
- *
+ * The main Registry daemon
+ * Responds to queries, etc.
  * @author Martin Minovski <martin at minovski.net>
  */
 public class RegistryDaemon extends UnicastRemoteObject implements RegistryInterface {
@@ -67,11 +68,11 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     RegistryServiceType newServiceFlag;
 
     HashMap<String, Double> sessionFeatures;
-    
+
     GlobalFeatureContainer globalFeatures;
 
     /**
-     *
+     * Constructor
      * @param frame
      * @throws RemoteException
      */
@@ -85,7 +86,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     /**
-     *
+     * Connect method - responds with a full Update message.
      * @param agentType
      * @param agentName
      * @param agentIP
@@ -151,7 +152,6 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
         return getFirstUpdate(newAgentDummy);
     }
 
-    
     private void loadAgentSync(int agentID) throws RemoteException {
         //This method ensures that only 1 agent is being loaded at a time.
         synchronized (loadAgentLock) {
@@ -160,7 +160,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     /**
-     *
+     * Triggers global monitor update
      * @throws RemoteException
      */
     public synchronized void triggerGlobalUpdate() throws RemoteException {
@@ -195,7 +195,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     }
 
     /**
-     *
+     * Ping service
      * @param id
      * @return
      * @throws RemoteException
@@ -208,8 +208,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public boolean isPerforming() throws RemoteException {
@@ -225,8 +224,9 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     @Override
     public synchronized boolean disconnect(int id) throws RemoteException {
         AgentDummy agent = frame.agentDummies.get(id);
-        frame.agentConnections.set(id, null);
+        frame.agentConnections.remove(id);
         frame.log(agent.name + " (#" + id + ") has disconnected.", false);
+        agent.isReady = true;
         agent.isOffline = true;
 
         //Update agents
@@ -341,8 +341,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public String startPerformance() throws RemoteException {
@@ -460,7 +459,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                         for (AgentInterface agentConnection : frame.agentConnections) {
                             agentConnection.unicast("TO-MONITORS-ONLY:" + soloLogString, -1);
                         }
-                        
+
                         //Play agent solo
                         frame.agentConnections.get(currentChordMessage.chordOriginID).playSolo();
                     } catch (RemoteException e) {
@@ -477,8 +476,7 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public String stopPerformance() throws RemoteException {
@@ -510,7 +508,12 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
     private void adaptCommonFeaturesTo(int agentID) throws RemoteException {
         //TODO: Implement
     }
-    
+
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public synchronized GlobalFeatureContainer getGlobalFeatures() throws RemoteException {
         return globalFeatures;

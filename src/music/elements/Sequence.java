@@ -64,26 +64,50 @@ public class Sequence {
         }
     }
     
+    /**
+     *
+     * @param source
+     */
     public void setMIDISource(String source) {
         MIDIFileSource = source;
     }
     
+    /**
+     *
+     * @return
+     */
     public String getMIDISource() {
         return MIDIFileSource;
     }
     
+    /**
+     *
+     * @param channelNumber
+     */
     public void setMIDIChannel(int channelNumber) {
         MIDIChannel = channelNumber;
     }
     
+    /**
+     *
+     * @return
+     */
     public Integer getMIDIChannel() {
         return MIDIChannel;
     }
     
+    /**
+     *
+     * @param chord
+     */
     public void setSongKey(Chord chord) {
         songKey = chord;
     }
     
+    /**
+     *
+     * @return
+     */
     public Chord getSongKey() {
         return songKey;
     }

@@ -31,16 +31,16 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 /**
- *
+ * The custom developed instrument extractor
  * @author Martin Minovski <martin at minovski.net>
  */
 public class InstrumentExtractor {
 
 
     /**
-     *
-     * @param file
-     * @return
+     * Returns the first instrument in the event stream
+     * @param file A single midi file to extract from
+     * @return The MIDI value of the chosen instrument
      */
     public static int getFirstInstrument(File file) {
         try {
@@ -66,8 +66,8 @@ public class InstrumentExtractor {
     }
 
     /**
-     *
-     * @param files
+     * A static method which returns the most frequently used instrument
+     * @param files MIDI files to extract from
      * @return
      */
     public static int getMostFrequentInstrument(File[] files) {
@@ -87,8 +87,8 @@ public class InstrumentExtractor {
     }
 
     /**
-     *
-     * @param files
+     * A static method which returns the most frequently used instruments
+     * @param files MIDI files
      * @return
      */
     public static int[] getMostFrequentInstruments(File[] files) {
