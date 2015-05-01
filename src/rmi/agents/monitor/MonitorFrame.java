@@ -152,7 +152,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     + "\n    - port " + monitorPort
                     + "\n    - s. port " + monitorServicePort
                     + "\n", false);
-            statusTextField.setText("Idle (not connected to a registry)");
+            statusTextField.setText("Idle (not connected to a Registry)");
         } catch (ExportException e) {
             if (e.getMessage().contains("already in use")) {
                 alert("Port is already in use!");
@@ -262,8 +262,8 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         try {
             registryConnection = (RegistryInterface) Naming.lookup(registryURL);
         } catch (Exception e) {
-            log("Could not connect to registry. Look at console for exception stack trace", false);
-            alert("Could not connect to registry. Look at console for exception stack trace");
+            log("Could not connect to Registry. Look at console for exception stack trace", false);
+            alert("Could not connect to Registry. Look at console for exception stack trace");
             e.printStackTrace();
         }
 
@@ -594,7 +594,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
                 //Draw arrow base
                 int rectangleBaseWidth = 200;
-                int rectangleBaseHeight = 70;
+                int rectangleBaseHeight = 85;
                 int rectXOffset = 110;
                 int rectYOffset = 34;
 
@@ -889,7 +889,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         registryMenu.setText("Registry");
         registryMenu.setEnabled(false);
 
-        startNewRegistryBtn.setText("Start new local registry...");
+        startNewRegistryBtn.setText("Start new local Registry...");
         startNewRegistryBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startNewRegistryBtnActionPerformed(evt);
@@ -897,7 +897,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         });
         registryMenu.add(startNewRegistryBtn);
 
-        connectBtn.setText("Connect to existing registry...");
+        connectBtn.setText("Connect to existing Registry...");
         connectBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 connectBtnActionPerformed(evt);

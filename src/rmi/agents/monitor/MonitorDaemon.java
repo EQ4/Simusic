@@ -215,5 +215,11 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     public void loadAgent() throws RemoteException {
         //Not applicable
     }
-;
+
+    @Override
+    public Integer getInstrument() throws RemoteException {
+        //Not applicable
+        return -2;
+    }
+
 }

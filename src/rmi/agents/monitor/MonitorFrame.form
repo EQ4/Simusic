@@ -40,7 +40,7 @@
           <SubComponents>
             <MenuItem class="javax.swing.JMenuItem" name="startNewRegistryBtn">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Start new local registry..."/>
+                <Property name="text" type="java.lang.String" value="Start new local Registry..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startNewRegistryBtnActionPerformed"/>
@@ -48,7 +48,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="connectBtn">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Connect to existing registry..."/>
+                <Property name="text" type="java.lang.String" value="Connect to existing Registry..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="connectBtnActionPerformed"/>

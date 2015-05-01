@@ -157,4 +157,10 @@ public class HumanPerformer extends Agent {
         //Not applicable
         return false;
     }
+    
+    @Override
+    public Integer getInstrument() throws RemoteException {
+        //To do: implement
+        return -1;
+    }
 }

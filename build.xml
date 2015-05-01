@@ -19,6 +19,9 @@
         <copy todir="${dist.dir}/runtime" overwrite="true">
             <fileset dir="${basedir}/runtime" includes="**" />
         </copy>
+        <copy todir="${dist.dir}/lib" overwrite="true">
+            <fileset dir="${basedir}/lib" includes="**" />
+        </copy>
         <copy file="README.md" tofile="${dist.dir}/README.TXT" overwrite="true"/>
         <copy file="maintenance.pdf" tofile="${dist.dir}/maintenance.pdf" overwrite="true"/>
     </target>

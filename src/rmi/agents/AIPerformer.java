@@ -68,7 +68,7 @@ public class AIPerformer extends Agent {
 
     private String roleModelInfo;
     private boolean isLoading;
-    private int agentInstrument;
+    private Integer agentInstrument;
 
     AgentDummy roleModelDummy;
     AgentInterface roleModelConnection;
@@ -337,11 +337,10 @@ public class AIPerformer extends Agent {
             MarkovModel currentMelodyModel = markovMelodyModels[lastGlobalChordMarkovInteger];
             Sequence soloSequence = new Sequence();
             Double lastNoteProbability = Double.MIN_NORMAL;
-            
+
             //3, 4, 6 or 8
             int numberOfNotes = (3 + Main.rand.nextInt(2)) * (1 + Main.rand.nextInt(2));
-            
-            
+
             for (int j = 0; j < numberOfNotes; j++) {
                 if (Double.isNaN(lastNoteProbability)) {
                     break;
@@ -385,9 +384,11 @@ public class AIPerformer extends Agent {
         if ((midiFiles != null) && (featuresFolder != null)) {
             result += "Files: " + Arrays.toString(midiFiles) + "\n\n"
                     + "Folder: " + featuresFolder.getPath() + "\n\n"
+                    + "My instrument is " + agentInstrument + "\n\n"
                     + ((roleModelDummy != null) ? "Role Model: " + roleModelDummy.name + ", info: \n" + roleModelInfo + "\n\n" : "")
                     + ((!isLoading) ? markovChordModel.getCondensedProcessedSortedProbabilityString() : "Agent still loading markov model\n")
                     + ((!isLoading) ? fextract.getAverageFeatures() + "\n" : "Agent still loading features")
+                    + "My instrument is " + agentInstrument
                     + "\n";
         }
         return result;
@@ -407,4 +408,10 @@ public class AIPerformer extends Agent {
         //Else - unknown feature name
         return null;
     }
+
+    @Override
+    public Integer getInstrument() throws RemoteException {
+        return agentInstrument;
+    }
+
 }

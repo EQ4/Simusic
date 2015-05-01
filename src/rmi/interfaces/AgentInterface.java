@@ -34,7 +34,7 @@ import rmi.messages.UpdateMessage;
  *
  * @author Martin Minovski <martin at minovski.net>
  */
-public interface AgentInterface extends Remote  {
+public interface AgentInterface extends Remote {
     //AI methods
 
     /**
@@ -43,12 +43,11 @@ public interface AgentInterface extends Remote  {
      * @return
      * @throws RemoteException
      */
-        public boolean connectNeighbour(int agentID) throws RemoteException;
+    public boolean connectNeighbour(int agentID) throws RemoteException;
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     public boolean ping() throws RemoteException;
 
@@ -83,8 +82,7 @@ public interface AgentInterface extends Remote  {
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     public boolean shutdown() throws RemoteException;
 
@@ -107,11 +105,10 @@ public interface AgentInterface extends Remote  {
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
-    
+
     /**
      *
      * @param initialTempo
@@ -124,7 +121,7 @@ public interface AgentInterface extends Remote  {
      * @throws RemoteException
      */
     public void performanceStopped() throws RemoteException;
-    
+
     /**
      *
      * @param chord
@@ -137,14 +134,13 @@ public interface AgentInterface extends Remote  {
      * @throws RemoteException
      */
     public void playSolo() throws RemoteException;
-    
-    
-    //Test
 
+    //Test
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
-        public String sayHello() throws RemoteException;
+    public String sayHello() throws RemoteException;
+
+    public Integer getInstrument() throws RemoteException;
 }
