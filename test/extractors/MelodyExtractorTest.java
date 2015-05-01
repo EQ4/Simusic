@@ -29,4 +29,7 @@ package extractors;
  */
 public class MelodyExtractorTest {
     
+    public static void main(String[] args) {
+        //Melody extractor still in very early dev stage.
+    }
 }

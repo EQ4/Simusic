@@ -36,22 +36,6 @@ import javax.sound.midi.Track;
  */
 public class InstrumentExtractor {
 
-    /**
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        test();
-    }
-
-    /**
-     *
-     */
-    public static void test() {
-        String path = "E:\\Documents\\NetBeansProjects\\Simusic\\runtime\\sample_agents\\Group1\\Doug";
-        System.out.println(Arrays.toString(getMostFrequentInstruments(new File(path).listFiles())));
-        System.out.println(getMostFrequentInstrument(new File(path).listFiles()));
-    }
 
     /**
      *

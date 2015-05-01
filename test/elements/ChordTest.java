@@ -23,10 +23,19 @@
  */
 package elements;
 
+import music.elements.Chord;
+
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
 public class ChordTest {
-    
+
+    public static void main(String[] args) {
+        System.out.println("Creating C Major chord...");
+        Chord chord = new Chord("C", "maj");
+        System.out.println("Markov integer: " + chord.getMarkovInteger());
+        chord.setProbability(3.333333);
+        System.out.println("Rounded probability: " + chord.getRoundedProbability());
+    }
 }

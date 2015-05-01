@@ -40,7 +40,7 @@ import run.Main;
  * @author Martin Minovski <martin at minovski.net>
  */
 public abstract class Agent extends UnicastRemoteObject implements Runnable, AgentInterface {
-    
+
     /**
      *
      */
@@ -80,7 +80,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
      *
      */
     public int masterMonitorID;
-    
+
     private java.rmi.registry.Registry rmiRegistryLocation;
 
     /**
@@ -99,28 +99,26 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     public RegistryInterface registryConnection;
 
     //Abstract methods
-
     /**
      *
      * @throws RemoteException
      */
-        @Override
+    @Override
     public abstract void loadAgent() throws RemoteException;
-    
+
     /**
      *
      * @return
      */
     public abstract AgentType getAgentType();
-    
+
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public abstract String getAgentTypeSpecificInfo() throws RemoteException;
-    
+
     /**
      *
      * @param initialTempo
@@ -128,14 +126,14 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
      */
     @Override
     public abstract void performanceStarted(int initialTempo) throws RemoteException;
-    
+
     /**
      *
      * @throws RemoteException
      */
     @Override
     public abstract void performanceStopped() throws RemoteException;
-    
+
     /**
      *
      * @param name
@@ -155,11 +153,11 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         this.servicePort = servicePort;
         this.masterMonitorID = masterMonitorID;
         this.agentRmiAddress = "rmi://" + ip + ":" + port + "/" + name;
-        
+
         this.neighbourConnections = new HashMap<>();
         this.neighbourDummies = new HashMap<>();
     }
-    
+
     /**
      *
      */
@@ -168,7 +166,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         agentDaemon.setDaemon(true);
         agentDaemon.start();
     }
-    
+
     @Override
     public void run() {
         try {
@@ -181,7 +179,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
             e.printStackTrace();
         }
     }
-    
+
     /**
      *
      * @param url
@@ -196,7 +194,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         }
         return null;
     }
-    
+
     private void connectToRegistry() throws RemoteException {
         registryConnection = (RegistryInterface) RMIconnect(registryURL);
 
@@ -204,11 +202,11 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         UpdateMessage firstUpdate = registryConnection.connect(getAgentType(), name, ip, port, masterMonitorID);
         this.agentID = firstUpdate.welcomePack.agentID;
     }
-    
+
     private void disconnectFromRegistry() throws RemoteException {
         registryConnection.disconnect(agentID);
     }
-    
+
     /**
      *
      * @param message
@@ -217,7 +215,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     public void log(String message, boolean precise) {
         System.out.println(Main.getCurrentTimestamp(precise) + "<" + name + ", " + getAgentType().toString() + " #" + agentID + "> " + message);
     }
-    
+
     /**
      *
      * @param logMessage
@@ -226,7 +224,7 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     public void logInRegistry(String logMessage) throws RemoteException {
         registryConnection.log(logMessage, agentID);
     }
-    
+
     /**
      *
      * @param message
@@ -240,6 +238,9 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
             logMessage = "My master monitor sent me '" + message + "'";
         } else if (neighbourDummies.containsKey(senderID)) {
             logMessage = neighbourDummies.get(senderID).name + " sent me '" + message + "'";
+        } else if (message.contains("TO-MONITORS-ONLY")) {
+            //Ignore message
+            return;
         } else {
             logMessage = "Non-neighbour (id=" + senderID + " sent me '" + message + "'";
         }
@@ -247,13 +248,11 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     //Sent by registry or monitor to
-
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
-        @Override
+    @Override
     public boolean shutdown() throws RemoteException {
         logInRegistry("Shutdown triggered by master monitor #" + masterMonitorID);
         disconnectFromRegistry();
@@ -264,14 +263,13 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         return true;
     }
-    
+
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public boolean ping() throws RemoteException {
@@ -280,16 +278,15 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
     }
 
     //Sent by other AI agents to become neighbours
-
     /**
      *
      * @param neighbourID
      * @return
      * @throws RemoteException
      */
-        @Override
+    @Override
     public abstract boolean connectNeighbour(int neighbourID) throws RemoteException;
-    
+
     /**
      *
      * @param agentID
@@ -303,18 +300,17 @@ public abstract class Agent extends UnicastRemoteObject implements Runnable, Age
         neighbourConnections.remove(agentID);
         return true;
     }
-    
+
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public String sayHello() throws RemoteException {
         log("Someone said hi!", false);
         return "Hi from " + name + "!";
     }
-    
+
     /**
      *
      * @param update

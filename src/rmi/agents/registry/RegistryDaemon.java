@@ -455,7 +455,12 @@ public class RegistryDaemon extends UnicastRemoteObject implements RegistryInter
                         adaptCommonFeaturesTo(currentChordMessage.chordOriginID);
 
                         //Log solo
-                        frame.log("@ " + frame.agentDummies.get(currentSoloistID).name + " is soloing!", true);
+                        String soloLogString = "@ " + frame.agentDummies.get(currentSoloistID).name + " is soloing!";
+                        frame.log(soloLogString, true);
+                        for (AgentInterface agentConnection : frame.agentConnections) {
+                            agentConnection.unicast("TO-MONITORS-ONLY:" + soloLogString, -1);
+                        }
+                        
                         //Play agent solo
                         frame.agentConnections.get(currentChordMessage.chordOriginID).playSolo();
                     } catch (RemoteException e) {

@@ -27,6 +27,9 @@ package player;
  *
  * @author Martin Minovski <martin at minovski.net>
  */
-public class ChordTest {
+public class SoloTest {
     
+    public static void main(String[] args) {
+
+    }
 }

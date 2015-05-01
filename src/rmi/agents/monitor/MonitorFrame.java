@@ -48,8 +48,15 @@ import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import enums.AgentType;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Synthesizer;
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
+import music.player.Player;
 import rmi.agents.Agent;
 import rmi.agents.AIPerformer;
 import rmi.agents.HumanPerformer;
@@ -126,6 +133,10 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
      */
     public HashMap<Integer, AgentInterface> spawnedAgentConnections;
 
+    private DefaultCaret logCaret;
+
+    private MidiDevice.Info[] midiInfos;
+
     @Override
     public void run() {
         try {
@@ -166,11 +177,14 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
         //Set up controls
         ipCombo.setModel(new DefaultComboBoxModel(getAllIPs()));
+        //TO IMPLEMENT: Midi Synth Picker
+        //midiCombo.setModel(new DefaultComboBoxModel(getAllMIDIs()));
+
         monitorNameField.setText(Main.getRandomName());
 
         this.setLocationRelativeTo(null);
         this.setVisible(true);
-        DefaultCaret logCaret = (DefaultCaret) logField.getCaret();
+        logCaret = (DefaultCaret) logField.getCaret();
         logCaret.setUpdatePolicy(ALWAYS_UPDATE);
 
         spawnedAgentConnections = new HashMap<>();
@@ -179,8 +193,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     public boolean pingRegistry() throws RemoteException {
         if (registryConnection == null) {
@@ -191,8 +204,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     public boolean isAssignedID() throws RemoteException {
         return (monitorID != null);
@@ -200,8 +212,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     public boolean checkConnection() throws RemoteException {
         boolean truthValue = (pingRegistry() && isAssignedID());
@@ -338,7 +349,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 } else {
                     return;
                 }
-                
+
                 //Get Markov level
                 String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(this,
                         "Specify maximum Markov chain order\nI.e. agent memory span\n(press OK if unsure)",
@@ -350,7 +361,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                 if (maxMarkovChainLevel == null) {
                     return;
                 }
-                
+
                 //Create agent
                 newAgent = new AIPerformer(name, registryURL, selectedIPInterface, Main.getRandomPort(), Main.getRandomPort(), monitorID, agentFiles, Integer.parseInt(maxMarkovChainLevel));
             } else {
@@ -375,7 +386,14 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
     }
 
     private void showAbout() {
-        alert("Simusic is awesome!");
+        String readmeContent = "README file not found!";
+        try {
+            readmeContent = new Scanner(new File("README.txt")).useDelimiter("\\Z").next();
+            log(readmeContent, false);
+        } catch (FileNotFoundException e) {
+            System.out.println(readmeContent);
+        }
+        log(readmeContent, false);
     }
 
     private void alert(String message) {
@@ -435,6 +453,46 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         return result.toArray(new String[result.size()]);
     }
 
+    private String[] getAllMIDIs() {
+        ArrayList<String> result = new ArrayList<>();
+        try {
+            // Obtain information about all the installed synthesizers.
+            MidiDevice device = null;
+            midiInfos = MidiSystem.getMidiDeviceInfo();
+            for (int i = 0; i < midiInfos.length; i++) {
+                try {
+                    device = MidiSystem.getMidiDevice(midiInfos[i]);
+                } catch (MidiUnavailableException e) {
+                    // Handle or throw exception...
+                }
+                if (device instanceof Synthesizer) {
+                    result.add(midiInfos[i].getDescription() + " " + midiInfos[i].getName());
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error resolving own IPs");
+            e.printStackTrace();
+        }
+        return result.toArray(new String[result.size()]);
+    }
+
+    
+    private void setGlobalPlayerChoice() {
+        /*
+        for (int i = 0; i < midiInfos.length; i++) {
+            try {
+                String midiString = midiInfos[i].getDescription() + " " + midiInfos[i].getName();
+                if (midiString.equals((String) midiCombo.getSelectedItem())) {
+                    Main.selectedMidiSynth = (Synthesizer) MidiSystem.getMidiDevice(midiInfos[i]);
+                }
+
+            } catch (MidiUnavailableException e) {
+                e.printStackTrace();
+            }
+        }
+        */
+    }
+
     /**
      *
      * @throws RemoteException
@@ -458,12 +516,25 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         monitorServicePortField.setEditable(false);
         registryMenu.setEnabled(true);
         ipCombo.setEnabled(false);
+        //midiCombo.setEnabled(false);
 
         //Set variables
         selectedIPInterface = (String) ipCombo.getSelectedItem();
         monitorName = monitorNameField.getText();
         monitorPort = Integer.parseInt(monitorPortField.getText());
         monitorServicePort = Integer.parseInt(monitorServicePortField.getText());
+
+        // Set global MIDI synth
+        // TODO: Set MIDI synth from dropdown menu
+        // setGlobalPlayerChoice();
+        try {
+            Main.selectedMidiSynth = MidiSystem.getSynthesizer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //Create the local instance of Player
+        Main.player = new Player();
 
         //Set RMI hostname system variable
         System.setProperty("java.rmi.server.hostname", selectedIPInterface);
@@ -493,9 +564,9 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                             + dummy.ip + ":"
                             + dummy.port + "<br />ID: "
                             + dummy.agentID
-                            + ((dummy.masterMonitorID == null) ? "" : (", owned by M" + dummy.masterMonitorID))
+                            + ((dummy.masterMonitorID == null) ? "" : (", from monitor " + dummy.masterMonitorID))
                             + (dummy.isOffline ? "<br />OFFLINE" : "")
-                            + (!dummy.isReady ? "<br /><em>AGENT LOADING</em>" : "")
+                            + (!dummy.isReady ? "<br /><em>AGENT LOADING</em>" : "<br /><strong>AGENT READY</strong>")
                             + "</html>", dummy.agentID) {
                                 @Override
                                 void iconClicked() {
@@ -517,7 +588,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         JPanel newPanel = new JPanel(newLayout) {
             @Override
             public void paintComponent(Graphics g) {
-                //TODO: Paint leaf and conductor agents
 
                 Graphics2D newGraphics2D = (Graphics2D) g.create();
                 newGraphics2D.setColor(java.awt.Color.BLACK);
@@ -587,7 +657,6 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     y2 += 40 + Main.rand.nextInt(max_jitter);
 
                     //Following 10 lines taken from Stack Overflow
-
                     //Draw arrow head and line
                     newGraphics2D = (Graphics2D) g.create();
                     newGraphics2D.setColor(java.awt.Color.white);
@@ -608,7 +677,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
                     if (update.updatedDummies.get(iconFrom.agentIDNote).isLeafAgent) {
                         continue;
                     }
-                    
+
                     //Draw arrow base
                     newGraphics2D = (Graphics2D) g.create();
                     newGraphics2D.setColor(java.awt.Color.ORANGE);
@@ -718,7 +787,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
         logField.setColumns(20);
         logField.setFont(new java.awt.Font("Verdana", 0, 10)); // NOI18N
         logField.setRows(5);
-        logField.setText("How to get started:\n1) Press 'Start Monitor' button\n2) Registry > Start new local registry\n3) Agents > Add...\n4) Performance > Start performance\n\n* Agent icons are clickable\n** Names and ports are randomly generated\n\n-------------------------------------------------\n\n");
+        logField.setText("How to get started:\n1) Press 'Start Monitor' button\n2) Registry > Start new local registry\n3) Agents > Add...\n4) Performance > Start performance\n\n* Agent icons are clickable\n** Names and ports are randomly generated\n\n--------------------------------------------------\n\n");
         jScrollPane1.setViewportView(logField);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -1050,7 +1119,7 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             } else {
                 return;
             }
-            
+
             //Get markov level
             String maxMarkovChainLevel = (String) JOptionPane.showInputDialog(this,
                     "Specify maximum Markov chain depth\n(press OK if unsure)",
@@ -1102,6 +1171,16 @@ public class MonitorFrame extends javax.swing.JFrame implements Runnable {
             e.printStackTrace();
         }
     }//GEN-LAST:event_stopPerformanceItemActionPerformed
+
+    private void logFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_logFieldFocusGained
+        //Fixes log autoscroll bug
+        logCaret = (DefaultCaret) logField.getCaret();
+        logCaret.setUpdatePolicy(ALWAYS_UPDATE);
+    }//GEN-LAST:event_logFieldFocusGained
+
+    private void monitorIdTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_monitorIdTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_monitorIdTextFieldActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;

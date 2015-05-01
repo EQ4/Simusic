@@ -23,10 +23,21 @@
  */
 package extractors;
 
+import java.io.File;
+import music.extractors.instrument.InstrumentExtractor;
+import static music.extractors.instrument.InstrumentExtractor.getMostFrequentInstrument;
+import testvars.General;
+
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
 public class InstrumentExtractorTest {
-    
+
+    public static void main(String[] args) {
+        File letItBe = new File(General.midiPath + "/let_it_be.mid");
+        File imagine = new File(General.midiPath + "/imagine.mid");
+        File[] file = new File[] {letItBe, imagine};
+        System.out.println(getMostFrequentInstrument(file));
+    }
 }

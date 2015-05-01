@@ -34,10 +34,14 @@ import testvars.General;
 public class FeatureExtractorTest {
 
     public static void main(String[] args) {
-        //Extract features
-        FeatureExtractor fextract = extractChords(General.midiPath, General.featurePath);
-        //Print all average features
-        System.out.println(fextract.getAverageFeatures());
+        //Extract features from imagine.mid
+        FeatureExtractor imagineFeatures = extractChords(General.midiPath + "/imagine.mid", General.featurePath);
+        FeatureExtractor letItBeFeatures = extractChords(General.midiPath + "/let_it_be.mid", General.featurePath);
+        FeatureExtractor bothFeatures = extractChords(General.midiPath, General.featurePath);
+        
+        System.out.println("Imagine tempo: " + imagineFeatures.getAverageFeatureValue("Initial Tempo"));
+        System.out.println("Let It Be tempo: " + letItBeFeatures.getAverageFeatureValue("Initial Tempo"));
+        System.out.println("Average tempo of the two songs: " + bothFeatures.getAverageFeatureValue("Initial Tempo"));
     }
 
     public static FeatureExtractor extractChords(String midiPath, String featureFolderPath) {

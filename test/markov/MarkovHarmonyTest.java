@@ -46,7 +46,7 @@ public class MarkovHarmonyTest {
         //Train new markov model
         MarkovModel markovModel = new MarkovModel(3, new Chord());
         markovModel.trainModel(chords);
-        System.out.println(markovModel.toString());
+        //System.out.println(markovModel.toString());
         return markovModel;
     }
 

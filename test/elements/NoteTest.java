@@ -23,10 +23,20 @@
  */
 package elements;
 
+import music.elements.Note;
+import music.elements.Playable;
+
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
 public class NoteTest {
     
+    public static void main(String[] args) {
+        
+        System.out.println("Creating C note...");
+        Playable playableNote = Note.integerToNewNote(5);
+        System.out.println("Object type: " + playableNote.getType());
+        System.out.println("Note name: " + playableNote.toString());
+    }
 }

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import javax.sound.midi.Synthesizer;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import music.player.Player;
@@ -58,6 +59,7 @@ public class Main {
     public static String[] names;
     public static Random rand;
     public static int windowsCurrentlyOpened;
+    public static Synthesizer selectedMidiSynth;
     public static Player player;
 
     /**
@@ -68,8 +70,6 @@ public class Main {
         //Initialise static variables
         rand = new Random();
         windowsCurrentlyOpened = 0;
-
-        player = new Player();
 
         //Set RMI policy variables
         System.setProperty("java.security.policy", "resources/simusic.policy");

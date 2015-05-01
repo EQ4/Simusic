@@ -25,6 +25,8 @@ package music.player;
 
 import java.util.Random;
 import javax.sound.midi.MidiChannel;
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiDevice.Info;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Synthesizer;
 import music.elements.Chord;
@@ -73,12 +75,7 @@ public class Player {
     }
 
     private Synthesizer getSynth() {
-        try {
-            return MidiSystem.getSynthesizer();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        return Main.selectedMidiSynth;
     }
 
     private void openSynth(Synthesizer synth) {

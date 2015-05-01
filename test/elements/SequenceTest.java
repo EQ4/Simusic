@@ -23,12 +23,22 @@
  */
 package elements;
 
+import music.elements.Chord;
+import music.elements.Sequence;
+
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
 public class SequenceTest {
+
     public static void main(String[] args) {
-        //To do 
+        System.out.println("Creating a sequence of notes...");
+        Sequence s = new Sequence();
+        s.appendPlayable(new Chord("C", "maj"));
+        s.appendPlayable(new Chord("F", "maj"));
+        s.appendPlayable(new Chord("G", "maj"));
+        System.out.println("Resulting sequence: " + s.toString());
+        System.out.println("Resulting sequence: " + s.toString());
     }
 }

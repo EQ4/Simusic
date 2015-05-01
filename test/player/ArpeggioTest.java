@@ -23,12 +23,33 @@
  */
 package player;
 
+import javax.sound.midi.MidiSystem;
+import music.elements.Chord;
+import music.extractors.feature.GlobalFeatureContainer;
+import music.player.Player;
+import run.Main;
+
 /**
  *
  * @author Martin Minovski <martin at minovski.net>
  */
 public class ArpeggioTest {
+
     public static void main(String[] args) {
-        //To do
+        //Set MIDI synth
+        try {
+            Main.selectedMidiSynth = MidiSystem.getSynthesizer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //Create new player
+        Player player = new Player();
+
+        //Create global feature object and set tempo
+        GlobalFeatureContainer globalFeatures = new GlobalFeatureContainer();
+        globalFeatures.setCurrentTempo(90);
+
+        //Play arpeggio
+        player.playHarmony(new Chord("C", "maj"), 0, null, globalFeatures);
     }
 }

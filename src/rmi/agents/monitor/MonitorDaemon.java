@@ -50,22 +50,25 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     }
 
     //AI methods
-
     /**
      *
      * @param message
      * @param senderID
      * @throws RemoteException
      */
-        @Override
+    @Override
     public void unicast(String message, int senderID) throws RemoteException {
-        frame.log("Agent " + senderID + " told me '" + message + "'", false);
+        String messageCopy = message.replace("TO-MONITORS-ONLY:", "");
+        String agentString = "Agent " + senderID;
+        if (senderID == -1) {
+            agentString = "Registry";
+        }
+        frame.log(agentString + " told me '" + messageCopy + "'", false);
     }
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public boolean ping() throws RemoteException {
@@ -73,13 +76,11 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     }
 
     //Monitor methods
-
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
-        @Override
+    @Override
     public String sayHello() throws RemoteException {
         frame.log("Registry says hi!", false);
         return "Hi from agent!";
@@ -121,8 +122,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public boolean shutdown() throws RemoteException {
@@ -134,8 +134,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
 
     /**
      *
-     * @return
-     * @throws RemoteException
+     * @return @throws RemoteException
      */
     @Override
     public String getAgentTypeSpecificInfo() throws RemoteException {
@@ -184,7 +183,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
      */
     @Override
     public void beat(Chord chord) throws RemoteException {
-        frame.log("Current chord: " + chord.toString() + " by agent #" + chord.agentID + ", probability: " + chord.getProbability() + (chord.isDefault ? " DEFAULT - NOONE KNOWS NEXT CHORD!" : ""), true);
+        frame.log("Current chord: " + chord.toString() + " by agent #" + chord.agentID + ", utility: " + chord.getProbability() + (chord.isDefault ? " DEFAULT - NOONE KNOWS NEXT CHORD!" : ""), true);
     }
 
     /**
@@ -207,7 +206,7 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
         //Not Applicable
         return (double) -1;
     }
-    
+
     /**
      *
      * @throws RemoteException
@@ -215,5 +214,6 @@ public class MonitorDaemon extends UnicastRemoteObject implements AgentInterface
     @Override
     public void loadAgent() throws RemoteException {
         //Not applicable
-    };
+    }
+;
 }

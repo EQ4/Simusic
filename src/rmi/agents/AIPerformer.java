@@ -250,7 +250,7 @@ public class AIPerformer extends Agent {
             for (AuctionMessage message : ballotBox) {
                 ballotContent += "\n\n\tChord base: " + message.chordBase;
                 ballotContent += "\n\tChord mode: " + message.chordMode;
-                ballotContent += "\n\tChord probability: " + message.chordProbability;
+                ballotContent += "\n\tChord utility: " + message.chordProbability;
                 ballotContent += "\n\tOrigin ID: " + message.chordOriginID;
             }
             //log("My local CHORD Auction was won by " + resultMessage.chordOriginID + " and the result is " + resultMessage.chordBase + "-" + resultMessage.chordMode + ", probability " + resultMessage.chordProbability + "Ballot content: " + ballotContent, false);
@@ -338,9 +338,8 @@ public class AIPerformer extends Agent {
             Sequence soloSequence = new Sequence();
             Double lastNoteProbability = Double.MIN_NORMAL;
             
-            //int numberOfNotes = 4 + Main.rand.nextInt(5);
             //3, 4, 6 or 8
-            int numberOfNotes = (3 + Main.rand.nextInt(1)) * (1 + Main.rand.nextInt(1));
+            int numberOfNotes = (3 + Main.rand.nextInt(2)) * (1 + Main.rand.nextInt(2));
             
             
             for (int j = 0; j < numberOfNotes; j++) {

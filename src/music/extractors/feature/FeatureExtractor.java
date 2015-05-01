@@ -27,7 +27,6 @@ import java.io.File;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import jsymbolic.*;
 import org.w3c.dom.*;
 import rmi.agents.Agent;
 
@@ -93,8 +92,8 @@ public class FeatureExtractor {
                     callingAgent.log("Extracting features - file " + ++counter + "/" + midiFiles.length, false);
                 }
 
-                //Extract features to XML
-                CommandLine.extractFeatures(
+                //Extract features to XML using jSymbolic
+                jsymbolic.CommandLine.extractFeatures(
                         file.getCanonicalPath(),
                         featurePath + file.getName() + ".xml",
                         featurePath + file.getName() + "_def.xml", false);
@@ -111,9 +110,12 @@ public class FeatureExtractor {
 
                 //Store features from XML to hashmap
                 File xmlFile = new File(featurePath + file.getName() + ".xml");
+                
+                //First create XML parser instances
                 DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 
+                //The document...
                 Document doc;
 
                 try {
@@ -158,6 +160,11 @@ public class FeatureExtractor {
                 for (Map.Entry<String, ArrayList<Double>> entry : mapOfSongListsOfFeatures.entrySet()) {
                     mapOfAverageFeatures.put(entry.getKey(), calculateAverage(entry.getValue()));
                 }
+                
+                //Dispose of parsers
+                dbFactory = null;
+                dBuilder = null;
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }

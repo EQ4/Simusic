@@ -41,24 +41,15 @@ import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 
 /**
- *
+ * The class contains common test data
  * @author Martin
  */
 public class General {
 
     //public static String midiPath = "runtime/test_files/midi/imagine.mid";
-    public static String midiPath = "runtime/grouped_agents/Group4/Trance";
-    public static String featurePath = "runtime/grouped_agents/Group4/Trance/simusic/features";
+    public static String midiPath = "runtime/test_files/midi";
+    public static String featurePath = "runtime/test_files/features";
     //public static String featurePath = "runtime/test_files/features";
-
-    /**
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        // Nothing - this class is used to hold static test variables. 
-        // To test, run files in other test packages.
-    }
 
     public static File[] getFileArrayFromPathString(String path) {
         File inputPath = new File(path);
