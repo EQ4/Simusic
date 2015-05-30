@@ -1,5 +1,8 @@
 # Simusic
 
+DISSERTATION:
+http://minovski.net/algomusic/Dissertation.pdf
+
 HOW TO RUN:
 
 To run the project 
